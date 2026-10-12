@@ -24,22 +24,29 @@ gnctl games list                                        # app_id, has_container
 gnctl components list --target dxwrapperConfig.version  # valid values; installed / downloadable
 gnctl containers get STEAM_123                          # current values, env, read_only
 echo '{"values":{"dxwrapperConfig.version":"2.4.1"}}' | gnctl containers set STEAM_123 -
+                                                        # note its backup_id: the config this session started from
 gnctl launch STEAM_123 --debug --wait running --timeout 300
 gnctl screenshot -o shot.png                            # look at it
 gnctl sessions logs --tail 200                          # redacted buffer
 gnctl sessions stop
 gnctl sessions wait --until exited --timeout 60
-gnctl logs pull -o ./logs/                              # full agent_<appId>.log (unredacted)
+mkdir -p logs && gnctl logs pull -o logs/              # full agent_<appId>.log (unredacted)
 # next experiment: containers set … → launch → …
-gnctl containers restore STEAM_123 --baseline           # on failure, and when done
-gnctl containers get STEAM_123                          # confirm it matches the original
+gnctl containers restore STEAM_123 --backup <id>        # id from the first set; on failure, and when done
+gnctl containers get STEAM_123                          # confirm it matches the config you started from
 ```
 
 ## Rules
 
-- **Never leave a game on an experimental config.** When the experiment fails, and when you finish, restore:
-  `containers restore --baseline` (the config before the agent first touched the game) or `--backup <id>` for
-  a known good intermediate step (`containers backups`). Report the final config to the user.
+- **Never leave a game on an experimental config.** Record the `backup_id` returned by the first
+  `containers set` of this session (it is `null` when nothing changed; take the first non-null one): that
+  backup holds the config as it was when you started. When the experiment fails,
+  and when you finish, restore it with `containers restore --backup <that id>`, or a later id for a known good
+  intermediate step. Report the final config to the user. Only the newest 10 non-baseline backups are kept, so
+  record the id right away; if it is lost, find it by `created_at` in `containers backups`.
+- **`--baseline` is not "this session's start".** The baseline is the first backup the game ever got, taken
+  before any agent's first change, possibly days ago; restoring it also reverts everything the user changed in
+  the app since then. Use `--baseline` only when the user asks for the config from before the agent.
 - **`NO_CONTAINER`** → the game was never launched. Do one normal launch first (`gnctl launch STEAM_123
   --wait running`, then stop it), then edit the config.
 - **`wineVersion` changes may upgrade the Wine prefix irreversibly** (`wine_version_changed` warning);
@@ -50,7 +57,8 @@ gnctl containers get STEAM_123                          # confirm it matches the
   (use dotted keys and `env`), and `WINEDEBUG` in `env` (use `--debug --wine-debug`).
 - **`MISSING_COMPONENTS`** → nothing was written. Pick an installed version from `components list`, or ask the
   user to install the downloadable one in the app; the API never downloads.
-- **`SESSION_ACTIVE`** → stop the session first; configs cannot change while the game has a session.
+- **`SESSION_ACTIVE`** → configs cannot change while the game has a session that has not exited. Check
+  `gnctl sessions current` and clear it per state, as for `SESSION_BUSY` below.
 - **`needs_unpacking`** → the next launch unpacks the game again and takes longer.
 - **Channels:** `--wine-debug` needs `--debug`; at most 8, no `all`/`relay`/`server`/`heap`/`snoop`/`file`,
   nothing the base already sets (`seh`, `loaddll`, `process`, `timestamp`, `pid`, `tid`). gnctl refuses bad
@@ -63,8 +71,15 @@ gnctl containers get STEAM_123                          # confirm it matches the
 - `launch --wait running` exit 4 `SESSION_EXITED` → the game exited before a window appeared; read
   `exit_reason`/`last_launch_error`, `sessions logs`, `logs pull`. A `last_launch_error` alone is not fatal:
   the game may still run.
-- `SESSION_BUSY` → a session is active. Stop it (`sessions stop` + `sessions wait --until exited`) instead of
-  `--force`; `--force --wait` over a live session is refused anyway, the app keeps the live session.
+- `SESSION_BUSY` → a session has not exited; `error.details.state` says which state. The remedy depends on it:
+  - `starting` / `running`: `sessions stop` + `sessions wait --until exited`. Do not use `--force` here:
+    the app keeps the live session, and `--force --wait` is refused.
+  - `exiting`: only `sessions wait --until exited` (`sessions stop` answers `NO_ACTIVE_SESSION` here).
+  - `launching`: `sessions stop` cannot stop it (`NO_ACTIVE_SESSION`). The pre-launch may be waiting at a
+    dialog or for a Steam login (see below): take a screenshot. To launch again, `launch --force` replaces
+    it (`--wait` works). To change the config instead, the session has to end: the user resolves the dialog
+    (dismissing it ends the session with `launch_error`), or it ends by itself with `launch_timeout` 5 minutes
+    after it started.
 - `sessions stop` during `starting` needs **no retry**: the app queues it until the Wine environment exists and
   then closes the game; repeating it does not queue another stop. Exit reason: `agent_stop`.
 - `TIMEOUT` "no new session … appeared" → the launch never started: game not installed, or the launch was

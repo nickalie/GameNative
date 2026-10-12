@@ -34,9 +34,9 @@ The provider authority is derived from the package name: `app.gamenative.agent` 
   they have the same access as `adb shell`. The settings subtitle says so.
 - **Toggle.** Off by default. Before the app has finished starting (preferences not initialized yet) every
   command answers `NOT_READY`; after that, with the toggle off, `DISABLED`.
-- **Only `call`.** `query`, `insert`, `update`, `delete`, `getType`, `openFile`, `openAssetFile` and
-  `openTypedAssetFile` check the caller and then throw `UnsupportedOperationException`. A `call` with a method
-  other than `command` returns a `BAD_ARGS` envelope.
+- **Only `call`.** `query`, `insert`, `update`, `delete`, `openFile`, `openAssetFile` and
+  `openTypedAssetFile` check the caller and then throw `UnsupportedOperationException`; `getType` checks the
+  caller and returns `null`. A `call` with a method other than `command` returns a `BAD_ARGS` envelope.
 - **Launch extras.** `MainActivity` is exported, so any app can send `LAUNCH_GAME`. `agent_debug` and
   `wine_debug_channels` are honored only while the toggle is on; otherwise the launch runs as a plain launch.
 - **Secrets.** The provider never reads account tokens or credentials. `containers.get` masks env values whose
@@ -183,8 +183,8 @@ Result: `{app_id, backup_id, changed_fields[], warnings[]}`. `backup_id` is `nul
 `envVars.DXVK_HUD`). `warnings`:
 
 - `wine_version_changed` — the next launch may upgrade the Wine prefix; `containers.restore` does not undo that.
-- `needs_unpacking` — `executablePath`, `launchBionicSteam`, `launchRealSteam` or `unpackFiles` changed; the
-  next launch unpacks the game files again.
+- `needs_unpacking` — `executablePath` changed from a non-empty value, `launchBionicSteam`/`launchRealSteam`
+  changed, or `unpackFiles` was turned on; the next launch unpacks the game files again.
 
 **Network note.** The component check (step 5) uses the app's component manifest. If the cached manifest is
 older than 24 h it may be refreshed over the network inside the call, which then takes longer.

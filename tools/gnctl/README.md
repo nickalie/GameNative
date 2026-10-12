@@ -69,10 +69,10 @@ gnctl screenshot -o shot.png
 gnctl sessions logs --tail 100
 gnctl sessions stop
 gnctl sessions wait --until exited --timeout 60
-gnctl logs pull -o ./logs/            # adb pull of sessions.current.log_file
+mkdir -p logs && gnctl logs pull -o logs/   # adb pull of sessions.current.log_file
 
 gnctl containers backups STEAM_123
-gnctl containers restore STEAM_123 --baseline     # or --backup <id>
+gnctl containers restore STEAM_123 --backup <id>  # or --baseline: the config before the agent's first change
 
 gnctl call games.list --args '{"source":"GOG"}'   # any raw API command
 ```
