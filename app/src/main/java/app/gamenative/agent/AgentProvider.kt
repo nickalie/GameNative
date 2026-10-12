@@ -18,6 +18,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.commands.ComponentCommands
 import app.gamenative.agent.commands.ContainerCommands
+import app.gamenative.agent.commands.CustomFolderDeps
 import app.gamenative.agent.commands.ContainerWriteDeps
 import app.gamenative.agent.commands.DeviceCommands
 import app.gamenative.agent.commands.GameCommands
@@ -136,6 +137,7 @@ class AgentProvider : ContentProvider() {
                 storeGames = { GameCommands.storeGamesFrom(context) },
                 customGames = { GameCommands.customGamesFrom() },
                 containerIds = { GameCommands.containerIdsFrom(context) },
+                customFolders = CustomFolderDeps.forApp(context),
             ).register(dispatcher)
             ComponentCommands { ComponentCommands.loadSources(context) }.register(dispatcher)
             ContainerCommands(

@@ -8,6 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import app.gamenative.agent.commands.ComponentCommands
 import app.gamenative.agent.commands.ComponentSources
 import app.gamenative.agent.commands.ContainerCommands
+import app.gamenative.agent.commands.CustomFolderDeps
 import app.gamenative.agent.commands.DeviceCommands
 import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.InstalledGame
@@ -86,7 +87,7 @@ class ReadCommandsTest {
 
         val commands = dispatcher.commands()
 
-        listOf(DeviceCommands.INFO, GameCommands.LIST, ComponentCommands.LIST, ContainerCommands.GET).forEach {
+        listOf(DeviceCommands.INFO, GameCommands.LIST, GameCommands.ADD_CUSTOM, ComponentCommands.LIST, ContainerCommands.GET).forEach {
             assertTrue("$it registered", it in commands)
         }
     }
@@ -149,7 +150,30 @@ class ReadCommandsTest {
         store: List<InstalledGame> = STORE_GAMES,
         custom: List<InstalledGame> = CUSTOM_GAMES,
         containers: Set<String> = setOf("STEAM_10"),
-    ) = GameCommands(storeGames = { store }, customGames = { custom }, containerIds = { containers })
+        folders: FakeCustomFolders = FakeCustomFolders(),
+    ) = GameCommands(storeGames = { store }, customGames = { custom }, containerIds = { containers }, customFolders = folders.deps())
+
+    /** Records what `games.add_custom` asks of the app. */
+    private class FakeCustomFolders(
+        val storageAccess: Boolean = true,
+        val entry: (String) -> InstalledGame? = { InstalledGame("CUSTOM_GAME_77", 77, GameSource.CUSTOM_GAME, File(it).name) },
+        val alreadyAdded: Boolean = false,
+        val executable: String? = "Game.exe",
+        val sharedRoot: String = "/storage/emulated/0",
+    ) {
+        val added = mutableListOf<String>()
+        val notified = mutableListOf<InstalledGame>()
+
+        fun deps() = CustomFolderDeps(
+            hasStorageAccess = { storageAccess },
+            libraryEntry = entry,
+            addFolder = { added += it; !alreadyAdded },
+            notifyLibrary = { notified += it },
+            autoExecutable = { executable },
+            sharedStorageRoot = sharedRoot,
+            storageGrantHint = GRANT_HINT,
+        )
+    }
 
     @Test
     fun gamesList_mergesStoresAndCustomGames() {
@@ -198,6 +222,131 @@ class ReadCommandsTest {
             .list(JsonObject(emptyMap())).objects()
 
         assertEquals(JsonNull, games.single()["game_id"])
+    }
+
+    // --- games.add_custom ---
+
+    private fun gameFolder(): File = Files.createTempDirectory("agent-custom").toFile().also { tempDir = it }.absoluteFile
+
+    @Test
+    fun addCustom_registersFolderAndReportsTheEntry() {
+        val folder = gameFolder()
+        val folders = FakeCustomFolders()
+
+        val data = gameCommands(containers = setOf("CUSTOM_GAME_77"), folders = folders)
+            .addCustom(args("path" to folder.path)).jsonObject
+
+        assertEquals("CUSTOM_GAME_77", data.str("app_id"))
+        assertEquals(77, data["game_id"]!!.jsonPrimitive.int)
+        assertEquals("CUSTOM_GAME", data.str("game_source"))
+        assertEquals(folder.name, data.str("name"))
+        assertEquals(folder.path, data.str("path"))
+        assertTrue(data["added"]!!.jsonPrimitive.boolean)
+        assertTrue(data["has_container"]!!.jsonPrimitive.boolean)
+        assertEquals("Game.exe", data.str("executable"))
+        assertEquals(listOf(folder.path), folders.added)
+        assertEquals(listOf("CUSTOM_GAME_77"), folders.notified.map { it.appId })
+    }
+
+    @Test
+    fun addCustom_resolvesThePathBeforeUsingIt() {
+        val folder = gameFolder()
+        val folders = FakeCustomFolders()
+
+        val data = gameCommands(folders = folders)
+            .addCustom(args("path" to "${folder.path}/./../${folder.name}//")).jsonObject
+
+        assertEquals(folder.path, data.str("path"))
+        assertEquals(listOf(folder.path), folders.added)
+    }
+
+    @Test
+    fun addCustom_sdcardAliasIsSpelledAsTheSharedStorageRoot() {
+        val folder = gameFolder()
+        val folders = FakeCustomFolders(sharedRoot = folder.parent)
+
+        val data = gameCommands(folders = folders).addCustom(args("path" to "/sdcard/${folder.name}")).jsonObject
+
+        assertEquals(folder.path, data.str("path"))
+        assertEquals(listOf(folder.path), folders.added)
+    }
+
+    @Test
+    fun addCustom_keepsSymlinksAndWhitespaceAsSpelled() {
+        val root = gameFolder()
+        File(root, "My Game").mkdir()
+        val spaced = File(root, "My Game ").apply { mkdir() }
+        val link = File(root, "link").also { Files.createSymbolicLink(it.toPath(), spaced.toPath()) }
+        val folders = FakeCustomFolders()
+
+        val viaSpace = gameCommands(folders = folders).addCustom(args("path" to spaced.path)).jsonObject
+        val viaLink = gameCommands(folders = folders).addCustom(args("path" to link.path)).jsonObject
+
+        assertEquals("trailing space is part of the name", spaced.path, viaSpace.str("path"))
+        assertEquals("symlinks are not resolved, as the folder picker does not", link.path, viaLink.str("path"))
+        assertEquals(listOf(spaced.path, link.path), folders.added)
+    }
+
+    @Test
+    fun addCustom_folderAlreadyInTheLibraryIsNotAddedAgain() {
+        val folders = FakeCustomFolders(alreadyAdded = true)
+
+        val data = gameCommands(folders = folders).addCustom(args("path" to gameFolder().path)).jsonObject
+
+        assertFalse(data["added"]!!.jsonPrimitive.boolean)
+        assertTrue("the library did not change", folders.notified.isEmpty())
+    }
+
+    @Test
+    fun addCustom_folderImportedAsSteamGameHasNoExecutable() {
+        val folders = FakeCustomFolders(entry = { InstalledGame("STEAM_10", 10, GameSource.STEAM, "Half-Life") })
+
+        val data = gameCommands(folders = folders).addCustom(args("path" to gameFolder().path)).jsonObject
+
+        assertEquals("STEAM_10", data.str("app_id"))
+        assertEquals(JsonNull, data["executable"])
+    }
+
+    @Test
+    fun addCustom_withoutStorageAccessAddsNothing() {
+        val folders = FakeCustomFolders(storageAccess = false)
+
+        val error = failure { gameCommands(folders = folders).addCustom(args("path" to gameFolder().path)) }
+
+        assertEquals(AgentErrorCode.STORAGE_ACCESS_DENIED, error.code)
+        assertTrue("the message says how to grant access", error.message!!.contains(GRANT_HINT))
+        assertTrue(folders.added.isEmpty())
+    }
+
+    @Test
+    fun addCustom_badPathsAreBadArgs() {
+        val file = File(gameFolder(), "game.exe").apply { writeText("MZ") }
+        val folders = FakeCustomFolders()
+        val cases = listOf(
+            JsonObject(emptyMap()),
+            args("path" to "  "),
+            args("path" to "Games/PC/Yakuza"),
+            args("path" to "/storage/emulated/0/\u0000x"),
+            args("path" to "/" + "a".repeat(5000)),
+            buildJsonObject { put("path", 1) },
+            args("path" to file.path),
+            args("path" to File(file.parentFile, "missing").path),
+        )
+
+        cases.forEach { case ->
+            assertEquals("$case", AgentErrorCode.BAD_ARGS, failure { gameCommands(folders = folders).addCustom(case) }.code)
+        }
+        assertTrue(folders.added.isEmpty())
+    }
+
+    @Test
+    fun addCustom_folderTheAppRefusesIsBadArgs() {
+        val folders = FakeCustomFolders(entry = { null })
+
+        val error = failure { gameCommands(folders = folders).addCustom(args("path" to gameFolder().path)) }
+
+        assertEquals(AgentErrorCode.BAD_ARGS, error.code)
+        assertTrue(folders.added.isEmpty())
     }
 
     // --- components.list ---
@@ -401,6 +550,8 @@ class ReadCommandsTest {
     }
 
     companion object {
+        private const val GRANT_HINT = "adb shell appops set app.test MANAGE_EXTERNAL_STORAGE allow"
+
         private val STORE_GAMES = listOf(
             InstalledGame("STEAM_10", 10, GameSource.STEAM, "Half-Life"),
             InstalledGame("EPIC_20", 20, GameSource.EPIC, "Alan Wake"),

@@ -1638,6 +1638,24 @@ object PrefManager {
             setPref(CUSTOM_GAME_MANUAL_FOLDERS, Json.encodeToString(value))
         }
 
+    /**
+     * Adds [path] to [customGameManualFolders] in one read-modify-write and returns once it is stored, so a
+     * read right after sees it. Returns false when the folder was already there.
+     */
+    fun addCustomGameManualFolder(path: String): Boolean = runBlocking {
+        var added = false
+        dataStore.edit { pref ->
+            val current = try {
+                Json.decodeFromString<Set<String>>(pref[CUSTOM_GAME_MANUAL_FOLDERS] ?: "[]")
+            } catch (e: Exception) {
+                emptySet()
+            }
+            added = path !in current
+            if (added) pref[CUSTOM_GAME_MANUAL_FOLDERS] = Json.encodeToString(current + path)
+        }
+        added
+    }
+
     // Steam Controller (2026 "Triton") BLE support. OFF by default: enabling it makes every game launch connect to
     // the controller over BLE, which is pure overhead (and a runtime BT-permission prompt) for anyone without the
     // hardware. The settings switch requests the Bluetooth permissions before it can be turned on.

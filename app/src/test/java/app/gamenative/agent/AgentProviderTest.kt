@@ -312,6 +312,7 @@ class AgentProviderTest {
             "capabilities",
             "device.info",
             "games.list",
+            "games.add_custom",
             "components.list",
             "containers.get",
             "containers.set",
