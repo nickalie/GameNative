@@ -61,7 +61,7 @@ object DeviceInfo {
         cls.getMethod("get", String::class.java).invoke(null, name) as? String
     }.getOrNull()?.takeIf { it.isNotBlank() }
 
-    private fun deviceProperties(context: Context): Map<String, Any> = buildMap {
+    internal fun deviceProperties(context: Context): Map<String, Any> = buildMap {
         put("modern_build", BuildConfig.MODERN_ANDROID)
         put("device_codename", Build.DEVICE)
         put("board", Build.BOARD)
@@ -98,7 +98,7 @@ object DeviceInfo {
         put("screen_density_dpi", context.resources.displayMetrics.densityDpi)
     }
 
-    private fun gpuProperties(context: Context): Map<String, Any> = buildMap {
+    internal fun gpuProperties(context: Context): Map<String, Any> = buildMap {
         GPUInformation.getRenderer(context)?.takeIf { it.isNotBlank() }?.let { put("gpu_name", it) }
         GPUInformation.getVendor(context)?.takeIf { it.isNotBlank() }?.let { put("gpu_vendor", it) }
         GPUInformation.getVersion(context)?.takeIf { it.isNotBlank() }?.let { put("gpu_driver_version", it) }

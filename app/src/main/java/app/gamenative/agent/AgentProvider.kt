@@ -13,6 +13,10 @@ import android.os.ParcelFileDescriptor
 import androidx.annotation.VisibleForTesting
 import app.gamenative.BuildConfig
 import app.gamenative.PrefManager
+import app.gamenative.agent.commands.ComponentCommands
+import app.gamenative.agent.commands.ContainerCommands
+import app.gamenative.agent.commands.DeviceCommands
+import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.SessionCommands
 
 /**
@@ -114,6 +118,15 @@ class AgentProvider : ContentProvider() {
                 packageName = context.packageName,
             )
             SessionCommands(tracker).register(dispatcher)
+            // App state is resolved per call, so building the dispatcher never touches Hilt or the disk.
+            DeviceCommands { DeviceCommands.collect(context) }.register(dispatcher)
+            GameCommands(
+                storeGames = { GameCommands.storeGamesFrom(context) },
+                customGames = { GameCommands.customGamesFrom() },
+                containerIds = { GameCommands.containerIdsFrom(context) },
+            ).register(dispatcher)
+            ComponentCommands { ComponentCommands.loadSources(context) }.register(dispatcher)
+            ContainerCommands { ContainerCommands.load(context, it) }.register(dispatcher)
             return dispatcher
         }
     }

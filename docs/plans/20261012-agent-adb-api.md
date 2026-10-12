@@ -181,13 +181,14 @@
 - Modify: `app/src/main/java/app/gamenative/utils/SessionReport.kt` (`deviceProperties`/`gpuProperties` → `internal`)
 - Create: `app/src/test/java/app/gamenative/agent/ReadCommandsTest.kt`
 
-- [ ] `device.info` via `SessionReport` properties + `StatFs`
-- [ ] `games.list`: `FrontendSyncEntryPoint` + `getInstalledGames()` of all DAOs + `CustomGameScanner.scanAsLibraryItems()` with deduplication; `has_container`; `source` filter
-- [ ] `components.list`: sources as in `BestConfigService.validateComponentVersions` with an offline manifest read; `target`/`variant` (incl. `arm64ec`)/`installed`/`downloadable`; `target` filter
-- [ ] `containers.get`: values for `APPLICABLE_CONFIG_KEYS` + read-only `containerVariant`, env masking, `NO_CONTAINER`
-- [ ] register the four commands in the dispatcher
-- [ ] tests: filters, unknown source/target → `BAD_ARGS`, custom/Steam dedup, masking doesn't hit `*_BYPASS*`/`*PASSTHROUGH*`, `NO_CONTAINER`, components never call the network
-- [ ] run tests - must pass before Task 6
+- [x] `device.info` via `SessionReport` properties + `StatFs`
+- [x] `games.list`: `FrontendSyncEntryPoint` + `getInstalledGames()` of all DAOs + `CustomGameScanner.scanAsLibraryItems()` with deduplication; `has_container`; `source` filter
+- [x] `components.list`: sources as in `BestConfigService.validateComponentVersions` with an offline manifest read; `target`/`variant` (incl. `arm64ec`)/`installed`/`downloadable`; `target` filter
+- [x] `containers.get`: values for `APPLICABLE_CONFIG_KEYS` + read-only `containerVariant`, env masking, `NO_CONTAINER`
+- [x] register the four commands in the dispatcher
+- [x] tests: filters, unknown source/target → `BAD_ARGS`, custom/Steam dedup, masking doesn't hit `*_BYPASS*`/`*PASSTHROUGH*`, `NO_CONTAINER`, components never call the network
+- [x] run tests - must pass before Task 6
+- ➕ `commands/CommandArgs.kt`: shared argument parsing (`app_id` shape `<SOURCE>_<digits>`, optional strings, `game_source`) for this and later command tasks
 
 ### Task 6: containers.set / restore / backups
 
