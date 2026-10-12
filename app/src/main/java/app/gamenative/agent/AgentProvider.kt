@@ -9,9 +9,12 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Bundle
 import android.os.CancellationSignal
+import android.os.Handler
+import android.os.Looper
 import android.os.ParcelFileDescriptor
 import androidx.annotation.VisibleForTesting
 import app.gamenative.BuildConfig
+import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.commands.ComponentCommands
 import app.gamenative.agent.commands.ContainerCommands
@@ -19,6 +22,7 @@ import app.gamenative.agent.commands.ContainerWriteDeps
 import app.gamenative.agent.commands.DeviceCommands
 import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.SessionCommands
+import app.gamenative.events.SteamEvent
 
 /**
  * ADB back channel for AI agents: `adb shell content call --uri content://<package>.agent
@@ -111,6 +115,7 @@ class AgentProvider : ContentProvider() {
             isEnabled: () -> Boolean = { PrefManager.agentApiEnabled },
             isReady: () -> Boolean = { AgentRuntime.isReady },
             tracker: AgentSessionTracker = AgentRuntime.tracker,
+            postToMain: (Runnable) -> Unit = { Handler(Looper.getMainLooper()).post(it) },
         ): AgentDispatcher {
             val dispatcher = AgentDispatcher(
                 isEnabled = isEnabled,
@@ -118,7 +123,11 @@ class AgentProvider : ContentProvider() {
                 appVersion = BuildConfig.VERSION_NAME,
                 packageName = context.packageName,
             )
-            SessionCommands(tracker).register(dispatcher)
+            SessionCommands(
+                tracker = tracker,
+                postToMain = postToMain,
+                forceClose = { PluviaApp.events.emit(SteamEvent.ForceCloseApp) },
+            ).register(dispatcher)
             // App state is resolved per call, so building the dispatcher never touches Hilt or the disk.
             DeviceCommands { DeviceCommands.collect(context) }.register(dispatcher)
             GameCommands(

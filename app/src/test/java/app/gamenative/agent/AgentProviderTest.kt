@@ -5,9 +5,12 @@ import android.content.ContentValues
 import android.content.pm.ProviderInfo
 import android.net.Uri
 import android.os.Bundle
+import android.os.Looper
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.preferencesOf
+import app.gamenative.PluviaApp
 import app.gamenative.agent.commands.SessionCommands
+import app.gamenative.events.SteamEvent
 import app.gamenative.utils.FakeDataStore
 import app.gamenative.utils.PrefManagerTestScope
 import app.gamenative.utils.installFakePrefManager
@@ -32,6 +35,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
+import org.robolectric.Shadows.shadowOf
 import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowBinder
 
@@ -231,7 +235,56 @@ class AgentProviderTest {
         assertTrue(data["agent_debug"]!!.jsonPrimitive.boolean)
     }
 
+    // --- v1 command set ---
+
+    @Test
+    fun capabilities_listsEveryV1Command() {
+        useTestDispatcher()
+
+        val data = callJson(provider(), "capabilities")["data"]!!.jsonObject
+        val commands = data["commands"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet()
+
+        assertEquals(V1_COMMANDS, commands)
+    }
+
+    // --- sessions.stop ---
+
+    @Test
+    fun sessionsStop_emitsForceCloseOnMainLooper() {
+        val tracker = AgentSessionTracker()
+        tracker.onStarting("STEAM_123", container = null)
+        tracker.onRunning()
+        useTestDispatcher(tracker)
+        var forceCloses = 0
+        val listener: (SteamEvent.ForceCloseApp) -> Unit = { forceCloses++ }
+        PluviaApp.events.on<SteamEvent.ForceCloseApp, Unit>(listener)
+        try {
+            val json = callJson(provider(), SessionCommands.STOP)
+
+            assertTrue(json["ok"]!!.jsonPrimitive.boolean)
+            assertEquals(0, forceCloses)
+            shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(1, forceCloses)
+        } finally {
+            PluviaApp.events.off<SteamEvent.ForceCloseApp, Unit>(listener)
+        }
+    }
+
     private companion object {
         const val SHELL_UID = 2000
+
+        val V1_COMMANDS = setOf(
+            "capabilities",
+            "device.info",
+            "games.list",
+            "components.list",
+            "containers.get",
+            "containers.set",
+            "containers.restore",
+            "containers.backups",
+            "sessions.current",
+            "sessions.stop",
+            "sessions.logs",
+        )
     }
 }

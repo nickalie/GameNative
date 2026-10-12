@@ -214,11 +214,11 @@
 - Modify: `app/src/main/java/app/gamenative/agent/commands/SessionCommands.kt`
 - Create: `app/src/test/java/app/gamenative/agent/SessionCommandsTest.kt`
 
-- [ ] `sessions.logs {tail}` with a byte cap
-- [ ] `sessions.stop`: `requestStop()` + `ForceCloseApp` via the injected main-thread poster; `NO_ACTIVE_SESSION` outside `starting/running`
-- [ ] register both commands; `capabilities` lists every v1 command
-- [ ] tests: logs tail/cap, stop without a session, stop posts the event via the poster, repeated stop is idempotent
-- [ ] run tests - must pass before Task 8
+- [x] `sessions.logs {tail}` with a byte cap
+- [x] `sessions.stop`: `requestStop()` + `ForceCloseApp` via the injected main-thread poster; `NO_ACTIVE_SESSION` outside `starting/running`
+- [x] register both commands; `capabilities` lists every v1 command
+- [x] tests: logs tail/cap, stop without a session, stop posts the event via the poster, repeated stop is idempotent
+- [x] run tests - must pass before Task 8
 
 ### Task 8: Launch extras agent_debug and wine_debug_channels
 

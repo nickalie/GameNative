@@ -36,6 +36,15 @@ internal object CommandArgs {
         return primitive.content.toBooleanStrictOrNull() ?: throw badArgs("$name must be a boolean")
     }
 
+    /** The integer argument [name], or `null` when it is absent or JSON `null`. */
+    fun optInt(args: JsonObject, name: String): Int? {
+        val raw = args[name]
+        if (raw == null || raw is JsonNull) return null
+        val primitive = raw as? JsonPrimitive
+        if (primitive == null || primitive.isString) throw badArgs("$name must be an integer")
+        return primitive.content.toIntOrNull() ?: throw badArgs("$name must be an integer")
+    }
+
     fun requireAppId(args: JsonObject): String {
         val appId = optString(args, "app_id")?.trim()
         if (appId.isNullOrEmpty()) throw badArgs("app_id is required")
