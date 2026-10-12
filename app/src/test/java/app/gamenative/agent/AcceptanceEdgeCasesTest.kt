@@ -35,9 +35,9 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 /**
- * Acceptance checks across the production dispatcher: every v1 command is registered and listed in
- * `capabilities`, the toggle turns every command off, and a secret env value written through
- * `containers.set` never comes back in any container command response.
+ * Acceptance checks: with the toggle off the production dispatcher answers `DISABLED` to every command
+ * its `capabilities` lists, and a secret env value never comes back in any container command response,
+ * including rejections of the secret entry itself and backups/restores of a config that holds it.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(application = Application::class)
@@ -97,22 +97,24 @@ class AcceptanceEdgeCasesTest {
         return Json.parseToJsonElement(dispatcher.dispatch(AgentProtocol.encode(request))).jsonObject
     }
 
-    @Test
-    fun capabilitiesListsEveryV1Command() {
+    /**
+     * Commands the production dispatcher lists in `capabilities`;
+     * `AgentProviderTest.capabilities_listsEveryV1Command` pins the exact set.
+     */
+    private fun listedCommands(): List<String> {
         val dispatcher = AgentProvider.createDispatcher(context, isEnabled = { true }, isReady = { true }, tracker = AgentSessionTracker())
-
         val response = call(dispatcher, AgentDispatcher.CAPABILITIES)
-
         assertTrue(response["ok"]!!.jsonPrimitive.boolean)
-        val listed = response["data"]!!.jsonObject["commands"]!!.jsonArray.map { it.jsonPrimitive.content }.toSet()
-        assertTrue("missing: ${V1_COMMANDS - listed}", listed.containsAll(V1_COMMANDS))
+        return response["data"]!!.jsonObject["commands"]!!.jsonArray.map { it.jsonPrimitive.content }
     }
 
     @Test
-    fun toggleOffDisablesEveryV1Command() {
+    fun toggleOffDisablesEveryListedCommand() {
+        val commands = listedCommands()
+        assertTrue("capabilities lists the v1 commands", ContainerCommands.SET in commands && AgentDispatcher.CAPABILITIES in commands)
         val dispatcher = AgentProvider.createDispatcher(context, isEnabled = { false }, isReady = { true }, tracker = AgentSessionTracker())
 
-        V1_COMMANDS.forEach { command ->
+        commands.forEach { command ->
             val response = call(dispatcher, command)
             assertFalse(command, response["ok"]!!.jsonPrimitive.boolean)
             assertEquals(command, AgentErrorCode.DISABLED.name, response["error"]!!.jsonObject["code"]!!.jsonPrimitive.content)
@@ -123,12 +125,23 @@ class AcceptanceEdgeCasesTest {
     fun secretEnvValueNeverAppearsInContainerResponses() {
         val cmd = commands()
 
+        // The secret entries themselves are rejected: two spellings of one name, and a value with a newline.
         val rejected = assertThrows(AgentException::class.java) {
-            cmd.set(request("""{"app_id":"APP","values":{"containerVariant":"glibc"},"env":{"set":{"MY_TOKEN":"$SECRET"}}}"""))
+            cmd.set(request("""{"app_id":"APP","env":{"set":{"MY_TOKEN":"$SECRET","my_token":"$SECRET","OTHER_TOKEN":"$SECRET\n"}}}"""))
         }
         assertEquals(AgentErrorCode.BAD_ARGS, rejected.code)
+        val rejectedEntries = rejected.details!!.jsonObject["rejected"]!!.jsonArray.map { it.jsonObject }
+        assertEquals(
+            setOf(
+                "MY_TOKEN" to ContainerEdits.REASON_DUPLICATE,
+                "my_token" to ContainerEdits.REASON_DUPLICATE,
+                "OTHER_TOKEN" to ContainerEdits.REASON_INVALID_VALUE,
+            ),
+            rejectedEntries.map { it["name"]!!.jsonPrimitive.content to it["reason"]!!.jsonPrimitive.content }.toSet(),
+        )
         assertFalse(rejected.message.orEmpty().contains(SECRET))
         assertFalse(rejected.details.toString().contains(SECRET))
+        assertFalse("nothing was written", ContainerUtils.toContainerData(open()).envVars.contains(SECRET))
 
         val setResult = cmd.set(request("""{"app_id":"APP","env":{"set":{"MY_TOKEN":"$SECRET"}}}"""))
         assertTrue("secret was written", ContainerUtils.toContainerData(open()).envVars.contains(SECRET))
@@ -138,28 +151,28 @@ class AcceptanceEdgeCasesTest {
         assertEquals(ContainerCommands.MASK, got["env"]!!.jsonObject["MY_TOKEN"]!!.jsonPrimitive.content)
         assertFalse(got.toString().contains(SECRET))
 
+        // The next write backs up the config that holds the secret.
+        val secretBackup = cmd.set(request("""{"app_id":"APP","env":{"set":{"FOO":"2"}}}""")).jsonObject
+        val secretBackupId = secretBackup["backup_id"]!!.jsonPrimitive.content
+        val backups = cmd.backups(request("""{"app_id":"APP"}"""))
+        assertTrue(secretBackupId in backups.jsonArray.map { it.jsonObject["backup_id"]!!.jsonPrimitive.content })
+        assertFalse(backups.toString().contains(SECRET))
+
+        cmd.set(request("""{"app_id":"APP","env":{"unset":["MY_TOKEN"]}}"""))
+        assertFalse("secret was removed", ContainerUtils.toContainerData(open()).envVars.contains(SECRET))
+
+        val restoreSecret = cmd.restore(request("""{"app_id":"APP","backup_id":"$secretBackupId"}"""))
+        assertTrue("secret was restored", ContainerUtils.toContainerData(open()).envVars.contains(SECRET))
+        assertFalse(restoreSecret.toString().contains(SECRET))
         assertFalse(cmd.backups(request("""{"app_id":"APP"}""")).toString().contains(SECRET))
 
-        val restoreResult = cmd.restore(request("""{"app_id":"APP","baseline":true}"""))
-        assertFalse(restoreResult.toString().contains(SECRET))
+        val restoreBaseline = cmd.restore(request("""{"app_id":"APP","baseline":true}"""))
+        assertFalse(restoreBaseline.toString().contains(SECRET))
         assertFalse(ContainerUtils.toContainerData(open()).envVars.contains(SECRET))
     }
 
     private companion object {
         const val APP_ID = "STEAM_424242"
         const val SECRET = "s3cr3tValue42"
-        val V1_COMMANDS = setOf(
-            "capabilities",
-            "device.info",
-            "games.list",
-            "components.list",
-            "containers.get",
-            "containers.set",
-            "containers.restore",
-            "containers.backups",
-            "sessions.current",
-            "sessions.stop",
-            "sessions.logs",
-        )
     }
 }
