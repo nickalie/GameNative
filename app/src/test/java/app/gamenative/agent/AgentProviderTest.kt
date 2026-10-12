@@ -24,8 +24,8 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
-import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -94,15 +94,6 @@ class AgentProviderTest {
         return json["error"]!!.jsonObject["code"]!!.jsonPrimitive.content
     }
 
-    private fun assertThrows(expected: Class<out Throwable>, block: () -> Unit) {
-        try {
-            block()
-            fail("expected ${expected.simpleName}")
-        } catch (e: Throwable) {
-            assertTrue("expected ${expected.simpleName}, got $e", expected.isInstance(e))
-        }
-    }
-
     private fun allEntryPoints(p: AgentProvider): List<Pair<String, () -> Unit>> = listOf(
         "call" to { p.call(AgentProvider.METHOD_COMMAND, request("capabilities"), null) },
         "call(other)" to { p.call("other", null, null) },
@@ -159,12 +150,7 @@ class AgentProviderTest {
         val p = provider()
 
         allEntryPoints(p).forEach { (name, block) ->
-            try {
-                block()
-                fail("$name did not reject a foreign uid")
-            } catch (e: SecurityException) {
-                // expected
-            }
+            assertThrows("$name did not reject a foreign uid", SecurityException::class.java) { block() }
         }
     }
 
@@ -176,7 +162,7 @@ class AgentProviderTest {
         assertNull(p.getType(uri))
         allEntryPoints(p)
             .filterNot { (name, _) -> name.startsWith("call") || name == "getType" }
-            .forEach { (_, block) -> assertThrows(UnsupportedOperationException::class.java, block) }
+            .forEach { (name, block) -> assertThrows(name, UnsupportedOperationException::class.java) { block() } }
     }
 
     @Test

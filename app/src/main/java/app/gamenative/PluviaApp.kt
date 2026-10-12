@@ -86,7 +86,7 @@ class PluviaApp : SplitCompatApplication() {
 
         // Init our datastore preferences.
         PrefManager.init(this)
-        runCatching { AgentRuntime.markReady() }.onFailure { Timber.e(it, "[PluviaApp]: Agent API readiness failed") }
+        AgentRuntime.markReady()
         NexusAuthManager.initialize(this)
         FrontendSyncManager.init(this)
 
