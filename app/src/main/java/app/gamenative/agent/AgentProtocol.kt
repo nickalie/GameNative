@@ -2,6 +2,7 @@ package app.gamenative.agent
 
 import java.util.Base64
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -100,6 +101,10 @@ object AgentProtocol {
 
     private val json = Json { isLenient = false }
 
+    // Tree parsing keeps unquoted tokens as non-string literals even when not lenient, so every
+    // non-string primitive is re-checked against the JSON literal grammar.
+    private val JSON_NUMBER = Regex("-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][+-]?[0-9]+)?")
+
     /**
      * Decodes a base64url(JSON) request. The API version is parsed but not checked here: the
      * dispatcher owns the version check so it can report UNSUPPORTED_API_VERSION.
@@ -121,6 +126,7 @@ object AgentProtocol {
             throw badArgs("request is not valid JSON")
         }
         if (root !is JsonObject) throw badArgs("request must be a JSON object")
+        if (!hasOnlyValidLiterals(root)) throw badArgs("request is not valid JSON")
 
         val version = (root["api_version"] as? JsonPrimitive)
             ?.takeUnless { it.isString }
@@ -144,4 +150,21 @@ object AgentProtocol {
         Base64.getUrlEncoder().withoutPadding().encodeToString(request.toString().toByteArray(Charsets.UTF_8))
 
     private fun badArgs(message: String) = AgentException(AgentErrorCode.BAD_ARGS, message)
+
+    /** Iterative walk, so deeply nested input cannot overflow the stack. */
+    private fun hasOnlyValidLiterals(root: JsonElement): Boolean {
+        val pending = ArrayDeque<JsonElement>()
+        pending.addLast(root)
+        while (pending.isNotEmpty()) {
+            when (val element = pending.removeLast()) {
+                is JsonObject -> pending.addAll(element.values)
+                is JsonArray -> pending.addAll(element)
+                is JsonPrimitive -> if (!element.isString && !isJsonLiteral(element.content)) return false
+            }
+        }
+        return true
+    }
+
+    private fun isJsonLiteral(content: String): Boolean =
+        content == "true" || content == "false" || content == "null" || JSON_NUMBER.matches(content)
 }

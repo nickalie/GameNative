@@ -149,6 +149,27 @@ class AgentDispatcherTest {
     }
 
     @Test
+    fun unquotedLiterals_areBadArgs() {
+        val d = dispatcher()
+        val bad = listOf(
+            """{"api_version":1,"command":"capabilities","args":{"x":garbage}}""",
+            """{"api_version":1,"command":"capabilities","args":{"x":[1,{"y":nul}]}}""",
+            """{"api_version":1,"command":"capabilities","args":{"x":01}}""",
+            """{"api_version":1,"command":"capabilities","args":{"x":1.}}""",
+            """{"api_version":1,"command":"capabilities","args":{"x":True}}""",
+            """{"api_version":1,"command":capabilities}""",
+        )
+        bad.forEach { assertError(d.dispatch(rawRequest(it)), AgentErrorCode.BAD_ARGS) }
+    }
+
+    @Test
+    fun validLiterals_areAccepted() {
+        val raw = """{"api_version":1,"command":"capabilities",""" +
+            """"args":{"a":true,"b":false,"c":null,"d":[0,-1,2.5,1e3,-0.5E-2],"e":{"f":"garbage"}}}"""
+        assertOk(dispatcher().dispatch(rawRequest(raw)))
+    }
+
+    @Test
     fun nonObjectJson_isBadArgs() {
         assertError(dispatcher().dispatch(rawRequest("[1,2]")), AgentErrorCode.BAD_ARGS)
     }
