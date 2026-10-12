@@ -206,12 +206,16 @@ class AgentSessionTracker(
         finish(current)
     }
 
-    /** The launch failed before or during environment setup. */
-    fun onLaunchError(message: String) = synchronized(lock) {
+    /**
+     * The app reported a launch error. Most are non-fatal (a failed unpack or Steam CEG pass, and the
+     * game boots anyway), so by default the error is only recorded and the regular exit path closes the
+     * session. [fatal] is for a failure that tears the environment down before the game can start
+     * (wine setup); it ends a `launching`/`starting` session with `exit_reason=launch_error`.
+     */
+    fun onLaunchError(message: String, fatal: Boolean = false) = synchronized(lock) {
         val current = active() ?: return@synchronized
         current.lastLaunchError = message.take(MAX_ERROR_LENGTH)
-        // Once the game window is up, the regular exit path closes the session.
-        if (current.state == AgentSessionState.LAUNCHING || current.state == AgentSessionState.STARTING) {
+        if (fatal && (current.state == AgentSessionState.LAUNCHING || current.state == AgentSessionState.STARTING)) {
             current.exitReason = REASON_LAUNCH_ERROR
             finish(current)
         }
@@ -272,13 +276,14 @@ class AgentSessionTracker(
         val current = session ?: return
         if (current.state == AgentSessionState.LAUNCHING && clock() - current.startedAt >= launchTimeoutMs) {
             current.exitReason = REASON_LAUNCH_TIMEOUT
-            finish(current)
+            // Expiry is noticed lazily on the next call; report when the timeout actually happened.
+            finish(current, at = current.startedAt + launchTimeoutMs)
         }
     }
 
-    private fun finish(current: Session) {
+    private fun finish(current: Session, at: Long = clock()) {
         current.state = AgentSessionState.EXITED
-        current.exitedAt = clock()
+        current.exitedAt = at
         current.stopRequested = false
     }
 

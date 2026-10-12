@@ -214,10 +214,13 @@ class AgentSessionTrackerTest {
         t.onLaunchRequested("STEAM_1", debug)
         now += AgentSessionTracker.LAUNCH_TIMEOUT_MS - 1
         assertEquals(AgentSessionState.LAUNCHING, t.state())
-        now += 1
+        val timedOutAt = now + 1
+        // Nobody polls for a long time; exited_at still reports when the timeout happened.
+        now += 2 * 60 * 60 * 1000L
         val s = t.current()!!
         assertEquals(AgentSessionState.EXITED, s.state)
         assertEquals(AgentSessionTracker.REASON_LAUNCH_TIMEOUT, s.exitReason)
+        assertEquals(timedOutAt, s.exitedAt)
         assertFalse(t.isActive("STEAM_1"))
         assertEquals(AgentLaunchOptions.NONE, t.optionsFor("STEAM_1"))
 
@@ -228,19 +231,47 @@ class AgentSessionTrackerTest {
     }
 
     @Test
-    fun `launch error while launching or starting ends the session`() {
+    fun `non-fatal launch error is recorded and the session keeps going`() {
         val t = tracker()
         t.onLaunchRequested("STEAM_1", debug)
-        t.onLaunchError("Steam not logged in")
+        t.onLaunchError("Error during unpacking: boom")
+        assertEquals(AgentSessionState.LAUNCHING, t.state())
+        assertEquals("Error during unpacking: boom", t.current()!!.lastLaunchError)
+
+        // A failed Steam CEG pass during setup: the game still boots.
+        t.onStarting("STEAM_1", null)
+        t.onLaunchError("Steam could not prepare the game executable (fail)")
+        var s = t.current()!!
+        assertEquals(AgentSessionState.STARTING, s.state)
+        assertNull(s.exitReason)
+        assertEquals("Steam could not prepare the game executable (fail)", s.lastLaunchError)
+        assertTrue(t.isActive("STEAM_1"))
+        assertTrue(t.requestStop())
+
+        t.onRunning()
+        assertEquals(AgentSessionState.RUNNING, t.state())
+        t.onExiting(AgentSessionTracker.REASON_FORCE_CLOSE)
+        t.onExited()
+        s = t.current()!!
+        assertEquals(AgentSessionState.EXITED, s.state)
+        assertEquals(AgentSessionTracker.REASON_AGENT_STOP, s.exitReason)
+    }
+
+    @Test
+    fun `fatal launch error while launching or starting ends the session`() {
+        val t = tracker()
+        t.onLaunchRequested("STEAM_1", debug)
+        t.onLaunchError("Steam not logged in", fatal = true)
         var s = t.current()!!
         assertEquals(AgentSessionState.EXITED, s.state)
         assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, s.exitReason)
         assertEquals("Steam not logged in", s.lastLaunchError)
 
         t.onStarting("STEAM_1", null)
-        t.onLaunchError("Failed to setup wine: boom")
+        t.onLaunchError("Failed to setup wine: boom", fatal = true)
         s = t.current()!!
         assertEquals(AgentSessionState.EXITED, s.state)
+        assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, s.exitReason)
         assertEquals("Failed to setup wine: boom", s.lastLaunchError)
     }
 
@@ -411,10 +442,27 @@ class AgentSessionTrackerTest {
             "using bearer abcdefghijkl" to "using bearer [REDACTED]",
             "password=hunter2" to "password=[REDACTED]",
             "STEAM_API_KEY=0123" to "STEAM_API_KEY=[REDACTED]",
+            "password=abc,def;ghi next" to "password=[REDACTED] next",
+            "password=,hunter2" to "password=[REDACTED]",
+            "--access-token='a\\'hunter2' -x" to "--access-token=[REDACTED] -x",
+            "token=\"a\\\"hunter2\" end" to "token=[REDACTED] end",
+            "{\"password\":\"a\\\"hunter2\"}" to "{\"password\":\"[REDACTED]\"}",
             "err:d3d:wined3d_device_create device creation failed" to "err:d3d:wined3d_device_create device creation failed",
             "DXVK_HUD=fps WINEDEBUG=+d3d" to "DXVK_HUD=fps WINEDEBUG=+d3d",
         )
         cases.forEach { (input, expected) -> assertEquals(input, expected, LogRedactor.redact(input)) }
+    }
+
+    @Test
+    fun `redactor stays linear on long runs of key characters`() {
+        val inputs = listOf("a".repeat(100_000), "token".repeat(20_000), "-".repeat(100_000), "\"" + "a".repeat(100_000))
+        val started = System.nanoTime()
+        inputs.forEach { assertEquals(it, LogRedactor.redact(it)) }
+        val elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started)
+        // The quadratic version needed ~28 s for 16k characters; linear scans finish in milliseconds.
+        assertTrue("redaction took $elapsedMs ms", elapsedMs < 5_000)
+        val long = "x".repeat(50_000) + " password=hunter2"
+        assertEquals("x".repeat(50_000) + " password=[REDACTED]", LogRedactor.redact(long))
     }
 
     @Test
