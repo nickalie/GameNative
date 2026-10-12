@@ -3,7 +3,9 @@ package app.gamenative.agent.commands
 import app.gamenative.agent.AgentDispatcher
 import app.gamenative.agent.AgentErrorCode
 import app.gamenative.agent.AgentException
+import app.gamenative.agent.AgentSessionState
 import app.gamenative.agent.AgentSessionTracker
+import java.util.concurrent.atomic.AtomicReference
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -16,16 +18,21 @@ import timber.log.Timber
 /**
  * `sessions.*` commands over the session tracker.
  *
- * [postToMain] runs a task on the main looper and [forceClose] emits the app's force-close event;
- * the event dispatcher is not thread-safe and its listeners touch the UI, so a stop is always posted
- * instead of emitted from the binder thread.
+ * [postToMain] runs a task on the main looper after a delay in milliseconds (0 = as soon as possible) and
+ * [forceClose] emits the app's force-close event; the event dispatcher is not thread-safe and its listeners
+ * touch the UI, so a stop is always posted instead of emitted from the binder thread. [environmentReady]
+ * tells whether the wine environment has been published (`PluviaApp.xEnvironment`); it is read on the main
+ * thread only.
  */
 class SessionCommands(
     private val tracker: AgentSessionTracker,
-    private val postToMain: (Runnable) -> Unit,
+    private val postToMain: (Runnable, Long) -> Unit,
+    private val environmentReady: () -> Boolean,
     private val forceClose: () -> Unit,
     private val maxLogBytes: Int = MAX_LOG_BYTES,
 ) {
+    /** Session whose stop is queued on the main looper; at most one waiting stop per session. */
+    private val pendingStop = AtomicReference<String?>(null)
 
     fun register(dispatcher: AgentDispatcher) {
         dispatcher.register(CURRENT) { current() }
@@ -38,9 +45,12 @@ class SessionCommands(
 
     /**
      * `sessions.stop` → `{session_id, app_id, state, already_requested}`. Marks the session as stopped by
-     * the agent and posts the force-close event. Repeating it while the session is still `starting` or
-     * `running` is safe and posts the event again: a stop sent before the game screen exists is lost,
-     * so the agent retries. Any other state → `NO_ACTIVE_SESSION`.
+     * the agent and, on the main thread, emits the force-close event once the wine environment exists.
+     * While the session is `starting` the setup worker has not published the environment yet; closing the
+     * screen then would tear nothing down while the worker goes on to start wine and the game, so the stop
+     * waits (polling every [STOP_POLL_MS]) until the environment is published, or ends unused when the
+     * session finishes some other way. Repeating the stop is safe. Any state other than `starting` or
+     * `running` → `NO_ACTIVE_SESSION`.
      */
     fun stop(): JsonElement {
         val before = tracker.current()
@@ -48,12 +58,10 @@ class SessionCommands(
             val details = before?.let { buildJsonObject { put("state", it.state.wire) } }
             throw AgentException(AgentErrorCode.NO_ACTIVE_SESSION, "no session is starting or running", details)
         }
-        postToMain(
-            Runnable {
-                runCatching { forceClose() }.onFailure { Timber.w(it, "Agent stop: force close failed") }
-            },
-        )
         val session = tracker.current()
+        if (session != null && pendingStop.getAndSet(session.sessionId) != session.sessionId) {
+            postToMain(Runnable { closeWhenReady(session.sessionId) }, 0L)
+        }
         return buildJsonObject {
             session?.let {
                 put("session_id", it.sessionId)
@@ -62,6 +70,28 @@ class SessionCommands(
             }
             put("already_requested", before?.stopRequested == true && before.sessionId == session?.sessionId)
         }
+    }
+
+    /** Main thread: force-closes [sessionId] once the environment exists; drops the stop once it ended. */
+    private fun closeWhenReady(sessionId: String) {
+        val session = tracker.current()
+        val stillWanted = session != null &&
+            session.sessionId == sessionId &&
+            session.stopRequested &&
+            (session.state == AgentSessionState.STARTING || session.state == AgentSessionState.RUNNING)
+        if (!stillWanted) {
+            pendingStop.compareAndSet(sessionId, null)
+            return
+        }
+        val ready = runCatching { environmentReady() }
+            .onFailure { Timber.w(it, "Agent stop: environment check failed") }
+            .getOrDefault(false)
+        if (!ready) {
+            postToMain(Runnable { closeWhenReady(sessionId) }, STOP_POLL_MS)
+            return
+        }
+        pendingStop.compareAndSet(sessionId, null)
+        runCatching { forceClose() }.onFailure { Timber.w(it, "Agent stop: force close failed") }
     }
 
     /**
@@ -99,5 +129,8 @@ class SessionCommands(
 
         /** Byte budget for the log lines, leaving room for the envelope under the response cap. */
         const val MAX_LOG_BYTES = 192 * 1024
+
+        /** How often a stop waiting for the environment re-checks it on the main thread. */
+        const val STOP_POLL_MS = 250L
     }
 }

@@ -21,15 +21,34 @@ class SessionCommandsTest {
     private var nextId = 0
     private val tracker = AgentSessionTracker(clock = { 1_000L }, idGenerator = { "s${++nextId}" })
     private val posted = mutableListOf<Runnable>()
+    private val delays = mutableListOf<Long>()
     private var forceCloses = 0
+    private var environmentReady = true
+
+    /** Runs the queued main-thread tasks in order, including the ones they queue, up to [limit]. */
+    private fun drainMain(limit: Int = 100) {
+        var runs = 0
+        while (posted.isNotEmpty() && runs < limit) {
+            posted.removeAt(0).run()
+            runs++
+        }
+    }
 
     private fun dispatcher(
         maxLogBytes: Int = SessionCommands.MAX_LOG_BYTES,
         forceClose: () -> Unit = { forceCloses++ },
     ): AgentDispatcher {
         val dispatcher = AgentDispatcher(isEnabled = { true }, isReady = { true }, appVersion = "test", packageName = "app.gamenative")
-        SessionCommands(tracker, postToMain = { posted += it }, forceClose = forceClose, maxLogBytes = maxLogBytes)
-            .register(dispatcher)
+        SessionCommands(
+            tracker,
+            postToMain = { task, delayMs ->
+                posted += task
+                delays += delayMs
+            },
+            environmentReady = { environmentReady },
+            forceClose = forceClose,
+            maxLogBytes = maxLogBytes,
+        ).register(dispatcher)
         return dispatcher
     }
 
@@ -211,6 +230,77 @@ class SessionCommandsTest {
     }
 
     @Test
+    fun stop_whileStarting_waitsForTheEnvironmentBeforeForceClosing() {
+        tracker.onStarting("STEAM_123", container = null)
+        environmentReady = false
+        val dispatcher = dispatcher(
+            forceClose = {
+                forceCloses++
+                tracker.onExiting(AgentSessionTracker.REASON_FORCE_CLOSE)
+            },
+        )
+
+        data(call(dispatcher, SessionCommands.STOP))
+        // The setup worker has not published the environment: the stop is re-checked, not emitted.
+        repeat(3) { posted.removeAt(0).run() }
+        assertEquals(0, forceCloses)
+        assertEquals(1, posted.size)
+        assertEquals(listOf(0L, SessionCommands.STOP_POLL_MS, SessionCommands.STOP_POLL_MS, SessionCommands.STOP_POLL_MS), delays)
+        assertEquals(AgentSessionState.STARTING, tracker.current()!!.state)
+        // A retry while the stop is waiting does not queue a second one.
+        assertTrue(data(call(dispatcher, SessionCommands.STOP))["already_requested"]!!.jsonPrimitive.boolean)
+        assertEquals(1, posted.size)
+
+        environmentReady = true
+        drainMain()
+
+        assertEquals(1, forceCloses)
+        assertTrue(posted.isEmpty())
+        tracker.onExited()
+        assertEquals(AgentSessionTracker.REASON_AGENT_STOP, tracker.current()!!.exitReason)
+    }
+
+    @Test
+    fun stop_whileStarting_isDroppedWhenTheSessionEndsOtherwise() {
+        tracker.onStarting("STEAM_123", container = null)
+        environmentReady = false
+        val dispatcher = dispatcher()
+
+        data(call(dispatcher, SessionCommands.STOP))
+        posted.removeAt(0).run()
+        tracker.onLaunchError(AgentHooks.wineSetupFailedMessage("boom"), fatal = true)
+        environmentReady = true
+        drainMain()
+
+        assertEquals(0, forceCloses)
+        assertTrue(posted.isEmpty())
+        // The next session's stop is queued again rather than treated as already waiting.
+        tracker.onStarting("STEAM_123", container = null)
+        data(call(dispatcher, SessionCommands.STOP))
+        drainMain()
+        assertEquals(1, forceCloses)
+    }
+
+    @Test
+    fun stop_environmentCheckFailure_keepsWaiting() {
+        runningSession()
+        var checks = 0
+        val dispatcher = AgentDispatcher(isEnabled = { true }, isReady = { true }, appVersion = "test", packageName = "app.gamenative")
+        SessionCommands(
+            tracker,
+            postToMain = { task, _ -> posted += task },
+            environmentReady = { if (++checks == 1) error("boom") else true },
+            forceClose = { forceCloses++ },
+        ).register(dispatcher)
+
+        data(call(dispatcher, SessionCommands.STOP))
+        drainMain()
+
+        assertEquals(2, checks)
+        assertEquals(1, forceCloses)
+    }
+
+    @Test
     fun stop_repeated_isIdempotent() {
         runningSession()
         val dispatcher = dispatcher()
@@ -222,7 +312,13 @@ class SessionCommandsTest {
         assertTrue(second["already_requested"]!!.jsonPrimitive.boolean)
         assertEquals(first["session_id"], second["session_id"])
         assertEquals("running", second["state"]!!.jsonPrimitive.content)
-        posted.forEach { it.run() }
+        // The first stop is still queued, so the second one does not queue another.
+        assertEquals(1, posted.size)
+        drainMain()
+        assertEquals(1, forceCloses)
+        // Once the queued stop ran, a retry queues the force close again.
+        data(call(dispatcher, SessionCommands.STOP))
+        drainMain()
         assertEquals(2, forceCloses)
         assertTrue(tracker.current()!!.stopRequested)
     }

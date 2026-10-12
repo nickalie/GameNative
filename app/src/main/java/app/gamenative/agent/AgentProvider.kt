@@ -115,7 +115,8 @@ class AgentProvider : ContentProvider() {
             isEnabled: () -> Boolean = { PrefManager.agentApiEnabled },
             isReady: () -> Boolean = { AgentRuntime.isReady },
             tracker: AgentSessionTracker = AgentRuntime.tracker,
-            postToMain: (Runnable) -> Unit = { Handler(Looper.getMainLooper()).post(it) },
+            postToMain: (Runnable, Long) -> Unit = { task, delayMs -> Handler(Looper.getMainLooper()).postDelayed(task, delayMs) },
+            environmentReady: () -> Boolean = { PluviaApp.xEnvironment != null },
         ): AgentDispatcher {
             val dispatcher = AgentDispatcher(
                 isEnabled = isEnabled,
@@ -126,6 +127,7 @@ class AgentProvider : ContentProvider() {
             SessionCommands(
                 tracker = tracker,
                 postToMain = postToMain,
+                environmentReady = environmentReady,
                 forceClose = { PluviaApp.events.emit(SteamEvent.ForceCloseApp) },
             ).register(dispatcher)
             // App state is resolved per call, so building the dispatcher never touches Hilt or the disk.

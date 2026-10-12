@@ -14,6 +14,7 @@ import app.gamenative.events.SteamEvent
 import app.gamenative.utils.FakeDataStore
 import app.gamenative.utils.PrefManagerTestScope
 import app.gamenative.utils.installFakePrefManager
+import java.time.Duration
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -75,9 +76,18 @@ class AgentProviderTest {
         prefScope = installFakePrefManager(FakeDataStore(initial))
     }
 
-    private fun useTestDispatcher(tracker: AgentSessionTracker = AgentSessionTracker()) {
+    private fun useTestDispatcher(
+        tracker: AgentSessionTracker = AgentSessionTracker(),
+        environmentReady: () -> Boolean = { true },
+    ) {
         AgentProvider.dispatcherFactory = { context ->
-            AgentProvider.createDispatcher(context, isEnabled = { true }, isReady = { true }, tracker = tracker)
+            AgentProvider.createDispatcher(
+                context,
+                isEnabled = { true },
+                isReady = { true },
+                tracker = tracker,
+                environmentReady = environmentReady,
+            )
         }
     }
 
@@ -264,6 +274,31 @@ class AgentProviderTest {
             assertTrue(json["ok"]!!.jsonPrimitive.boolean)
             assertEquals(0, forceCloses)
             shadowOf(Looper.getMainLooper()).idle()
+            assertEquals(1, forceCloses)
+        } finally {
+            PluviaApp.events.off<SteamEvent.ForceCloseApp, Unit>(listener)
+        }
+    }
+
+    @Test
+    fun sessionsStop_whileStarting_emitsForceCloseOnlyOnceEnvironmentExists() {
+        val tracker = AgentSessionTracker()
+        tracker.onStarting("STEAM_123", container = null)
+        var environmentReady = false
+        useTestDispatcher(tracker, environmentReady = { environmentReady })
+        var forceCloses = 0
+        val listener: (SteamEvent.ForceCloseApp) -> Unit = { forceCloses++ }
+        PluviaApp.events.on<SteamEvent.ForceCloseApp, Unit>(listener)
+        try {
+            assertTrue(callJson(provider(), SessionCommands.STOP)["ok"]!!.jsonPrimitive.boolean)
+            val mainLooper = shadowOf(Looper.getMainLooper())
+            mainLooper.idleFor(Duration.ofMillis(SessionCommands.STOP_POLL_MS * 4))
+            assertEquals(0, forceCloses)
+
+            environmentReady = true
+            mainLooper.idleFor(Duration.ofMillis(SessionCommands.STOP_POLL_MS))
+            assertEquals(1, forceCloses)
+            mainLooper.idleFor(Duration.ofMillis(SessionCommands.STOP_POLL_MS * 4))
             assertEquals(1, forceCloses)
         } finally {
             PluviaApp.events.off<SteamEvent.ForceCloseApp, Unit>(listener)
