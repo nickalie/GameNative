@@ -82,6 +82,15 @@ Most of the time you don't need this — if you just want to play, grab the rele
    ```
    You can get one from your [SteamGridDB preferences](https://www.steamgriddb.com/profile/preferences). Without it everything still works — it just won't fetch images.
 
+## Agent API (ADB)
+
+An AI agent or a script on a computer connected over ADB can drive GameNative without tapping through the UI: list games and component versions, read and change a game's container config (with backups and rollback), add a folder as a custom game, install component versions from the app's manifest, launch a game with verbose Wine/DXVK logging, follow and stop the session, read logs and take screenshots.
+
+- Off by default: turn on **Settings → Debug → Agent API (ADB)**. Only `adb shell` (and root) can call it.
+- Host CLI: [`tools/gnctl`](tools/gnctl/README.md) (Rust, `cargo build --release`).
+- Full reference — security model, commands, error codes, launch extras: [docs/agent-api.md](docs/agent-api.md).
+- Agent skill: [`.claude/skills/gamenative-adb`](.claude/skills/gamenative-adb/SKILL.md).
+
 ## Analytics & privacy
 
 GameNative uses [PostHog](https://posthog.com) for anonymous analytics. No personal information is ever collected — no names, emails, IPs or device identifiers.

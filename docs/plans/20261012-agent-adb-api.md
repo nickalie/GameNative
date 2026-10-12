@@ -299,9 +299,9 @@
   - ⚠️ c78519c..a3bb46b also touches `PluviaApp` and `MainViewModel` (hook call sites) and adds `PreInstallStepGate.kt` + its test (Task 7 review fix, exit gate for the pre-install chain in `XServerScreen`)
 
 ### Task 13: [Final] Update documentation
-- [ ] short Agent API section in the fork's README (leave upstream sections untouched)
-- [ ] fork CLAUDE.md: `modernDebug` build, tests, no edits to the `XServerScreen` composable, where agent code lives, reused config/debug mechanisms
-- [ ] move this plan to `docs/plans/completed/`
+- [x] short Agent API section in the fork's README (leave upstream sections untouched)
+- [x] fork CLAUDE.md: `modernDebug` build, tests, no edits to the `XServerScreen` composable, where agent code lives, reused config/debug mechanisms
+- [x] move this plan to `docs/plans/completed/` (done by the harness after the run)
 
 ## Post-Completion
 *Items requiring manual intervention or external systems - no checkboxes, informational only*
