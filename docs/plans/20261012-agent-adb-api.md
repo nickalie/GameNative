@@ -250,13 +250,15 @@
 - Create: `tools/gnctl/src/adb.rs`
 - Create: `tools/gnctl/src/protocol.rs`
 - Create: `tools/gnctl/src/error.rs`
+- ➕ Create: `tools/gnctl/src/lib.rs` (library + thin `main.rs`, so Task 10 helpers are not dead code under `clippy -D warnings`)
 - Modify: `.gitignore` (`tools/gnctl/target/`)
 
-- [ ] `AdbRunner` trait + implementation via `std::process::Command` (`--serial`/`ANDROID_SERIAL`, `--adb`), binary-safe `exec-out`
-- [ ] `protocol.rs`: request/response types (`serde`), base64url, parsing `content call` output (`Result: Bundle[{json=...}]`), authority from `--package`
-- [ ] `error.rs`: error → exit code mapping 2/3/4/5, JSON error on stdout
-- [ ] tests with a fake `AdbRunner`: arguments, Bundle parsing, adb errors → 2, garbage → 3, `ok=false` → 4
-- [ ] `cargo test` and `cargo clippy` - must pass before Task 10
+- [x] `AdbRunner` trait + implementation via `std::process::Command` (`--serial`/`ANDROID_SERIAL`, `--adb`), binary-safe `exec-out`
+- [x] `protocol.rs`: request/response types (`serde`), base64url, parsing `content call` output (`Result: Bundle[{json=...}]`), authority from `--package`
+- [x] `error.rs`: error → exit code mapping 2/3/4/5, JSON error on stdout
+- [x] tests with a fake `AdbRunner`: arguments, Bundle parsing, adb errors → 2, garbage → 3, `ok=false` → 4
+- [x] `cargo test` and `cargo clippy` - must pass before Task 10
+- ➕ raw `gnctl call <command> [--args JSON]` subcommand (exercises the transport end to end; Task 10 builds the wrappers on top); clap parse errors exit 3 (not clap's default 2, which means adb)
 
 ### Task 10: gnctl commands
 
