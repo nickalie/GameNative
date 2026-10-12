@@ -29,7 +29,7 @@ object SupportSuggestionApplier {
     private const val SOURCE_RESTORED = "ai_suggestion_restored"
     private const val MATCH_TYPE = "exact_gpu_match"
 
-    private val COMPONENT_KEYS = setOf(
+    internal val COMPONENT_KEYS = setOf(
         "wineVersion", "dxwrapper", "dxwrapperConfig", "box64Version", "box64Preset", "emulator",
         "fexcoreVersion", "fexcorePreset", "graphicsDriver", "graphicsDriverVersion", "graphicsDriverConfig",
     )
@@ -82,7 +82,7 @@ object SupportSuggestionApplier {
     fun editFor(change: SupportSuggestion.Change): Edit =
         Edit(change.key, change.name, if (change.isUnset) null else change.to)
 
-    private fun updatesFor(live: ContainerData, edits: List<Edit>): Map<String, Any?> {
+    internal fun updatesFor(live: ContainerData, edits: List<Edit>): Map<String, Any?> {
         val updates = linkedMapOf<String, Any?>()
         var env: EnvVars? = null
         val kv = linkedMapOf<String, String>()
@@ -114,7 +114,7 @@ object SupportSuggestionApplier {
         return updates
     }
 
-    private fun componentJson(data: ContainerData): JSONObject = JSONObject().apply {
+    internal fun componentJson(data: ContainerData): JSONObject = JSONObject().apply {
         put("containerVariant", data.containerVariant)
         put("wineVersion", data.wineVersion)
         put("dxwrapper", data.dxwrapper)

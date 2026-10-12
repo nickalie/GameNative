@@ -200,13 +200,13 @@
 - Create: `app/src/test/java/app/gamenative/agent/ContainerEditsTest.kt`
 - Create: `app/src/test/java/app/gamenative/agent/ContainerWriteCommandsTest.kt`
 
-- [ ] `ContainerEdits`: JSON `values`/`env` → `SupportSuggestion.Change` list → `isValid` (rejections collected) → edits → `updatesFor` → `applyBestConfigMapToContainerData`; `changed_fields` and `warnings` from a `configValueOf` diff
-- [ ] `ContainerBackups`: `configValueOf` snapshot under `<rootDir>/.gamenative/agent_backups/`, pinned `baseline`, keep last 10, listing; restore computes only differing keys and writes full values directly
-- [ ] `containers.set`: `SESSION_ACTIVE` → `isValid` → `videoPciDeviceID` pre-check (`CONTAINER_INVALID`) → component check (`MISSING_COMPONENTS`) → backup → `applyToContainer(saveToDisk=true)` + `markConfigApplied(container, "agent_api")`
-- [ ] `containers.restore` (by `backup_id` or `baseline`, creates a backup itself) and `containers.backups`; register all three commands
-- [ ] codec tests: dotted keys (`dxwrapperConfig.version`, `graphicsDriverConfig.version`), env set/unset, `WINEDEBUG` env rejected, `containerVariant` rejected, unknown key → `BAD_ARGS` with `details.rejected`, warnings (`wine_version_changed`, `needs_unpacking`)
-- [ ] command tests (precedent `ContainerConfigDialogContainerUpdateTest`): set A → set B → restore baseline = original; restore touches only differing keys and creates a backup; rotation never removes the baseline; `MISSING_COMPONENTS` writes nothing and creates no backup; unknown current `videoPciDeviceID` → `CONTAINER_INVALID`; `SESSION_ACTIVE` while `launching`; `NO_BACKUP`
-- [ ] run tests - must pass before Task 7
+- [x] `ContainerEdits`: JSON `values`/`env` → `SupportSuggestion.Change` list → `isValid` (rejections collected) → edits → `updatesFor` → `applyBestConfigMapToContainerData`; `changed_fields` and `warnings` from a `configValueOf` diff
+- [x] `ContainerBackups`: `configValueOf` snapshot under `<rootDir>/.gamenative/agent_backups/`, pinned `baseline`, keep last 10, listing; restore computes only differing keys and writes full values directly
+- [x] `containers.set`: `SESSION_ACTIVE` → `isValid` → `videoPciDeviceID` pre-check (`CONTAINER_INVALID`) → component check (`MISSING_COMPONENTS`) → backup → `applyToContainer(saveToDisk=true)` + `markConfigApplied(container, "agent_api")`
+- [x] `containers.restore` (by `backup_id` or `baseline`, creates a backup itself) and `containers.backups`; register all three commands
+- [x] codec tests: dotted keys (`dxwrapperConfig.version`, `graphicsDriverConfig.version`), env set/unset, `WINEDEBUG` env rejected, `containerVariant` rejected, unknown key → `BAD_ARGS` with `details.rejected`, warnings (`wine_version_changed`, `needs_unpacking`)
+- [x] command tests (precedent `ContainerConfigDialogContainerUpdateTest`): set A → set B → restore baseline = original; restore touches only differing keys and creates a backup; rotation never removes the baseline; `MISSING_COMPONENTS` writes nothing and creates no backup; unknown current `videoPciDeviceID` → `CONTAINER_INVALID`; `SESSION_ACTIVE` while `launching`; `NO_BACKUP`
+- [x] run tests - must pass before Task 7
 
 ### Task 7: sessions.stop and sessions.logs
 

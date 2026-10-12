@@ -4,29 +4,112 @@ import android.content.Context
 import app.gamenative.agent.AgentDispatcher
 import app.gamenative.agent.AgentErrorCode
 import app.gamenative.agent.AgentException
+import app.gamenative.agent.AgentSessionTracker
+import app.gamenative.agent.ContainerBackups
+import app.gamenative.agent.ContainerEdits
 import app.gamenative.api.SuggestionConfigKeys
 import app.gamenative.api.SuggestionConfigKeys.ConfigValueType
+import app.gamenative.ui.screen.support.SupportSuggestionApplier
+import app.gamenative.utils.BestConfigService
 import app.gamenative.utils.ContainerUtils
+import app.gamenative.utils.SessionReport
+import com.winlator.container.Container
 import com.winlator.container.ContainerData
 import com.winlator.core.envvars.EnvVars
 import java.util.Locale
+import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.add
+import kotlinx.serialization.json.addJsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.put
+
+/** A component the requested config needs but the device does not have. */
+data class MissingComponent(val name: String, val downloadable: Boolean, val type: String? = null)
+
+/**
+ * App state the write commands need, injected so tests run against a temp container without
+ * PluviaApp. [ContainerWriteDeps.forApp] is the production wiring.
+ */
+class ContainerWriteDeps(
+    val openContainer: (appId: String) -> Container?,
+    val readContainer: (Container) -> ContainerData,
+    val writeContainer: (container: Container, data: ContainerData, source: String) -> Unit,
+    val gpuCardIds: () -> Set<Int>,
+    val missingComponents: (ContainerData) -> List<MissingComponent>,
+    val isSessionActive: (appId: String) -> Boolean,
+    val clock: () -> Long = System::currentTimeMillis,
+) {
+    companion object {
+        private const val MATCH_TYPE = "exact_gpu_match"
+
+        fun forApp(context: Context, tracker: AgentSessionTracker) = ContainerWriteDeps(
+            openContainer = { appId ->
+                if (ContainerUtils.hasContainer(context, appId)) ContainerUtils.getContainer(context, appId) else null
+            },
+            readContainer = ContainerUtils::toContainerData,
+            writeContainer = { container, data, source -> write(context, container, data, source) },
+            gpuCardIds = { ContainerUtils.getGPUCards(context).keys },
+            missingComponents = { missingComponents(context, it) },
+            isSessionActive = tracker::isActive,
+        )
+
+        /** Persists [data] the way the config dialog and AI suggestions do. */
+        fun write(context: Context, container: Container, data: ContainerData, source: String) {
+            ContainerUtils.applyToContainer(context, container, data, saveToDisk = true)
+            SessionReport.markConfigApplied(container, source)
+        }
+
+        /**
+         * Downloadable-but-not-installed manifest entries plus versions nobody provides. Never downloads
+         * anything; may refresh a stale manifest cache over the network (documented).
+         */
+        fun missingComponents(context: Context, data: ContainerData): List<MissingComponent> = runBlocking {
+            val configJson = Json.parseToJsonElement(SupportSuggestionApplier.componentJson(data).toString()).jsonObject
+            val downloadable = BestConfigService.resolveMissingManifestInstallRequests(
+                context = context,
+                configJson = configJson,
+                matchType = MATCH_TYPE,
+                preserveConfigValues = true,
+            ).map { request ->
+                val type = if (request.isDriver) "driver" else request.contentType?.name?.lowercase(Locale.ROOT)
+                MissingComponent(request.entry.id, downloadable = true, type = type)
+            }
+            val unknown = BestConfigService.parseConfigResult(
+                context = context,
+                configJson = configJson,
+                matchType = MATCH_TYPE,
+                applyKnownConfig = true,
+                preserveConfigValues = true,
+            ).missingComponents.map { MissingComponent(it, downloadable = false) }
+            (downloadable + unknown).distinctBy { it.name }
+        }
+    }
+}
 
 /**
  * `containers.*` commands. The readable and editable keys are the AI-suggestion boundary
  * (`SuggestionConfigKeys.APPLICABLE_CONFIG_KEYS`); `containerVariant` is reported but read-only.
+ * Writes are persistent and always preceded by a backup that `containers.restore` can roll back to.
  */
-class ContainerCommands(private val loadContainer: (appId: String) -> ContainerData?) {
+class ContainerCommands(
+    private val writes: ContainerWriteDeps? = null,
+    private val loadContainer: (appId: String) -> ContainerData?,
+) {
 
     fun register(dispatcher: AgentDispatcher) {
         dispatcher.register(GET) { get(it) }
+        if (writes != null) {
+            dispatcher.register(SET) { set(it) }
+            dispatcher.register(RESTORE) { restore(it) }
+            dispatcher.register(BACKUPS) { backups(it) }
+        }
     }
 
     /**
@@ -52,12 +135,143 @@ class ContainerCommands(private val loadContainer: (appId: String) -> ContainerD
         }
     }
 
+    /**
+     * `containers.set {app_id, values?, env?: {set?, unset?}}` → `{app_id, backup_id, changed_fields, warnings}`.
+     * Nothing is written (and no backup taken) when the request changes nothing.
+     */
+    fun set(args: JsonObject): JsonElement {
+        val appId = CommandArgs.requireAppId(args)
+        val deps = requireWrites()
+        synchronized(WRITE_LOCK) {
+            requireNoSession(deps, appId)
+            val changes = ContainerEdits.parse(args)
+            val container = deps.openContainer(appId) ?: throw noContainer(appId)
+            val live = deps.readContainer(container)
+            requireKnownGpu(deps, live)
+            val updated = ContainerEdits.apply(live, changes)
+            val changed = ContainerEdits.changedFields(live, updated)
+            if (changed.isEmpty()) return writeResult(appId, null, changed, emptyList())
+            if (changed.any { it.substringBefore('.') in SupportSuggestionApplier.COMPONENT_KEYS }) {
+                requireComponents(deps.missingComponents(updated))
+            }
+            val backup = ContainerBackups(container.rootDir, deps.clock).create(live)
+            deps.writeContainer(container, updated, SOURCE_SET)
+            return writeResult(appId, backup.id, changed, ContainerEdits.warnings(live, updated))
+        }
+    }
+
+    /**
+     * `containers.restore {app_id, backup_id? | baseline: true}` → `{app_id, restored_from, backup_id,
+     * changed_fields, warnings}`. Only keys that differ from the backup are written, after a backup of
+     * the current config.
+     */
+    fun restore(args: JsonObject): JsonElement {
+        val appId = CommandArgs.requireAppId(args)
+        val deps = requireWrites()
+        val backupId = CommandArgs.optString(args, "backup_id")?.trim()
+        val baseline = CommandArgs.optBoolean(args, "baseline") ?: false
+        if ((backupId != null) == baseline) throw CommandArgs.badArgs("pass either backup_id or baseline=true")
+        if (backupId != null && !ContainerBackups.isValidId(backupId)) {
+            throw CommandArgs.badArgs("backup_id must be an id listed by $BACKUPS")
+        }
+        synchronized(WRITE_LOCK) {
+            requireNoSession(deps, appId)
+            val container = deps.openContainer(appId) ?: throw noContainer(appId)
+            val backups = ContainerBackups(container.rootDir, deps.clock)
+            val source = (if (baseline) backups.baseline() else backups.find(backupId!!))
+                ?: throw AgentException(
+                    AgentErrorCode.NO_BACKUP,
+                    if (baseline) "$appId has no baseline backup" else "$appId has no backup $backupId",
+                )
+            val live = deps.readContainer(container)
+            requireKnownGpu(deps, live)
+            val updates = ContainerBackups.restoreUpdates(live, source)
+            if (updates.isEmpty()) return restoreResult(writeResult(appId, null, emptyList(), emptyList()), source)
+            val updated = ContainerUtils.applyBestConfigMapToContainerData(live, updates)
+            val created = backups.create(live)
+            deps.writeContainer(container, updated, SOURCE_RESTORE)
+            val changed = ContainerEdits.changedFields(live, updated)
+            return restoreResult(writeResult(appId, created.id, changed, ContainerEdits.warnings(live, updated)), source)
+        }
+    }
+
+    /** `containers.backups {app_id}` → `[{backup_id, created_at, baseline}]`, oldest first. */
+    fun backups(args: JsonObject): JsonElement {
+        val appId = CommandArgs.requireAppId(args)
+        val deps = requireWrites()
+        val container = deps.openContainer(appId) ?: throw noContainer(appId)
+        return buildJsonArray {
+            ContainerBackups(container.rootDir, deps.clock).list().forEach { backup ->
+                addJsonObject {
+                    put("backup_id", backup.id)
+                    put("created_at", backup.createdAt)
+                    put("baseline", backup.baseline)
+                }
+            }
+        }
+    }
+
+    private fun requireWrites(): ContainerWriteDeps =
+        writes ?: throw AgentException(AgentErrorCode.UNKNOWN_COMMAND, "container writes are not available")
+
+    private fun requireNoSession(deps: ContainerWriteDeps, appId: String) {
+        if (deps.isSessionActive(appId)) {
+            throw AgentException(AgentErrorCode.SESSION_ACTIVE, "$appId is running; stop the session before changing its config")
+        }
+    }
+
+    // ContainerUtils.applyToContainer looks the current GPU id up with `!!`; refuse instead of crashing.
+    private fun requireKnownGpu(deps: ContainerWriteDeps, live: ContainerData) {
+        if (live.videoPciDeviceID !in deps.gpuCardIds()) {
+            throw AgentException(
+                AgentErrorCode.CONTAINER_INVALID,
+                "the container's videoPciDeviceID ${live.videoPciDeviceID} is unknown; fix it in the app's container settings",
+            )
+        }
+    }
+
+    private fun requireComponents(missing: List<MissingComponent>) {
+        if (missing.isEmpty()) return
+        throw AgentException(
+            AgentErrorCode.MISSING_COMPONENTS,
+            "missing components: ${missing.joinToString { it.name }}; install them from the app first",
+            buildJsonArray {
+                missing.forEach { component ->
+                    addJsonObject {
+                        put("name", component.name)
+                        component.type?.let { put("type", it) }
+                        put("downloadable", component.downloadable)
+                    }
+                }
+            },
+        )
+    }
+
+    private fun writeResult(appId: String, backupId: String?, changed: List<String>, warnings: List<String>) = buildJsonObject {
+        put("app_id", appId)
+        put("backup_id", backupId)
+        put("changed_fields", buildJsonArray { changed.forEach { add(it) } })
+        put("warnings", buildJsonArray { warnings.forEach { add(it) } })
+    }
+
+    private fun restoreResult(result: JsonObject, source: ContainerBackups.Backup) =
+        JsonObject(result + ("restored_from" to JsonPrimitive(source.id)))
+
     companion object {
         const val GET = "containers.get"
+        const val SET = "containers.set"
+        const val RESTORE = "containers.restore"
+        const val BACKUPS = "containers.backups"
+
+        const val SOURCE_SET = "agent_api"
+        const val SOURCE_RESTORE = "agent_api_restored"
 
         const val ENV_KEY = "envVars"
         const val MASK = "***"
         val READ_ONLY_KEYS = listOf("containerVariant")
+
+        // One writer at a time: backups and the container file must not interleave between binder threads.
+        private val WRITE_LOCK = Any()
 
         // Whole name segments only, so DXVK_..._BYPASS or ..._PASSTHROUGH stay readable.
         private val SECRET_ENV = Regex("(^|_)(TOKEN|KEY|SECRET|PASSWORD|PASS|AUTH)(_|$)")

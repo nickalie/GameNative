@@ -27,6 +27,15 @@ internal object CommandArgs {
         return primitive.content
     }
 
+    /** The boolean argument [name], or `null` when it is absent or JSON `null`. */
+    fun optBoolean(args: JsonObject, name: String): Boolean? {
+        val raw = args[name]
+        if (raw == null || raw is JsonNull) return null
+        val primitive = raw as? JsonPrimitive
+        if (primitive == null || primitive.isString) throw badArgs("$name must be a boolean")
+        return primitive.content.toBooleanStrictOrNull() ?: throw badArgs("$name must be a boolean")
+    }
+
     fun requireAppId(args: JsonObject): String {
         val appId = optString(args, "app_id")?.trim()
         if (appId.isNullOrEmpty()) throw badArgs("app_id is required")

@@ -15,6 +15,7 @@ import app.gamenative.BuildConfig
 import app.gamenative.PrefManager
 import app.gamenative.agent.commands.ComponentCommands
 import app.gamenative.agent.commands.ContainerCommands
+import app.gamenative.agent.commands.ContainerWriteDeps
 import app.gamenative.agent.commands.DeviceCommands
 import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.SessionCommands
@@ -126,7 +127,10 @@ class AgentProvider : ContentProvider() {
                 containerIds = { GameCommands.containerIdsFrom(context) },
             ).register(dispatcher)
             ComponentCommands { ComponentCommands.loadSources(context) }.register(dispatcher)
-            ContainerCommands { ContainerCommands.load(context, it) }.register(dispatcher)
+            ContainerCommands(
+                loadContainer = { ContainerCommands.load(context, it) },
+                writes = ContainerWriteDeps.forApp(context, tracker),
+            ).register(dispatcher)
             return dispatcher
         }
     }
