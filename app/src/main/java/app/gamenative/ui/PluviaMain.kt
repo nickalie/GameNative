@@ -164,9 +164,10 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.Date
 import java.util.EnumSet
-import kotlin.reflect.KFunction2
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.coroutines.Dispatchers
@@ -500,36 +501,46 @@ fun PluviaMain(
             }
         } else {
             MainActivity.wasLaunchedViaExternalIntent = true
-            AgentHooks.onLaunchRequested(resolvedAppId)
+            val agentSessionId = AgentHooks.onLaunchRequested(resolvedAppId)
+            val gameLaunched = AtomicBoolean(false)
             trackGameLaunched(resolvedAppId)
             viewModel.setLaunchedAppId(resolvedAppId)
             viewModel.setBootToContainer(false)
             scope.launch(Dispatchers.IO) {
-                val gameSource = ContainerUtils.extractGameSourceFromContainerId(resolvedAppId)
-                val isOffline = when {
-                    gameSource != GameSource.STEAM -> false
-                    SteamService.isLoggedIn -> false
-                    !NetworkMonitor.hasInternet.value -> true
-                    else -> {
-                        viewModel.setLoadingDialogVisible(true)
-                        viewModel.setLoadingDialogMessage(context.getString(R.string.connecting_to_steam))
-                        viewModel.setLoadingDialogProgress(-1f)
-                        !SteamUtils.awaitSteamLogin()
+                var preLaunch: Job? = null
+                try {
+                    val gameSource = ContainerUtils.extractGameSourceFromContainerId(resolvedAppId)
+                    val isOffline = when {
+                        gameSource != GameSource.STEAM -> false
+                        SteamService.isLoggedIn -> false
+                        !NetworkMonitor.hasInternet.value -> true
+                        else -> {
+                            viewModel.setLoadingDialogVisible(true)
+                            viewModel.setLoadingDialogMessage(context.getString(R.string.connecting_to_steam))
+                            viewModel.setLoadingDialogProgress(-1f)
+                            !SteamUtils.awaitSteamLogin()
+                        }
                     }
+                    // sync viewModel — dialog retries + replaceSteamApi read isOffline.value
+                    viewModel.setOffline(isOffline)
+                    preLaunch = preLaunchApp(
+                        context = context,
+                        appId = resolvedAppId,
+                        useTemporaryOverride = hasTemporaryOverride,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = setMessageDialogState,
+                        onSuccess = { launchContext, launchAppId ->
+                            gameLaunched.set(true)
+                            viewModel.launchApp(launchContext, launchAppId)
+                        },
+                        isOffline = isOffline,
+                    )
+                } finally {
+                    // ends the agent's launching session if the pre-launch stops before the game launch
+                    AgentHooks.watchPreLaunch(agentSessionId, preLaunch, gameLaunched::get)
                 }
-                // sync viewModel — dialog retries + replaceSteamApi read isOffline.value
-                viewModel.setOffline(isOffline)
-                preLaunchApp(
-                    context = context,
-                    appId = resolvedAppId,
-                    useTemporaryOverride = hasTemporaryOverride,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = isOffline,
-                )
             }
         }
     }
@@ -2290,18 +2301,19 @@ fun preLaunchApp(
     setLoadingProgress: (Float) -> Unit,
     setLoadingMessage: (String) -> Unit,
     setMessageDialogState: (MessageDialogState) -> Unit,
-    onSuccess: KFunction2<Context, String, Unit>,
+    onSuccess: (Context, String) -> Unit,
     retryCount: Int = 0,
     isOffline: Boolean = false,
     bootToContainer: Boolean = false,
-) {
+): Job {
     setLoadingDialogVisible(true)
     // TODO: add a way to cancel
     // TODO: add fail conditions
 
     val gameId = ContainerUtils.extractGameIdFromContainerId(appId)
 
-    CoroutineScope(Dispatchers.IO).launch {
+    // Returns the pre-launch job; it completes without calling onSuccess when the launch stops early.
+    return CoroutineScope(Dispatchers.IO).launch {
         if (LaunchReadiness.pending) {
             setLoadingDialogVisible(false)
             (context as? Activity)?.let { LaunchReadiness.resolve(it) }
@@ -3119,6 +3131,7 @@ fun preLaunchApp(
                     // For intent launches, retry after a short delay (max 5 retries = ~10 seconds)
                     Timber.i("Sync in progress for intent launch, retrying in 2 seconds... (attempt ${retryCount + 1}/5)")
                     delay(2000)
+                    // joined so this pre-launch job only completes once the retry has finished or launched
                     preLaunchApp(
                         context = context,
                         appId = appId,
@@ -3134,7 +3147,7 @@ fun preLaunchApp(
                         onSuccess = onSuccess,
                         retryCount = retryCount + 1,
                         bootToContainer = bootToContainer,
-                    )
+                    ).join()
                 } else {
                     setMessageDialogState(
                         MessageDialogState(

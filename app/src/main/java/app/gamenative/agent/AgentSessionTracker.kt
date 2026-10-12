@@ -147,9 +147,36 @@ class AgentSessionTracker(
     private val lock = Any()
     private var session: Session? = null
 
-    /** An agent intent passed the launch funnel; starts a new session in `launching`. */
-    fun onLaunchRequested(appId: String, options: AgentLaunchOptions) = synchronized(lock) {
-        session = newSession(appId, AgentSessionState.LAUNCHING, options)
+    /**
+     * An intent launch passed the launch funnel. Starts a new `launching` session and returns its id, to
+     * be passed to [onLaunchAborted] if the pre-launch stops before the game launch.
+     *
+     * A session that is `starting`, `running` or `exiting` is kept and null is returned: its environment
+     * is live, the app brings it forward instead of setting up another one, so no `onStarting` would
+     * ever pick up a replacement. The intent's [options] are discarded then (with a warning on the kept
+     * session). A finished session or a `launching` one (a repeated intent) is replaced.
+     */
+    fun onLaunchRequested(appId: String, options: AgentLaunchOptions): String? = synchronized(lock) {
+        val current = active()
+        if (current != null && current.state != AgentSessionState.LAUNCHING) {
+            if (!options.isEmpty) current.warnings += WARNING_LAUNCH_IGNORED
+            return null
+        }
+        newSession(appId, AgentSessionState.LAUNCHING, options).also { session = it }.id
+    }
+
+    /**
+     * The pre-launch of the intent launch that created [sessionId] ended without launching the game (an
+     * error or confirmation dialog, a failed download, a cancel). Ends that session with
+     * `exit_reason=launch_error` while it is still `launching`, which also drops its options, so a later
+     * UI launch cannot inherit them. Any other session, including a newer `launching` one, is left alone.
+     */
+    fun onLaunchAborted(sessionId: String) = synchronized(lock) {
+        val current = active() ?: return@synchronized
+        if (current.id != sessionId || current.state != AgentSessionState.LAUNCHING) return@synchronized
+        current.exitReason = REASON_LAUNCH_ERROR
+        if (current.lastLaunchError == null) current.lastLaunchError = LAUNCH_ABORTED_MESSAGE
+        finish(current)
     }
 
     /** Launch options of the active session for [appId]; [AgentLaunchOptions.NONE] once it exits. */
@@ -313,5 +340,11 @@ class AgentSessionTracker(
         const val REASON_LAUNCH_TIMEOUT = "launch_timeout"
         const val REASON_LAUNCH_ERROR = "launch_error"
         const val REASON_SHUTDOWN = "shutdown"
+
+        /** Warning on a live session when a repeated intent's agent options could not be applied. */
+        const val WARNING_LAUNCH_IGNORED = "launch_options_ignored_session_active"
+
+        /** `last_launch_error` of a session whose pre-launch stopped without reporting an error itself. */
+        const val LAUNCH_ABORTED_MESSAGE = "Launch aborted before the game started"
     }
 }

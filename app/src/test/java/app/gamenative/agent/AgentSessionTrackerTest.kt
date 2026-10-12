@@ -169,6 +169,100 @@ class AgentSessionTrackerTest {
     }
 
     @Test
+    fun `launch request returns the new session id`() {
+        val t = tracker()
+        assertEquals("s1", t.onLaunchRequested("STEAM_1", debug))
+        assertEquals("s1", t.current()!!.sessionId)
+    }
+
+    @Test
+    fun `repeated launch request replaces a launching session`() {
+        val t = tracker()
+        t.onLaunchRequested("STEAM_1", debug)
+        assertEquals("s2", t.onLaunchRequested("STEAM_1", AgentLaunchOptions.NONE))
+        val s = t.current()!!
+        assertEquals(AgentSessionState.LAUNCHING, s.state)
+        assertEquals(AgentLaunchOptions.NONE, s.options)
+    }
+
+    @Test
+    fun `launch request keeps a starting, running or exiting session`() {
+        for (state in listOf(AgentSessionState.STARTING, AgentSessionState.RUNNING, AgentSessionState.EXITING)) {
+            val t = tracker()
+            t.onLaunchRequested("STEAM_1", debug)
+            t.onStarting("STEAM_1", null, "/logs/agent_STEAM_1.log")
+            if (state != AgentSessionState.STARTING) t.onRunning()
+            if (state == AgentSessionState.EXITING) t.onExiting("quick_menu")
+            t.onLogLine("game output")
+            val before = t.current()!!
+
+            // a repeated intent for this game, or one for another game: the live environment is kept
+            assertNull(t.onLaunchRequested("STEAM_1", AgentLaunchOptions(agentDebug = true, wineDebugChannels = "+x11")))
+            assertNull(t.onLaunchRequested("STEAM_2", AgentLaunchOptions.NONE))
+            val after = t.current()!!
+            assertEquals(before.sessionId, after.sessionId)
+            assertEquals(state, after.state)
+            assertEquals(debug, after.options)
+            assertEquals("/logs/agent_STEAM_1.log", after.logFile)
+            assertEquals(listOf(AgentSessionTracker.WARNING_LAUNCH_IGNORED), after.warnings)
+            assertEquals(listOf("game output"), t.logs(10).lines)
+            assertEquals(state != AgentSessionState.EXITING, t.requestStop())
+        }
+    }
+
+    @Test
+    fun `launch request without options on a live session adds no warning`() {
+        val t = tracker()
+        t.onStarting("STEAM_1", null)
+        assertNull(t.onLaunchRequested("STEAM_1", AgentLaunchOptions.NONE))
+        assertTrue(t.current()!!.warnings.isEmpty())
+    }
+
+    @Test
+    fun `aborted pre-launch ends the launching session and drops its options`() {
+        val t = tracker()
+        val id = t.onLaunchRequested("STEAM_1", debug)!!
+        now = 2_000
+        t.onLaunchAborted(id)
+        val s = t.current()!!
+        assertEquals(AgentSessionState.EXITED, s.state)
+        assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, s.exitReason)
+        assertEquals(AgentSessionTracker.LAUNCH_ABORTED_MESSAGE, s.lastLaunchError)
+        assertEquals(2_000L, s.exitedAt)
+        assertFalse(t.isActive("STEAM_1"))
+        assertEquals(AgentLaunchOptions.NONE, t.optionsFor("STEAM_1"))
+
+        // a later UI launch of the same game is a fresh session without the agent options
+        t.onStarting("STEAM_1", null)
+        val ui = t.current()!!
+        assertNotEquals(id, ui.sessionId)
+        assertEquals(AgentLaunchOptions.NONE, ui.options)
+    }
+
+    @Test
+    fun `aborted pre-launch keeps an error the app already reported`() {
+        val t = tracker()
+        val id = t.onLaunchRequested("STEAM_1", debug)!!
+        t.onLaunchError("Steam Cloud sync failed")
+        t.onLaunchAborted(id)
+        assertEquals("Steam Cloud sync failed", t.current()!!.lastLaunchError)
+    }
+
+    @Test
+    fun `aborted pre-launch only ends its own launching session`() {
+        val t = tracker()
+        val first = t.onLaunchRequested("STEAM_1", debug)!!
+        val second = t.onLaunchRequested("STEAM_1", debug)!!
+        t.onLaunchAborted(first) // the older attempt's pre-launch ended
+        assertEquals(second, t.current()!!.sessionId)
+        assertEquals(AgentSessionState.LAUNCHING, t.state())
+
+        t.onStarting("STEAM_1", null)
+        t.onLaunchAborted(second) // already handed over to setupXEnvironment
+        assertEquals(AgentSessionState.STARTING, t.state())
+    }
+
+    @Test
     fun `force_close after stop request is reported as agent_stop`() {
         val t = tracker()
         t.onStarting("STEAM_1", null)

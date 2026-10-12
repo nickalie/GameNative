@@ -4,6 +4,7 @@ import android.content.Context
 import com.winlator.container.Container
 import com.winlator.core.envvars.EnvVars
 import java.io.File
+import kotlinx.coroutines.Job
 import timber.log.Timber
 
 /**
@@ -42,12 +43,33 @@ object AgentHooks {
             .onFailure { Timber.w(it, "Agent hook onLaunchIntent failed") }
     }
 
-    /** The intent launch passed the funnel: takes the stored options once and starts a `launching` session. */
-    fun onLaunchRequested(appId: String) = guard("onLaunchRequested") { tracker ->
+    /**
+     * The intent launch passed the funnel: takes the stored options once and starts a `launching` session.
+     * Returns its id for [watchPreLaunch], or null when a live session was kept (or the tracker failed).
+     */
+    fun onLaunchRequested(appId: String): String? = runCatching {
+        val tracker = trackerSource()
         val options = launchOptionsSource().take(appId)
-        tracker.onLaunchRequested(appId, options)
+        val sessionId = tracker.onLaunchRequested(appId, options) ?: return@runCatching null
         AgentDebugEnv.warningsFor(options).forEach(tracker::addWarning)
+        sessionId
+    }.onFailure { Timber.w(it, "Agent hook onLaunchRequested failed") }.getOrNull()
+
+    /**
+     * `preLaunchApp` stops on many paths (dialogs, failed downloads, cancel) without telling anyone. Ends
+     * the `launching` session [sessionId] once the pre-launch [job] completes unless [launched] reports
+     * that it reached the game launch; a null [job] means the pre-launch never started.
+     */
+    fun watchPreLaunch(sessionId: String?, job: Job?, launched: () -> Boolean) {
+        if (sessionId == null) return
+        if (job == null) {
+            onLaunchAborted(sessionId)
+            return
+        }
+        job.invokeOnCompletion { if (!launched()) onLaunchAborted(sessionId) }
     }
+
+    fun onLaunchAborted(sessionId: String) = guard("onLaunchAborted") { it.onLaunchAborted(sessionId) }
 
     /** Drops stored options of a launch that will not happen (game not found, launch error, timeout). */
     fun clearLaunchOptions(appId: String) {

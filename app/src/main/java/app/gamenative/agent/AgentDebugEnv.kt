@@ -6,7 +6,8 @@ import com.winlator.core.envvars.EnvVars
 /**
  * Builds the verbose-logging env of an `agent_debug` launch. Channels follow the same rules as the
  * built-in debug run ([DebugRunParams]): pattern, banned channels, at most
- * [DebugRunParams.MAX_CHANNELS]. Rejected channels never block the launch; they become session warnings.
+ * [DebugRunParams.MAX_CHANNELS]. A channel already set by [DebugRunParams.BASE_WINEDEBUG] cannot be changed
+ * and is dropped too. Rejected channels never block the launch; they become session warnings.
  */
 object AgentDebugEnv {
     const val WARNING_CHANNEL_DROPPED = "wine_debug_channel_dropped"
@@ -15,6 +16,13 @@ object AgentDebugEnv {
     const val REASON_INVALID = "invalid"
     const val REASON_BANNED = "banned"
     const val REASON_TOO_MANY = "too_many"
+    const val REASON_IN_BASE = "base"
+
+    /** Channel names the base WINEDEBUG already sets; [DebugRunParams.mergeWineDebug] keeps the base for them. */
+    private val BASE_CHANNEL_NAMES: Set<String> = DebugRunParams.BASE_WINEDEBUG.split(',')
+        .map { DebugRunParams.channelName(it.trim()) }
+        .filter { it.isNotEmpty() }
+        .toSet()
 
     /** Longest raw item echoed back in a warning, so a junk extra cannot bloat the session. */
     private const val MAX_ITEM_IN_WARNING = 32
@@ -39,6 +47,11 @@ object AgentDebugEnv {
             }
             val channel = if (item.startsWith("+") || item.startsWith("-")) item else "+$item"
             val name = DebugRunParams.channelName(channel)
+            // Checked before the limit: a no-op channel must not take a slot or be blamed on it.
+            if (name in BASE_CHANNEL_NAMES) {
+                dropped += Dropped(item, REASON_IN_BASE)
+                return@forEach
+            }
             if (accepted.any { DebugRunParams.channelName(it) == name }) return@forEach
             if (accepted.size >= DebugRunParams.MAX_CHANNELS) {
                 dropped += Dropped(item, REASON_TOO_MANY)
