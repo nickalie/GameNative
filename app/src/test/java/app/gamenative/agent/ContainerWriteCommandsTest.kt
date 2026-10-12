@@ -3,9 +3,11 @@ package app.gamenative.agent
 import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import app.gamenative.agent.commands.ComponentCheck
 import app.gamenative.agent.commands.ContainerCommands
 import app.gamenative.agent.commands.ContainerWriteDeps
 import app.gamenative.agent.commands.MissingComponent
+import app.gamenative.utils.BestConfigService
 import app.gamenative.utils.ContainerUtils
 import app.gamenative.utils.FakeDataStore
 import app.gamenative.utils.PrefManagerTestScope
@@ -13,6 +15,9 @@ import app.gamenative.utils.installFakePrefManager
 import com.winlator.container.Container
 import com.winlator.container.ContainerData
 import com.winlator.core.KeyValueSet
+import io.mockk.coEvery
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import java.io.File
 import java.nio.file.Files
 import java.util.concurrent.atomic.AtomicInteger
@@ -79,24 +84,34 @@ class ContainerWriteCommandsTest {
         loadData(JSONObject(File(containerDir, ".container").readText()))
     }
 
+    /** Like [open], but every save of the `.container` file fails (e.g. a full disk). */
+    private fun openUnsavable(): Container = object : Container(APP_ID) {
+        override fun saveDataChecked(): Boolean = false
+    }.apply {
+        setRootDir(containerDir)
+        loadData(JSONObject(File(containerDir, ".container").readText()))
+    }
+
     private fun current(): ContainerData = ContainerUtils.toContainerData(open())
 
     private fun commands(
         gpuCardIds: () -> Set<Int> = { ContainerUtils.getGPUCards(context).keys },
         missing: List<MissingComponent> = emptyList(),
+        check: (ContainerData) -> ComponentCheck = { ComponentCheck(missing) },
+        openContainer: () -> Container = ::open,
     ) = ContainerCommands(
         loadContainer = { null },
         writes = ContainerWriteDeps(
-            openContainer = { if (it == APP_ID) open() else null },
+            openContainer = { if (it == APP_ID) openContainer() else null },
             readContainer = ContainerUtils::toContainerData,
             writeContainer = { container, data, source ->
                 writes.incrementAndGet()
                 ContainerWriteDeps.write(context, container, data, source)
             },
             gpuCardIds = gpuCardIds,
-            missingComponents = {
+            checkComponents = {
                 componentChecks.incrementAndGet()
-                missing
+                check(it)
             },
             isSessionActive = tracker::isActive,
             clock = { clock.addAndGet(1_000) },
@@ -197,16 +212,37 @@ class ContainerWriteCommandsTest {
     @Test
     fun rotationNeverRemovesTheBaseline() {
         val first = set("""{"app_id":"APP","values":{"execArgs":"-0"}}""")
-        repeat(ContainerBackups.KEEP + 3) { set("""{"app_id":"APP","values":{"execArgs":"-${it + 1}"}}""") }
+        val ids = (1..ContainerBackups.KEEP + 3).map { set("""{"app_id":"APP","values":{"execArgs":"-$it"}}""").str("backup_id") }
 
         val listed = backups()
 
         assertEquals(ContainerBackups.KEEP + 1, listed.size)
         assertEquals(first.str("backup_id"), listed.first().str("backup_id"))
+        assertEquals("the newest backups are kept", ids.takeLast(ContainerBackups.KEEP), listed.drop(1).map { it.str("backup_id") })
         assertTrue(listed.first()["baseline"]!!.jsonPrimitive.boolean)
         assertEquals(1, listed.count { it["baseline"]!!.jsonPrimitive.boolean })
         restore("""{"app_id":"APP","baseline":true}""")
         assertEquals("-original", current().execArgs)
+    }
+
+    @Test
+    fun backwardClockJumpKeepsTheNewBackup() {
+        val data = current()
+        var now = 1_000L
+        val store = ContainerBackups(containerDir) { now }
+        repeat(ContainerBackups.KEEP + 1) {
+            store.create(data)
+            now++
+        }
+        val newest = store.list().last().id.toLong()
+
+        now = 500L
+        val created = store.create(data)
+
+        assertTrue("ids never go back", created.id.toLong() > newest)
+        assertEquals(500L, created.createdAt)
+        assertNotNull("rotation kept the backup it just took", store.find(created.id))
+        assertEquals(created.id, store.list().last().id)
     }
 
     @Test
@@ -224,6 +260,74 @@ class ContainerWriteCommandsTest {
         assertEquals(configBefore, File(containerDir, ".container").readText())
         assertFalse(File(containerDir, ContainerBackups.DIR).exists() && File(containerDir, ContainerBackups.DIR).list()!!.isNotEmpty())
         assertEquals(0, writes.get())
+    }
+
+    @Test
+    fun rejectedComponentConfigIsBadArgsAndWritesNothing() {
+        val configBefore = File(containerDir, ".container").readText()
+        val cmd = commands(check = { ComponentCheck(rejected = true) })
+
+        val error = failure { set("""{"app_id":"APP","values":{"wineVersion":"","dxwrapperConfig.version":"definitely-missing"}}""", cmd) }
+
+        assertEquals(AgentErrorCode.BAD_ARGS, error.code)
+        assertEquals(configBefore, File(containerDir, ".container").readText())
+        assertEquals(emptyList<JsonObject>(), backups())
+        assertEquals(0, writes.get())
+    }
+
+    @Test
+    fun driverAliasIsPersistedAsTheCanonicalId() {
+        val canonical = { data: ContainerData ->
+            ComponentCheck(graphicsDriverConfig = data.graphicsDriverConfig.replace("Turnip_Gen8_V34", "turnip-gen8-v34"))
+        }
+        val cmd = commands(check = canonical)
+
+        val result = set("""{"app_id":"APP","values":{"graphicsDriverConfig.version":"Turnip_Gen8_V34"}}""", cmd)
+
+        assertEquals(listOf("graphicsDriverConfig.version"), result["changed_fields"]!!.strings())
+        assertEquals("turnip-gen8-v34", KeyValueSet(current().graphicsDriverConfig).get("version"))
+
+        val again = set("""{"app_id":"APP","values":{"graphicsDriverConfig.version":"Turnip_Gen8_V34"}}""", cmd)
+        assertEquals("an alias of the live driver changes nothing", JsonNull, again["backup_id"])
+        assertEquals(1, writes.get())
+    }
+
+    @Test
+    fun failedContainerSaveIsAnError() {
+        val cmd = commands(openContainer = ::openUnsavable)
+
+        val error = failure { set("""{"app_id":"APP","values":{"execArgs":"-x"}}""", cmd) }
+
+        assertEquals(AgentErrorCode.INTERNAL, error.code)
+        assertEquals("-original", current().execArgs)
+        assertEquals("the pre-write backup is kept for a rollback", 1, backups().size)
+    }
+
+    @Test
+    fun productionCheckReportsRejectionAndCanonicalDriver() {
+        mockkObject(BestConfigService)
+        try {
+            coEvery { BestConfigService.resolveMissingManifestInstallRequests(any(), any(), any(), any(), any()) } returns emptyList()
+            fun parsed(result: BestConfigService.ParsedConfigResult) = coEvery {
+                BestConfigService.parseConfigResult(any(), any(), any(), any(), any(), any(), any(), any())
+            } returns result
+
+            parsed(BestConfigService.ParsedConfigResult(emptyMap()))
+            val rejected = ContainerWriteDeps.checkComponents(context, current())
+            assertTrue("an empty parse without missing components is a rejection", rejected.rejected)
+
+            parsed(BestConfigService.ParsedConfigResult(emptyMap(), listOf("DXVK 9.9")))
+            val missing = ContainerWriteDeps.checkComponents(context, current())
+            assertFalse(missing.rejected)
+            assertEquals(listOf(MissingComponent("DXVK 9.9", downloadable = false)), missing.missing)
+
+            parsed(BestConfigService.ParsedConfigResult(mapOf("graphicsDriverConfig" to "version=turnip-gen8-v34")))
+            val ok = ContainerWriteDeps.checkComponents(context, current())
+            assertFalse(ok.rejected)
+            assertEquals("version=turnip-gen8-v34", ok.graphicsDriverConfig)
+        } finally {
+            unmockkObject(BestConfigService)
+        }
     }
 
     @Test

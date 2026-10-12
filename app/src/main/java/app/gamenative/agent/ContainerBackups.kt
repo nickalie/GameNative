@@ -34,9 +34,9 @@ class ContainerBackups(rootDir: File, private val clock: () -> Long) {
         dir.mkdirs()
         val existing = list()
         val now = clock()
-        var stamp = now
-        val taken = existing.map { it.id }.toSet()
-        while (stamp.toString() in taken || fileFor(stamp.toString()).exists()) stamp++
+        // Ids only grow, even when the wall clock moves back: rotation treats the lowest ids as oldest.
+        var stamp = maxOf(now, (existing.maxOfOrNull { it.id.toLong() } ?: -1L) + 1)
+        while (fileFor(stamp.toString()).exists()) stamp++
         val backup = Backup(
             id = stamp.toString(),
             createdAt = now,

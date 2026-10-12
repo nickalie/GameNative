@@ -34,6 +34,17 @@ import kotlinx.serialization.json.put
 data class MissingComponent(val name: String, val downloadable: Boolean, val type: String? = null)
 
 /**
+ * Outcome of validating a config's components. [rejected] means the validator refused the config
+ * outright (e.g. an empty `wineVersion`), so nothing was checked. [graphicsDriverConfig] is the
+ * config with the driver alias rewritten to the id the runtime resolves, `null` when unknown.
+ */
+data class ComponentCheck(
+    val missing: List<MissingComponent> = emptyList(),
+    val rejected: Boolean = false,
+    val graphicsDriverConfig: String? = null,
+)
+
+/**
  * App state the write commands need, injected so tests run against a temp container without
  * PluviaApp. [ContainerWriteDeps.forApp] is the production wiring.
  */
@@ -42,7 +53,7 @@ class ContainerWriteDeps(
     val readContainer: (Container) -> ContainerData,
     val writeContainer: (container: Container, data: ContainerData, source: String) -> Unit,
     val gpuCardIds: () -> Set<Int>,
-    val missingComponents: (ContainerData) -> List<MissingComponent>,
+    val checkComponents: (ContainerData) -> ComponentCheck,
     val isSessionActive: (appId: String) -> Boolean,
     val clock: () -> Long = System::currentTimeMillis,
 ) {
@@ -56,13 +67,22 @@ class ContainerWriteDeps(
             readContainer = ContainerUtils::toContainerData,
             writeContainer = { container, data, source -> write(context, container, data, source) },
             gpuCardIds = { ContainerUtils.getGPUCards(context).keys },
-            missingComponents = { missingComponents(context, it) },
+            checkComponents = { checkComponents(context, it) },
             isSessionActive = tracker::isActive,
         )
 
-        /** Persists [data] the way the config dialog and AI suggestions do. */
+        /**
+         * Persists [data] the way the config dialog and AI suggestions do, but fails instead of
+         * reporting success when the `.container` file could not be written.
+         */
         fun write(context: Context, container: Container, data: ContainerData, source: String) {
             ContainerUtils.applyToContainer(context, container, data, saveToDisk = true)
+            if (!container.saveDataChecked()) {
+                throw AgentException(
+                    AgentErrorCode.INTERNAL,
+                    "could not save the container config; it may be partly applied, roll back with ${ContainerCommands.RESTORE}",
+                )
+            }
             SessionReport.markConfigApplied(container, source)
         }
 
@@ -70,7 +90,7 @@ class ContainerWriteDeps(
          * Downloadable-but-not-installed manifest entries plus versions nobody provides. Never downloads
          * anything; may refresh a stale manifest cache over the network (documented).
          */
-        fun missingComponents(context: Context, data: ContainerData): List<MissingComponent> = runBlocking {
+        fun checkComponents(context: Context, data: ContainerData): ComponentCheck = runBlocking {
             val configJson = Json.parseToJsonElement(SupportSuggestionApplier.componentJson(data).toString()).jsonObject
             val downloadable = BestConfigService.resolveMissingManifestInstallRequests(
                 context = context,
@@ -81,14 +101,21 @@ class ContainerWriteDeps(
                 val type = if (request.isDriver) "driver" else request.contentType?.name?.lowercase(Locale.ROOT)
                 MissingComponent(request.entry.id, downloadable = true, type = type)
             }
-            val unknown = BestConfigService.parseConfigResult(
+            val parsed = BestConfigService.parseConfigResult(
                 context = context,
                 configJson = configJson,
                 matchType = MATCH_TYPE,
                 applyKnownConfig = true,
                 preserveConfigValues = true,
-            ).missingComponents.map { MissingComponent(it, downloadable = false) }
-            (downloadable + unknown).distinctBy { it.name }
+            )
+            val unknown = parsed.missingComponents.map { MissingComponent(it, downloadable = false) }
+            ComponentCheck(
+                missing = (downloadable + unknown).distinctBy { it.name },
+                // An empty config without missing components is the parser refusing the config before
+                // it validated anything (empty wineVersion/dxwrapper, glibc on modern, parse error).
+                rejected = parsed.config.isEmpty() && parsed.missingComponents.isEmpty(),
+                graphicsDriverConfig = parsed.config["graphicsDriverConfig"] as? String,
+            )
         }
     }
 }
@@ -148,12 +175,17 @@ class ContainerCommands(
             val container = deps.openContainer(appId) ?: throw noContainer(appId)
             val live = deps.readContainer(container)
             requireKnownGpu(deps, live)
-            val updated = ContainerEdits.apply(live, changes)
+            val edited = ContainerEdits.apply(live, changes)
+            val editedFields = ContainerEdits.changedFields(live, edited)
+            if (editedFields.isEmpty()) return writeResult(appId, null, editedFields, emptyList())
+            val updated = if (editedFields.any { it.substringBefore('.') in SupportSuggestionApplier.COMPONENT_KEYS }) {
+                checkedComponents(deps, edited)
+            } else {
+                edited
+            }
+            // The driver alias may canonicalize back to the live value, so recompute what changes.
             val changed = ContainerEdits.changedFields(live, updated)
             if (changed.isEmpty()) return writeResult(appId, null, changed, emptyList())
-            if (changed.any { it.substringBefore('.') in SupportSuggestionApplier.COMPONENT_KEYS }) {
-                requireComponents(deps.missingComponents(updated))
-            }
             val backup = ContainerBackups(container.rootDir, deps.clock).create(live)
             deps.writeContainer(container, updated, SOURCE_SET)
             return writeResult(appId, backup.id, changed, ContainerEdits.warnings(live, updated))
@@ -228,6 +260,24 @@ class ContainerCommands(
                 "the container's videoPciDeviceID ${live.videoPciDeviceID} is unknown; fix it in the app's container settings",
             )
         }
+    }
+
+    /**
+     * Fails unless every component of [data] is available; returns [data] with the driver version
+     * rewritten to the id the runtime resolves (a manifest name like `Turnip_Gen8_V34` is otherwise
+     * persisted as-is and the next launch falls back to the System driver).
+     */
+    private fun checkedComponents(deps: ContainerWriteDeps, data: ContainerData): ContainerData {
+        val check = deps.checkComponents(data)
+        requireComponents(check.missing)
+        if (check.rejected) {
+            throw CommandArgs.badArgs(
+                "the component validator rejected this config; containerVariant, wineVersion, dxwrapper " +
+                    "and dxwrapperConfig must be set to supported values",
+            )
+        }
+        val driver = check.graphicsDriverConfig
+        return if (driver != null && driver != data.graphicsDriverConfig) data.copy(graphicsDriverConfig = driver) else data
     }
 
     private fun requireComponents(missing: List<MissingComponent>) {

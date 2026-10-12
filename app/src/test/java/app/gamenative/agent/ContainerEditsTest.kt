@@ -7,8 +7,8 @@ import com.winlator.container.ContainerData
 import com.winlator.core.KeyValueSet
 import com.winlator.core.envvars.EnvVars
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -149,9 +149,15 @@ class ContainerEditsTest {
             val error = assertThrows(json, AgentException::class.java) { ContainerEdits.parse(request(json)) }
             assertEquals(json, AgentErrorCode.BAD_ARGS, error.code)
         }
-        val values = JsonObject((0..ContainerEdits.MAX_CHANGES).associate { "k$it" to JsonArray(emptyList()) })
-        val tooMany = JsonObject(mapOf("values" to values))
-        assertEquals(AgentErrorCode.BAD_ARGS, assertThrows(AgentException::class.java) { ContainerEdits.parse(tooMany) }.code)
+        // Valid entries, so only the size cap can reject the request.
+        val env = JsonObject((0..ContainerEdits.MAX_CHANGES).associate { "V$it" to JsonPrimitive("1") })
+        val tooMany = JsonObject(mapOf("env" to JsonObject(mapOf("set" to env))))
+        val capped = assertThrows(AgentException::class.java) { ContainerEdits.parse(tooMany) }
+        assertEquals(AgentErrorCode.BAD_ARGS, capped.code)
+        assertEquals(null, capped.details)
+        assertTrue(capped.message!!, capped.message!!.contains("${ContainerEdits.MAX_CHANGES}"))
+        val atCap = JsonObject(mapOf("env" to JsonObject(mapOf("set" to JsonObject(env.entries.drop(1).associate { it.toPair() })))))
+        assertEquals(ContainerEdits.MAX_CHANGES, ContainerEdits.parse(atCap).size)
     }
 
     @Test
