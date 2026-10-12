@@ -111,11 +111,12 @@
 - Create: `app/src/main/java/app/gamenative/agent/AgentDispatcher.kt`
 - Create: `app/src/test/java/app/gamenative/agent/AgentDispatcherTest.kt`
 
-- [ ] `AgentProtocol.kt`: `AgentRequest`, `AgentResponse`, `AgentError(code, message, details?)`, error code enum, `API_VERSION = 1`, base64url → JSON with a request size limit
-- [ ] `AgentDispatcher.kt`: `command → handler` registry, `capabilities`, version check, injected `isEnabled`/`isReady` (→ `DISABLED`/`NOT_READY`), exception capture → `INTERNAL`, response size cap → `RESPONSE_TOO_LARGE`
-- [ ] success tests: `capabilities`, routing, response shape
-- [ ] error tests: broken base64/JSON, foreign version, unknown command, `DISABLED`, `NOT_READY`, exception → `INTERNAL`, oversized response
-- [ ] run tests - must pass before Task 2
+- [x] `AgentProtocol.kt`: `AgentRequest`, `AgentResponse`, `AgentError(code, message, details?)`, error code enum, `API_VERSION = 1`, base64url → JSON with a request size limit
+- [x] `AgentDispatcher.kt`: `command → handler` registry, `capabilities`, version check, injected `isEnabled`/`isReady` (→ `DISABLED`/`NOT_READY`), exception capture → `INTERNAL`, response size cap → `RESPONSE_TOO_LARGE`
+- [x] success tests: `capabilities`, routing, response shape
+- [x] error tests: broken base64/JSON, foreign version, unknown command, `DISABLED`, `NOT_READY`, exception → `INTERNAL`, oversized response
+- [x] run tests - must pass before Task 2
+- ⚠️ `:app:lintKotlin` fails on ~11.9k pre-existing errors across the repo (baseline debt); gate = no lint errors in the new/changed files (check the lint log with `grep /agent/`). Gradle needs JDK 17 (`JAVA_HOME=~/.gradle/jdks/eclipse_adoptium-17-amd64-linux.2`; system JDK 27 is unsupported) and a gitignored `local.properties` with `sdk.dir`.
 
 ### Task 2: Session tracker and runtime singleton
 
