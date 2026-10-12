@@ -282,11 +282,12 @@
 - Create: `tools/gnctl/README.md`
 - Create: `.claude/skills/gamenative-adb/SKILL.md`
 
-- [ ] `docs/agent-api.md`: enabling, transport, security model (Shizuku, toggle-gated extras, unredacted log file), commands, codes, editable keys (= AI-suggestion boundary) and `warnings`, launch extras and channel rules, stale-manifest network note, raw `content call`/`am start` examples
-- [ ] `tools/gnctl/README.md`: build (`cargo build --release`), examples, exit codes
-- [ ] `gamenative-adb` skill: loop "games/components list → containers get → containers set → launch --debug --wait running → screenshot → logs / logs pull → stop → containers restore (--baseline) on failure"; rule: never leave a game on an experimental config; `NO_CONTAINER` → one normal launch first; `wineVersion` changes may irreversibly upgrade the prefix; `containerVariant` is UI-only; post-exit dialogs (feedback, AI debug-run offer, first Discord prompt — `input keyevent BACK`); `finish()` after external launch; `input keyevent WAKEUP` and keyguard; deferred launch without Steam login; `stop` during `starting` → retry
-- [ ] snapshot test of `gnctl --help` so docs don't drift from the CLI
-- [ ] `cargo test` - must pass before Task 12
+- [x] `docs/agent-api.md`: enabling, transport, security model (Shizuku, toggle-gated extras, unredacted log file), commands, codes, editable keys (= AI-suggestion boundary) and `warnings`, launch extras and channel rules, stale-manifest network note, raw `content call`/`am start` examples
+- [x] `tools/gnctl/README.md`: build (`cargo build --release`), examples, exit codes
+- [x] `gamenative-adb` skill: loop "games/components list → containers get → containers set → launch --debug --wait running → screenshot → logs / logs pull → stop → containers restore (--baseline) on failure"; rule: never leave a game on an experimental config; `NO_CONTAINER` → one normal launch first; `wineVersion` changes may irreversibly upgrade the prefix; `containerVariant` is UI-only; post-exit dialogs (feedback, AI debug-run offer, first Discord prompt — `input keyevent BACK`); `finish()` after external launch; `input keyevent WAKEUP` and keyguard; deferred launch without Steam login; `stop` during `starting` → retry (⚠️ deviation: documented as implemented — the stop waits on the main thread until the Wine environment exists, no retry needed)
+- [x] snapshot test of `gnctl --help` so docs don't drift from the CLI
+- [x] `cargo test` - must pass before Task 12
+- ➕ snapshot = `tools/gnctl/tests/help_snapshot.rs`: the `--help` of `gnctl` and every subcommand is embedded in `tools/gnctl/README.md` between `BEGIN/END GENERATED HELP` markers; regenerate with `GNCTL_UPDATE_HELP=1 cargo test --test help_snapshot`
 
 ### Task 12: Verify acceptance criteria
 - [ ] all v1 commands and launch extras implemented and listed in `capabilities`; toggle off → `DISABLED` everywhere and launch extras ignored
