@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
+import app.gamenative.agent.AgentHooks
 import app.gamenative.agent.AgentRuntime
 import app.gamenative.db.dao.AmazonGameDao
 import app.gamenative.db.dao.GOGGameDao
@@ -300,6 +301,7 @@ class PluviaApp : SplitCompatApplication() {
             SteamService.keepAlive = false
             SteamService.clearPlayingConflict()
             clearActiveSuspendState()
+            AgentHooks.onExited()
         }
 
         fun clearActiveSuspendState() {

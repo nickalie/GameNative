@@ -2,6 +2,8 @@ package app.gamenative.agent
 
 import android.app.Application
 import com.winlator.container.Container
+import io.mockk.every
+import io.mockk.mockk
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -10,6 +12,7 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -35,6 +38,14 @@ class AgentSessionTrackerTest {
     )
 
     private fun AgentSessionTracker.state() = current()?.state
+
+    @After
+    fun resetHooks() {
+        AgentHooks.trackerSource = { AgentRuntime.tracker }
+    }
+
+    /** A tracker the hooks write to, as `AgentRuntime.tracker` would be in the app. */
+    private fun hooked(): AgentSessionTracker = tracker().also { t -> AgentHooks.trackerSource = { t } }
 
     // --- transitions ---
 
@@ -491,5 +502,163 @@ class AgentSessionTrackerTest {
         t.onExited()
         t.onStarting("STEAM_1", null)
         assertNotEquals(first, t.current()!!.sessionId)
+    }
+
+    // --- hooks in real call order ---
+
+    @Test
+    fun `hooks - ui launch runs through every state`() {
+        val t = hooked()
+        AgentHooks.onStarting("STEAM_1", null) // setupXEnvironment
+        assertEquals(AgentSessionState.STARTING, t.state())
+        AgentHooks.onLogLine("wine: starting") // process debug callback
+        now = 2_000
+        AgentHooks.onRunning() // MainViewModel.onWindowMapped, game window seen
+        assertEquals(AgentSessionState.RUNNING, t.state())
+        AgentHooks.onExiting("quick_menu") // exit() after the isExiting check
+        assertEquals(AgentSessionState.EXITING, t.state())
+        now = 3_000
+        AgentHooks.onExited() // PluviaApp.shutdownEnvironment() inside exit()
+        val s = t.current()!!
+        assertEquals(AgentSessionState.EXITED, s.state)
+        assertEquals("quick_menu", s.exitReason)
+        assertEquals(2_000L, s.runningAt)
+        assertEquals(3_000L, s.exitedAt)
+        assertEquals(listOf("wine: starting"), t.logs(10).lines)
+    }
+
+    @Test
+    fun `hooks - guest_terminated and processes_exited are the exit reasons`() {
+        for (reason in listOf("guest_terminated", "processes_exited")) {
+            val t = hooked()
+            t.onLaunchRequested("STEAM_1", debug) // PluviaMain.launchIntentApp
+            AgentHooks.onStarting("STEAM_1", null)
+            AgentHooks.onRunning()
+            AgentHooks.onExiting(reason)
+            AgentHooks.onExited()
+            // MainActivity.onDestroy may call shutdownEnvironment() again; nothing changes.
+            now += 1_000
+            AgentHooks.onExited()
+            val s = t.current()!!
+            assertEquals(AgentSessionState.EXITED, s.state)
+            assertEquals(reason, s.exitReason)
+            assertEquals(now - 1_000, s.exitedAt)
+        }
+    }
+
+    @Test
+    fun `hooks - agent stop reports agent_stop`() {
+        val t = hooked()
+        t.onLaunchRequested("STEAM_1", AgentLaunchOptions.NONE)
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onRunning()
+        assertTrue(t.requestStop()) // sessions.stop, then ForceCloseApp -> exit(force_close)
+        AgentHooks.onExiting(AgentSessionTracker.REASON_FORCE_CLOSE)
+        AgentHooks.onExited()
+        assertEquals(AgentSessionTracker.REASON_AGENT_STOP, t.current()!!.exitReason)
+    }
+
+    @Test
+    fun `hooks - non-fatal launch error is recorded and the session keeps going`() {
+        val t = hooked()
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onLaunchError("Steam could not prepare the game executable (timeout)")
+        assertEquals(AgentSessionState.STARTING, t.state())
+        AgentHooks.onRunning()
+        AgentHooks.onLaunchError("Game terminated with error status: 1")
+        AgentHooks.onExiting("guest_terminated")
+        AgentHooks.onExited()
+        val s = t.current()!!
+        assertEquals("guest_terminated", s.exitReason)
+        assertEquals("Game terminated with error status: 1", s.lastLaunchError)
+    }
+
+    @Test
+    fun `hooks - wine setup failure ends the session with launch_error`() {
+        val t = hooked()
+        t.onLaunchRequested("STEAM_1", debug)
+        AgentHooks.onLaunchError("Failed to setup wine: boom") // thrown before setupXEnvironment
+        val s = t.current()!!
+        assertEquals(AgentSessionState.EXITED, s.state)
+        assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, s.exitReason)
+        assertEquals("Failed to setup wine: boom", s.lastLaunchError)
+        // The user then leaves the screen; the late exit hooks do not rewrite the outcome.
+        AgentHooks.onExiting("quick_menu")
+        AgentHooks.onExited()
+        assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, t.current()!!.exitReason)
+        assertEquals(AgentLaunchOptions.NONE, t.optionsFor("STEAM_1"))
+    }
+
+    @Test
+    fun `hooks - wine setup failure after setupXEnvironment ends a starting session`() {
+        val t = hooked()
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onLaunchError("Failed to setup wine: null")
+        assertEquals(AgentSessionState.EXITED, t.state())
+        assertEquals(AgentSessionTracker.REASON_LAUNCH_ERROR, t.current()!!.exitReason)
+    }
+
+    @Test
+    fun `hooks - fatal launch error classification`() {
+        assertTrue(AgentHooks.isFatalLaunchError("Failed to setup wine: x"))
+        assertFalse(AgentHooks.isFatalLaunchError("Game terminated with error status: 3"))
+        assertFalse(AgentHooks.isFatalLaunchError("Steam could not prepare the game executable (x)"))
+        assertFalse(AgentHooks.isFatalLaunchError("Error: Failed to setup wine"))
+    }
+
+    @Test
+    fun `hooks - shutdownEnvironment from MainActivity onCreate does not end an agent launch`() {
+        val t = hooked()
+        t.onLaunchRequested("STEAM_1", debug) // cold start: intent handled first
+        AgentHooks.onExited() // MainActivity.onCreate clears a stale keepAlive
+        assertEquals(AgentSessionState.LAUNCHING, t.state())
+        AgentHooks.onStarting("STEAM_1", null)
+        assertEquals(AgentSessionState.STARTING, t.state())
+        assertEquals(debug, t.optionsFor("STEAM_1"))
+    }
+
+    @Test
+    fun `hooks - shutdownEnvironment with no session is a no-op`() {
+        val t = hooked()
+        AgentHooks.onExited()
+        AgentHooks.onExiting("activity_destroyed")
+        AgentHooks.onRunning()
+        AgentHooks.onLaunchError("Failed to setup wine: x")
+        assertNull(t.current())
+    }
+
+    @Test
+    fun `hooks - a failing tracker never propagates`() {
+        AgentHooks.trackerSource = { throw IllegalStateException("tracker broken") }
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onLogLine("line")
+        AgentHooks.onRunning()
+        AgentHooks.onExiting("quick_menu")
+        AgentHooks.onExited()
+        AgentHooks.onLaunchError("Failed to setup wine: x")
+
+        val throwing = mockk<AgentSessionTracker>()
+        every { throwing.onStarting(any(), any(), any()) } throws RuntimeException("boom")
+        every { throwing.onLogLine(any()) } throws OutOfMemoryError("boom")
+        every { throwing.onRunning() } throws RuntimeException("boom")
+        every { throwing.onExiting(any()) } throws RuntimeException("boom")
+        every { throwing.onExited() } throws RuntimeException("boom")
+        every { throwing.onLaunchError(any(), any()) } throws RuntimeException("boom")
+        AgentHooks.trackerSource = { throwing }
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onLogLine("line")
+        AgentHooks.onRunning()
+        AgentHooks.onExiting("quick_menu")
+        AgentHooks.onExited()
+        AgentHooks.onLaunchError("x")
+    }
+
+    @Test
+    fun `hooks - a container that throws while snapshotting does not break setup`() {
+        val t = hooked()
+        val container = mockk<Container>()
+        every { container.wineVersion } throws IllegalStateException("corrupt container")
+        AgentHooks.onStarting("STEAM_1", container)
+        assertNull(t.current())
     }
 }

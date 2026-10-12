@@ -28,6 +28,7 @@ import android.view.InputDevice
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import app.gamenative.BuildConfig
+import app.gamenative.agent.AgentHooks
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -4301,6 +4302,7 @@ private fun setupXEnvironment(
                 "-all",
         )
     }
+    AgentHooks.onStarting(appId, container)
     // capture debug output to file if either Wine or Box86/64 logging is enabled
     var logFile: File? = null
     val captureLogs = debugRun || enableWineDebug || enableBox86Logs
@@ -4316,6 +4318,7 @@ private fun setupXEnvironment(
         if (captureLogs) {
             logFile?.appendText(line + "\n")
         }
+        AgentHooks.onLogLine(line)
     }
 
     val rootPath = imageFs.getRootDir().getPath()
@@ -5258,6 +5261,7 @@ private fun exit(
         Timber.i("Exit already in progress, ignoring duplicate request")
         return
     }
+    AgentHooks.onExiting(reason)
 
     PerfSampler.halt()
 

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import app.gamenative.BuildConfig
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
+import app.gamenative.agent.AgentHooks
 import app.gamenative.data.BootAdRepository
 import app.gamenative.data.GameProcessInfo
 import app.gamenative.data.GameSource
@@ -965,6 +966,7 @@ class MainViewModel @Inject constructor(
             // end it; with no card (or outside boot) any window map hides it as before.
             if (window.isApplicationWindow() && !WineProcessSnapshotHelper.isSystemProcessName(window.className)) {
                 gameWindowSeen = true
+                AgentHooks.onRunning()
             }
             val windowClass = window.className.trim().lowercase()
             if (bootAwaitingGameWindow && (windowClass.isEmpty() || windowClass == "explorer.exe")) {
@@ -1044,6 +1046,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun onGameLaunchError(error: String) {
+        AgentHooks.onLaunchError(error)
         viewModelScope.launch {
             // Hide the splash screen if it's still showing
             bootAwaitingGameWindow = false

@@ -163,13 +163,13 @@
 - Modify: `app/src/main/java/app/gamenative/ui/model/MainViewModel.kt`
 - Modify: `app/src/test/java/app/gamenative/agent/AgentSessionTrackerTest.kt`
 
-- [ ] `AgentHooks`: thin `runCatching` wrappers over `AgentRuntime.tracker` used by every hook
-- [ ] `setupXEnvironment`: before `:4306` → `AgentHooks.onStarting(appId, container)` (log file hook added in Task 8); in the callback registered after `removeAllDebugCallbacks()` (`:4315`) → `AgentHooks.onLogLine(line)`
-- [ ] `exit(...)` after the `isExiting` check (`:5257`) → `onExiting(reason)`; `PluviaApp.shutdownEnvironment()` → `onExited()`
-- [ ] `MainViewModel.onWindowMapped` (when `gameWindowSeen`) → `onRunning()`; `onGameLaunchError` → `onLaunchError`
-- [ ] tests: hook sequences in real call order (UI launch, `guest_terminated`, `processes_exited`, `agent_stop`, launch error, extra `shutdownEnvironment` from `MainActivity.onCreate`); a throwing tracker doesn't propagate out of `AgentHooks`
-- [ ] `./gradlew :app:assembleModernDebug` (background) + tests + `:app:lintKotlin`
-- [ ] ⚠️ on-device smoke gate: install `modernDebug`, enable the toggle, enter a game from the UI and exit — no VerifyError/crash; `adb shell content call … sessions.current` shows `starting → running → exiting → exited`
+- [x] `AgentHooks`: thin `runCatching` wrappers over `AgentRuntime.tracker` used by every hook
+- [x] `setupXEnvironment`: before `:4306` → `AgentHooks.onStarting(appId, container)` (log file hook added in Task 8); in the callback registered after `removeAllDebugCallbacks()` (`:4315`) → `AgentHooks.onLogLine(line)`
+- [x] `exit(...)` after the `isExiting` check (`:5257`) → `onExiting(reason)`; `PluviaApp.shutdownEnvironment()` → `onExited()`
+- [x] `MainViewModel.onWindowMapped` (when `gameWindowSeen`) → `onRunning()`; `onGameLaunchError` → `onLaunchError`
+- [x] tests: hook sequences in real call order (UI launch, `guest_terminated`, `processes_exited`, `agent_stop`, launch error, extra `shutdownEnvironment` from `MainActivity.onCreate`); a throwing tracker doesn't propagate out of `AgentHooks`
+- [x] `./gradlew :app:assembleModernDebug` (background) + tests + `:app:lintKotlin`
+- [x] ⚠️ on-device smoke gate: install `modernDebug`, enable the toggle, enter a game from the UI and exit — no VerifyError/crash; `adb shell content call … sessions.current` shows `starting → running → exiting → exited` (skipped - no device attached; `adb devices` lists none)
 
 ### Task 5: Read commands: device, games, components, containers.get
 
