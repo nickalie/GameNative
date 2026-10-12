@@ -128,12 +128,12 @@
 - Create: `app/src/test/java/app/gamenative/agent/AgentSessionTrackerTest.kt`
 - Create: `app/src/test/java/app/gamenative/agent/AgentLaunchOptionsTest.kt`
 
-- [ ] `AgentSessionTracker`: `onLaunchRequested(appId, options)`, `optionsFor(appId)`, `onStarting(appId, container, logFile?)`, `onRunning()`, `onExiting(reason)`, `onExited()`, `onLaunchError(msg)`, `addWarning(w)`, `requestStop()`, `onLogLine(line)`, `current()`, `isActive(appId)`; `session_id`, injected clock, `launching` timeout, thread safety, compact config snapshot
-- [ ] `AgentLaunchOptionsStore`: overwrite-on-every-intent semantics, take-once, clear on `NotFound`/error; `AgentRuntime` singleton exposing tracker + store
-- [ ] `LogRedactor`: patterns `-AUTH_PASSWORD=\S+`, `token=\S+`, etc.; applied in `onLogLine`
-- [ ] transition tests: full cycle; `starting` without `launching` (UI launch); `onExited` idempotent and ignored from `launching`/no session (stale `shutdownEnvironment`); new session replaces a finished one; `force_close` + flag → `agent_stop`, without flag → `force_close`; flag doesn't outlive the session; `launch_timeout`; `last_launch_error`; options one-shot; store overwrite clears stale options
-- [ ] buffer and redaction tests: overflow, `tail`, `truncated`, secrets removed
-- [ ] run tests - must pass before Task 3
+- [x] `AgentSessionTracker`: `onLaunchRequested(appId, options)`, `optionsFor(appId)`, `onStarting(appId, container, logFile?)`, `onRunning()`, `onExiting(reason)`, `onExited()`, `onLaunchError(msg)`, `addWarning(w)`, `requestStop()`, `onLogLine(line)`, `current()`, `isActive(appId)`; `session_id`, injected clock, `launching` timeout, thread safety, compact config snapshot
+- [x] `AgentLaunchOptionsStore`: overwrite-on-every-intent semantics, take-once, clear on `NotFound`/error; `AgentRuntime` singleton exposing tracker + store
+- [x] `LogRedactor`: patterns `-AUTH_PASSWORD=\S+`, `token=\S+`, etc.; applied in `onLogLine`
+- [x] transition tests: full cycle; `starting` without `launching` (UI launch); `onExited` idempotent and ignored from `launching`/no session (stale `shutdownEnvironment`); new session replaces a finished one; `force_close` + flag → `agent_stop`, without flag → `force_close`; flag doesn't outlive the session; `launch_timeout`; `last_launch_error`; options one-shot; store overwrite clears stale options
+- [x] buffer and redaction tests: overflow, `tail`, `truncated`, secrets removed
+- [x] run tests - must pass before Task 3
 
 ### Task 3: ContentProvider, readiness, toggle and sessions.current
 
