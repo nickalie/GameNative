@@ -180,20 +180,26 @@ fn sessions(ctx: &mut Ctx, command: &SessionsCommand) -> Result<Value, CliError>
 }
 
 /// `adb exec-out screencap -p` into [output]; anything that is not a PNG is an adb error.
+///
+/// `exec-out` has no separate stderr, so text `screencap` prints first (the multiple-displays warning
+/// on dual-screen and foldable devices) can precede the PNG; it is dropped.
 fn screenshot(ctx: &Ctx, output: &Path) -> Result<Value, CliError> {
-    let png = adb::exec_out(ctx.runner, &["screencap", "-p"])?;
-    if !png.starts_with(PNG_MAGIC) {
+    let out = adb::exec_out(ctx.runner, &["screencap", "-p"])?;
+    let Some(start) = out.windows(PNG_MAGIC.len()).position(|w| w == PNG_MAGIC) else {
         return Err(CliError::Adb(format!(
             "screencap did not return a PNG: {}",
-            truncate(String::from_utf8_lossy(&png).trim(), 200)
+            truncate(String::from_utf8_lossy(&out).trim(), 200)
         )));
-    }
-    fs::write(output, &png)
+    };
+    let png = &out[start..];
+    fs::write(output, png)
         .map_err(|e| CliError::Io(format!("cannot write {}: {e}", output.display())))?;
     Ok(json!({ "file": output.display().to_string(), "bytes": png.len() }))
 }
 
-/// `adb pull` of the current session's `log_file` (set by an `agent_debug` launch).
+/// `adb pull` of the current session's `log_file` (set by an `agent_debug` launch). [output] may be
+/// a file or an existing directory (the remote file name is kept); default: that name in the
+/// working directory.
 fn logs_pull(ctx: &Ctx, output: Option<&Path>) -> Result<Value, CliError> {
     let current = ctx.call("sessions.current", Value::Null)?;
     if current.is_null() {
@@ -204,17 +210,31 @@ fn logs_pull(ctx: &Ctx, output: Option<&Path>) -> Result<Value, CliError> {
     }
     let session_id = current.get("session_id").cloned().unwrap_or(Value::Null);
     let Some(remote) = current.get("log_file").and_then(Value::as_str) else {
+        let state = current.get("state").cloned().unwrap_or(Value::Null);
+        let agent_debug = current.get("agent_debug") == Some(&Value::Bool(true));
+        let message = if agent_debug {
+            format!(
+                "the session has no log file yet; it is created when the session reaches starting \
+                 (state: {}; a launch that ends before starting never gets one)",
+                state.as_str().unwrap_or("unknown")
+            )
+        } else {
+            "the session has no log file; only launches with --debug (agent_debug) write one"
+                .to_string()
+        };
         return Err(CliError::app_with(
             NO_LOG_FILE,
-            "the session has no log file; only launches with --debug (agent_debug) write one",
-            json!({ "session_id": session_id }),
+            message,
+            json!({ "session_id": session_id, "state": state, "agent_debug": agent_debug }),
         ));
     };
+    let name = Path::new(remote)
+        .file_name()
+        .map_or_else(|| PathBuf::from("agent.log"), PathBuf::from);
     let local: PathBuf = match output {
+        Some(dir) if dir.is_dir() => dir.join(name),
         Some(path) => path.to_path_buf(),
-        None => Path::new(remote)
-            .file_name()
-            .map_or_else(|| PathBuf::from("agent.log"), PathBuf::from),
+        None => name,
     };
     let local_text = local.display().to_string();
     adb::run_checked(
@@ -510,6 +530,26 @@ mod tests {
         assert_eq!(code, 2);
     }
 
+    #[test]
+    fn screenshot_drops_text_before_the_png() {
+        let path = temp_path("multi.png");
+        let _ = fs::remove_file(&path);
+        let png = [PNG_MAGIC, &[0u8, 1, 2]].concat();
+        let warning = b"[Warning] Multiple displays were found, but no display id was specified! \
+                        Defaulting to the first display found, however this default is not guaranteed \
+                        to be consistent across captures. A display id should be specified.\n";
+        let fake = FakeAdb::new();
+        fake.push_ok([warning.as_slice(), &png].concat());
+        let (code, out) = run_cli(
+            &["screenshot", "-o", path.to_str().unwrap()],
+            &fake,
+            &FakeClock::default(),
+        );
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(fs::read(&path).unwrap(), png);
+        assert_eq!(out["bytes"], png.len());
+    }
+
     /// Fake adb whose `pull` writes the local file like the real one.
     struct PullingAdb(FakeAdb, Vec<u8>);
 
@@ -551,6 +591,30 @@ mod tests {
     }
 
     #[test]
+    fn logs_pull_into_a_directory_keeps_the_remote_name() {
+        let dir = temp_path("pull-dir");
+        fs::create_dir_all(&dir).unwrap();
+        let remote = "/x/wine_logs/agent_STEAM_5.log";
+        let expected = dir.join("agent_STEAM_5.log");
+        let _ = fs::remove_file(&expected);
+        let fake = PullingAdb(FakeAdb::new(), b"abc".to_vec());
+        fake.0.push_ok(bundle_ok(
+            json!({"session_id": "s5", "state": "running", "log_file": remote}),
+        ));
+        fake.0.push_ok("1 file pulled.\n");
+        let (code, out) = crate::test_support::run_cli_runner(
+            &["logs", "pull", "-o", dir.to_str().unwrap()],
+            &fake,
+            &FakeClock::default(),
+            b"",
+        );
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(out["file"], expected.display().to_string());
+        assert_eq!(out["bytes"], 3);
+        assert_eq!(fs::read(&expected).unwrap(), b"abc");
+    }
+
+    #[test]
     fn logs_pull_defaults_to_the_remote_file_name() {
         let local = logs_pull_local(None, "/x/wine_logs/agent_GOG_3.log");
         assert_eq!(local, "agent_GOG_3.log");
@@ -588,5 +652,26 @@ mod tests {
                 .contains("--debug"));
             assert_eq!(fake.calls().len(), 1, "no adb pull");
         }
+    }
+
+    #[test]
+    fn logs_pull_for_a_debug_session_before_starting_says_to_wait() {
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle_ok(
+            json!({"session_id": "s1", "state": "launching", "agent_debug": true}),
+        ));
+        let (code, out) = run_cli(&["logs", "pull"], &fake, &FakeClock::default());
+        assert_eq!(code, 4);
+        assert_eq!(out["error"]["code"], NO_LOG_FILE);
+        let message = out["error"]["message"].as_str().unwrap();
+        assert!(
+            message.contains("reaches starting") && message.contains("state: launching"),
+            "{message}"
+        );
+        assert!(!message.contains("--debug"), "{message}");
+        assert_eq!(
+            out["error"]["details"],
+            json!({"session_id": "s1", "state": "launching", "agent_debug": true})
+        );
     }
 }

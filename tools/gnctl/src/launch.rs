@@ -30,6 +30,8 @@ pub const SESSION_EXITED: &str = "SESSION_EXITED";
 pub const SESSION_VANISHED: &str = "SESSION_VANISHED";
 pub const NO_ACTIVE_SESSION: &str = "NO_ACTIVE_SESSION";
 const NOT_READY: &str = "NOT_READY";
+/// `exit_reason`s of a session the app ended because its launch failed (`AgentSessionTracker`).
+const FAILED_LAUNCH: [&str; 2] = ["launch_error", "launch_timeout"];
 
 const STATE_LAUNCHING: &str = "launching";
 const STATE_EXITING: &str = "exiting";
@@ -106,6 +108,14 @@ impl Session {
         self.state != STATE_EXITED
     }
 
+    /// The app ended the session because the launch failed, before it ever ran.
+    fn launch_failed(&self) -> bool {
+        self.raw
+            .get("exit_reason")
+            .and_then(Value::as_str)
+            .is_some_and(|reason| FAILED_LAUNCH.contains(&reason))
+    }
+
     fn text(&self, name: &str) -> String {
         self.raw
             .get(name)
@@ -124,24 +134,18 @@ fn poll(ctx: &Ctx) -> Result<Option<Option<Session>>, CliError> {
     }
 }
 
-/// `sessions.current`, retrying `NOT_READY` for up to [READY_TIMEOUT].
-fn current_when_ready(ctx: &Ctx) -> Result<Option<Session>, CliError> {
-    let deadline = ctx.clock.now() + READY_TIMEOUT;
+/// `sessions.current`, retrying `NOT_READY` until [deadline] (a [Clock::now] value); `None` when the
+/// app still answered `NOT_READY` at the deadline.
+fn current_until(ctx: &Ctx, deadline: Duration) -> Result<Option<Option<Session>>, CliError> {
     loop {
-        match ctx.call("sessions.current", Value::Null) {
-            Ok(value) => return Session::parse(value),
-            Err(CliError::App { ref code, .. }) if code == NOT_READY => {
-                let now = ctx.clock.now();
-                if now >= deadline {
-                    return Err(CliError::app(
-                        NOT_READY,
-                        "the app is still starting; try again",
-                    ));
-                }
-                ctx.clock.sleep(POLL_INTERVAL.min(deadline - now));
-            }
-            Err(e) => return Err(e),
+        if let Some(current) = poll(ctx)? {
+            return Ok(Some(current));
         }
+        let now = ctx.clock.now();
+        if now >= deadline {
+            return Ok(None);
+        }
+        ctx.clock.sleep(POLL_INTERVAL.min(deadline - now));
     }
 }
 
@@ -205,7 +209,8 @@ pub fn launch(ctx: &Ctx, args: &LaunchArgs) -> Result<Value, CliError> {
     };
     protocol::validate_package(ctx.package)?;
 
-    let previous = current_when_ready(ctx)?;
+    let previous = current_until(ctx, ctx.clock.now().saturating_add(READY_TIMEOUT))?
+        .ok_or_else(|| CliError::app(NOT_READY, "the app is still starting; try again"))?;
     let mut warnings = Vec::new();
     if let Some(active) = previous.as_ref().filter(|s| s.is_active()) {
         let kept = active.state != STATE_LAUNCHING;
@@ -255,20 +260,33 @@ pub fn launch(ctx: &Ctx, args: &LaunchArgs) -> Result<Value, CliError> {
             previous: previous.map(|s| s.id),
             app_id: app.to_string(),
         };
-        result["session"] = wait(ctx, target, until, secs(args.timeout))?;
+        let timeout = secs(args.timeout);
+        let deadline = ctx.clock.now().saturating_add(timeout);
+        result["session"] = wait(ctx, target, until, deadline, timeout)?;
     }
     Ok(result)
 }
 
-/// `sessions wait`: follows the current session (active or last finished) until [until].
+/// `sessions wait`: follows the current session (active or last finished) until [until]. One
+/// deadline covers both the `NOT_READY` retries of a cold-starting app and the wait itself.
 pub fn wait_current(ctx: &Ctx, until: WaitUntil, timeout: Duration) -> Result<Value, CliError> {
-    let Some(session) = current_when_ready(ctx)? else {
-        return Err(CliError::app(
-            NO_ACTIVE_SESSION,
-            "there is no session to wait for",
-        ));
+    let deadline = ctx.clock.now().saturating_add(timeout);
+    let session = match current_until(ctx, deadline)? {
+        None => {
+            return Err(CliError::Timeout(format!(
+                "the app was still starting (NOT_READY) after {}s",
+                timeout.as_secs()
+            )))
+        }
+        Some(None) => {
+            return Err(CliError::app(
+                NO_ACTIVE_SESSION,
+                "there is no session to wait for",
+            ))
+        }
+        Some(Some(session)) => session,
     };
-    wait(ctx, Target::Known(session.id), until, timeout)
+    wait(ctx, Target::Known(session.id), until, deadline, timeout)
 }
 
 enum Target {
@@ -283,11 +301,18 @@ enum Target {
 
 /// Polls `sessions.current` until the target session reaches [until]; returns its JSON.
 ///
-/// Waiting for `running`, a session that is `exiting` or `exited` → `SESSION_EXITED` (exit 4). Once
-/// the target was seen, another (or no) current session → `SESSION_VANISHED` (exit 4). `NOT_READY`
-/// answers are skipped. Out of time → timeout (exit 5).
-fn wait(ctx: &Ctx, target: Target, until: WaitUntil, timeout: Duration) -> Result<Value, CliError> {
-    let deadline = ctx.clock.now().saturating_add(timeout);
+/// Waiting for `running`, a session that is `exiting` or `exited` → `SESSION_EXITED` (exit 4); so is a
+/// session that reached `exited` because its launch failed ([FAILED_LAUNCH] exit reasons), whatever
+/// [until] is. Once the target was seen, another (or no) current session → `SESSION_VANISHED` (exit
+/// 4). `NOT_READY` answers are skipped. Past [deadline] (a [Clock::now] value) → timeout (exit 5);
+/// [timeout] is only for the message.
+fn wait(
+    ctx: &Ctx,
+    target: Target,
+    until: WaitUntil,
+    deadline: Duration,
+    timeout: Duration,
+) -> Result<Value, CliError> {
     let (mut ours, previous, app_id) = match target {
         Target::Known(id) => (Some(id), None, None),
         Target::New { previous, app_id } => (None, previous, Some(app_id)),
@@ -306,13 +331,12 @@ fn wait(ctx: &Ctx, target: Target, until: WaitUntil, timeout: Duration) -> Resul
             if let Some(id) = &ours {
                 match current {
                     Some(session) if &session.id == id => {
+                        let ended = session.state == STATE_EXITING || session.state == STATE_EXITED;
+                        if ended && (until == WaitUntil::Running || session.launch_failed()) {
+                            return Err(exited_early(session));
+                        }
                         if session.state == until.state() {
                             return Ok(session.raw);
-                        }
-                        if until == WaitUntil::Running
-                            && (session.state == STATE_EXITING || session.state == STATE_EXITED)
-                        {
-                            return Err(exited_early(session));
                         }
                         last_state = Some(session.state);
                     }
@@ -635,6 +659,78 @@ mod tests {
             );
             assert_eq!(out["error"]["details"]["session_id"], "new");
         }
+    }
+
+    #[test]
+    fn failed_launch_while_waiting_for_exited_is_4() {
+        for reason in FAILED_LAUNCH {
+            let fake = FakeAdb::new();
+            fake.push_ok(bundle_ok(Value::Null));
+            fake.push_ok(STARTING);
+            fake.push_ok(bundle_ok(session("new", "launching")));
+            let mut ended = session("new", "exited");
+            ended["exit_reason"] = json!(reason);
+            fake.push_ok(bundle_ok(ended.clone()));
+            let (code, out) = run_cli(
+                &["launch", "STEAM_123", "--wait", "exited"],
+                &fake,
+                &FakeClock::default(),
+            );
+            assert_eq!(code, 4, "{reason}");
+            assert_eq!(out["error"]["code"], SESSION_EXITED);
+            assert_eq!(out["error"]["details"]["exit_reason"], reason);
+
+            // Following an already failed session gives the same answer.
+            let fake = FakeAdb::new();
+            fake.push_ok(bundle_ok(ended.clone()));
+            fake.push_ok(bundle_ok(ended));
+            let (code, out) = run_cli(
+                &["sessions", "wait", "--until", "exited"],
+                &fake,
+                &FakeClock::default(),
+            );
+            assert_eq!(code, 4, "{reason}");
+            assert_eq!(out["error"]["code"], SESSION_EXITED);
+        }
+    }
+
+    #[test]
+    fn sessions_wait_not_ready_shares_the_wait_deadline() {
+        // A short --timeout is not stretched to the 15s readiness retry: 0s, 0.5s, 1s.
+        let fake = FakeAdb::new();
+        for _ in 0..3 {
+            fake.push_ok(bundle_err("NOT_READY"));
+        }
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &["sessions", "wait", "--until", "running", "--timeout", "1"],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 5, "{out}");
+        assert_eq!(out["error"]["code"], "TIMEOUT");
+        assert!(out["error"]["message"]
+            .as_str()
+            .unwrap()
+            .contains("NOT_READY"));
+        assert_eq!(clock.now(), Duration::from_secs(1));
+
+        // A long --timeout keeps retrying NOT_READY past 15s (20s = 40 answers).
+        let fake = FakeAdb::new();
+        for _ in 0..40 {
+            fake.push_ok(bundle_err("NOT_READY"));
+        }
+        fake.push_ok(bundle_ok(session("s1", "running")));
+        fake.push_ok(bundle_ok(session("s1", "running")));
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &["sessions", "wait", "--until", "running", "--timeout", "60"],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(out["session_id"], "s1");
+        assert_eq!(clock.now(), Duration::from_secs(20));
     }
 
     #[test]
