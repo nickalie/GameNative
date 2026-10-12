@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
+import app.gamenative.agent.AgentRuntime
 import app.gamenative.db.dao.AmazonGameDao
 import app.gamenative.db.dao.GOGGameDao
 import app.gamenative.events.EventDispatcher
@@ -85,6 +86,7 @@ class PluviaApp : SplitCompatApplication() {
 
         // Init our datastore preferences.
         PrefManager.init(this)
+        runCatching { AgentRuntime.markReady() }.onFailure { Timber.e(it, "[PluviaApp]: Agent API readiness failed") }
         NexusAuthManager.initialize(this)
         FrontendSyncManager.init(this)
 

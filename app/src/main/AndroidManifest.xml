@@ -261,6 +261,15 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_provider_paths" />
         </provider>
+
+        <!--
+            Agent API over ADB (adb shell content call). Exported for the shell; the provider
+            itself only accepts the shell and root UIDs and is gated by a setting (off by default).
+        -->
+        <provider
+            android:name=".agent.AgentProvider"
+            android:authorities="${applicationId}.agent"
+            android:exported="true" />
     </application>
 
 </manifest>

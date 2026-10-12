@@ -147,12 +147,12 @@
 - Modify: `app/src/main/res/values/strings.xml`
 - Create: `app/src/test/java/app/gamenative/agent/AgentProviderTest.kt`
 
-- [ ] `AgentProvider`: `call(method="command", arg)` → UID check → dispatcher → Bundle `json`; `query/insert/update/delete/getType/openFile/openTypedAssetFile` → UID check + reject; dependency factory
-- [ ] manifest: `<provider android:authorities="${applicationId}.agent" android:exported="true">`
-- [ ] `PrefManager.agentApiEnabled` (default `false`); readiness flag set in `PluviaApp.onCreate` after `PrefManager.init`; `SettingsSwitch` "Agent API (ADB)" with a subtitle about ADB/Shizuku access
-- [ ] `sessions.current` registered (needed for the Task 4 smoke gate)
-- [ ] tests (Robolectric): allowed UID → response; foreign UID → `SecurityException` at every entry point; before readiness → `NOT_READY`; disabled → `DISABLED`; `sessions.current` with no session → `null`
-- [ ] run tests and `:app:lintKotlin` - must pass before Task 4
+- [x] `AgentProvider`: `call(method="command", arg)` → UID check → dispatcher → Bundle `json`; `query/insert/update/delete/getType/openFile/openTypedAssetFile` → UID check + reject; dependency factory
+- [x] manifest: `<provider android:authorities="${applicationId}.agent" android:exported="true">`
+- [x] `PrefManager.agentApiEnabled` (default `false`); readiness flag set in `PluviaApp.onCreate` after `PrefManager.init`; `SettingsSwitch` "Agent API (ADB)" with a subtitle about ADB/Shizuku access
+- [x] `sessions.current` registered (needed for the Task 4 smoke gate)
+- [x] tests (Robolectric): allowed UID → response; foreign UID → `SecurityException` at every entry point; before readiness → `NOT_READY`; disabled → `DISABLED`; `sessions.current` with no session → `null`
+- [x] run tests and `:app:lintKotlin` - must pass before Task 4 (agent tests green; lint: no errors in new files or changed lines, repo-wide baseline debt unchanged)
 
 ### Task 4: Session hooks (outside the XServerScreen composable)
 

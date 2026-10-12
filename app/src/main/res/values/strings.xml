@@ -1319,6 +1319,8 @@
     <string name="settings_debug_wine_channels_title">Select Wine Debug Channels</string>
     <string name="settings_debug_wine_logs_title">Enable Wine Debug Logs</string>
     <string name="settings_debug_wine_logs_subtitle">Write Wine debug output to file</string>
+    <string name="settings_debug_agent_api_title">Agent API (ADB)</string>
+    <string name="settings_debug_agent_api_subtitle">Let tools on a computer connected over ADB list games, change game configs and launch games. Shizuku-based apps on this device get the same access.</string>
     <string name="settings_debug_box_logs_title">Enable Box86/64 Logs</string>
     <string name="settings_debug_box_logs_subtitle">Write Box86 &amp; Box64 debug output to file</string>
     <string name="settings_debug_view_crash_title">View latest crash</string>

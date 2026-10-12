@@ -7,4 +7,16 @@ package app.gamenative.agent
 object AgentRuntime {
     val tracker: AgentSessionTracker = AgentSessionTracker()
     val launchOptions: AgentLaunchOptionsStore = AgentLaunchOptionsStore()
+
+    /**
+     * True once the application finished initializing preferences. Content providers are created
+     * before `Application.onCreate`, so the agent provider answers `NOT_READY` until this is set.
+     */
+    @Volatile
+    var isReady: Boolean = false
+        internal set
+
+    fun markReady() {
+        isReady = true
+    }
 }

@@ -1722,6 +1722,12 @@ object PrefManager {
         get() = getPref(WINE_DEBUG_CHANNELS, Constants.XServer.DEFAULT_WINE_DEBUG_CHANNELS)
         set(value) = setPref(WINE_DEBUG_CHANNELS, value)
 
+    // Agent API over ADB (app.gamenative.agent.AgentProvider); off by default
+    private val AGENT_API_ENABLED = booleanPreferencesKey("agent_api_enabled")
+    var agentApiEnabled: Boolean
+        get() = getPref(AGENT_API_ENABLED, false)
+        set(value) = setPref(AGENT_API_ENABLED, value)
+
     // App and notification icon variants
     private val USE_ALT_LAUNCHER_ICON = booleanPreferencesKey("use_alt_launcher_icon")
     var useAltLauncherIcon: Boolean

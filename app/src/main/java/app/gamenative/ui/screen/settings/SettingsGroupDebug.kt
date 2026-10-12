@@ -84,6 +84,9 @@ fun SettingsGroupDebug() {
     var enableWineDebugPref by rememberSaveable {
         mutableStateOf(if (isPreview) false else PrefManager.enableWineDebug)
     }
+    var agentApiEnabledPref by rememberSaveable {
+        mutableStateOf(if (isPreview) false else PrefManager.agentApiEnabled)
+    }
     var enableBox86Logs by rememberSaveable { mutableStateOf(
         if (isPreview) false else WinlatorPrefManager.getBoolean("enable_box86_64_logs", false)
     ) }
@@ -219,6 +222,18 @@ fun SettingsGroupDebug() {
                 enableBox86Logs = it
                 if (!isPreview) {
                     WinlatorPrefManager.putBoolean("enable_box86_64_logs", it)
+                }
+            },
+        )
+        SettingsSwitch(
+            colors = settingsTileColorsAlt(),
+            state = agentApiEnabledPref,
+            title = { Text(text = stringResource(R.string.settings_debug_agent_api_title)) },
+            subtitle = { Text(text = stringResource(R.string.settings_debug_agent_api_subtitle)) },
+            onCheckedChange = {
+                agentApiEnabledPref = it
+                if (!isPreview) {
+                    PrefManager.agentApiEnabled = it
                 }
             },
         )
