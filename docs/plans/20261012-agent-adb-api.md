@@ -266,12 +266,14 @@
 - Create: `tools/gnctl/src/cli.rs`
 - Create: `tools/gnctl/src/commands.rs`
 - Modify: `tools/gnctl/src/main.rs`
+- ➕ Modify `tools/gnctl/src/lib.rs` instead of `main.rs` (Task 9 split: `main.rs` stays a one-liner); ➕ Create `tools/gnctl/src/launch.rs` (launch, waits, injectable clock) and `tools/gnctl/src/channels.rs` (WINEDEBUG channel rules); `error.rs` gains `IO_ERROR` (exit 3) for local file errors
 
-- [ ] wrapper subcommands: `capabilities`, `device info`, `games list`, `components list`, `containers get|set (FILE|-)|restore [--backup ID|--baseline]|backups`, `sessions current|stop|logs`
-- [ ] `launch <app_id> [--source] [--debug] [--wine-debug CH] [--wait running|exited --timeout N] [--force]`: `-n <pkg>/app.gamenative.MainActivity`, `--ei app_id`, channel rules applied before calling adb, mandatory BUSY check, waits for a new `session_id`
-- [ ] `sessions wait --until running|exited --timeout N`; `screenshot -o FILE` (`exec-out screencap -p`); `logs pull [-o FILE]` (`adb pull` of `sessions.current.log_file`)
-- [ ] tests: `STEAM_123` and `123 --source`, `--ei`/`-n`, `containers set` from file and stdin, banned channels → 3 without calling adb, BUSY/`--force`, waiting for a new id, session vanished → 4, timeout → 5, early `exited` → 4, screenshot/pull write the file, pull without `log_file` → clear error
-- [ ] `cargo test` and `cargo clippy` - must pass before Task 11
+- [x] wrapper subcommands: `capabilities`, `device info`, `games list`, `components list`, `containers get|set (FILE|-)|restore [--backup ID|--baseline]|backups`, `sessions current|stop|logs`
+- [x] `launch <app_id> [--source] [--debug] [--wine-debug CH] [--wait running|exited --timeout N] [--force]`: `-n <pkg>/app.gamenative.MainActivity`, `--ei app_id`, channel rules applied before calling adb, mandatory BUSY check, waits for a new `session_id`
+- [x] `sessions wait --until running|exited --timeout N`; `screenshot -o FILE` (`exec-out screencap -p`); `logs pull [-o FILE]` (`adb pull` of `sessions.current.log_file`)
+- [x] tests: `STEAM_123` and `123 --source`, `--ei`/`-n`, `containers set` from file and stdin, banned channels → 3 without calling adb, BUSY/`--force`, waiting for a new id, session vanished → 4, timeout → 5, early `exited` → 4, screenshot/pull write the file, pull without `log_file` → clear error
+- [x] `cargo test` and `cargo clippy` - must pass before Task 11
+- ➕ CLI-side codes (exit 4): `SESSION_BUSY`, `SESSION_EXITED`, `SESSION_VANISHED`, `NO_ACTIVE_SESSION` (`sessions wait` with no session), `NO_LOG_FILE`; channels the app would drop (invalid/banned/too many/already in `BASE_WINEDEBUG`) are refused with exit 3; `--wine-debug` requires `--debug`; a bare numeric app id requires `--source`; `--force --wait` over a `starting`/`running`/`exiting` session → `SESSION_BUSY` (the app keeps that session, no new one would appear); `NOT_READY` is retried (15 s before launch, for the whole wait while waiting)
 
 ### Task 11: API docs and agent skill
 

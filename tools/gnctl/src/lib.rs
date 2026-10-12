@@ -4,64 +4,52 @@
 //! The binary (`main.rs`) only calls [`run_main`]; everything else lives here so it can be tested.
 
 pub mod adb;
+pub mod channels;
+pub mod cli;
+pub mod commands;
 pub mod error;
+pub mod launch;
 pub mod protocol;
 
 use std::ffi::OsString;
-use std::io::Write;
+use std::io::{Read, Write};
 
-use clap::{Parser, Subcommand};
-use serde_json::{Map, Value};
+use clap::Parser;
+use serde_json::Value;
 
 use crate::adb::{AdbRunner, SystemAdb};
+use crate::cli::Cli;
+use crate::commands::Ctx;
 use crate::error::{CliError, EXIT_OK};
+use crate::launch::{Clock, SystemClock};
 
-#[derive(Debug, Parser)]
-#[command(
-    name = "gnctl",
-    version,
-    about = "Control GameNative on an Android device over ADB"
-)]
-pub struct Cli {
-    /// Device serial (default: $ANDROID_SERIAL, else adb's only device)
-    #[arg(long, global = true)]
-    serial: Option<String>,
-    /// Path to the adb binary
-    #[arg(long, global = true, default_value = "adb")]
-    adb: String,
-    /// GameNative package name (the provider authority is <package>.agent)
-    #[arg(long, global = true, default_value = protocol::DEFAULT_PACKAGE)]
-    package: String,
-    #[command(subcommand)]
-    command: Command,
-}
-
-#[derive(Debug, Subcommand)]
-enum Command {
-    /// Send a raw agent API command and print its data
-    Call {
-        /// Command name, e.g. games.list
-        command: String,
-        /// Command arguments as a JSON object
-        #[arg(long, default_value = "{}")]
-        args: String,
-    },
-}
-
-/// Entry point of the binary: real argv, real stdout, real adb. Returns the exit code.
+/// Entry point of the binary: real argv, stdout, stdin, clock and adb. Returns the exit code.
 pub fn run_main() -> i32 {
-    run(std::env::args_os(), &mut std::io::stdout(), |cli| {
-        Box::new(SystemAdb::from_options(cli.adb.clone(), cli.serial.clone()))
-    })
+    let clock = SystemClock::new();
+    let stdin = std::io::stdin();
+    let mut stdin = stdin.lock();
+    run(
+        std::env::args_os(),
+        &mut std::io::stdout(),
+        &mut stdin,
+        &clock,
+        |cli| Box::new(SystemAdb::from_options(cli.adb.clone(), cli.serial.clone())),
+    )
 }
 
 /// Parses arguments, runs the command and prints the JSON result; returns the exit code.
-pub fn run<I, W, F>(argv: I, out: &mut W, make_runner: F) -> i32
+pub fn run<'r, I, W, F>(
+    argv: I,
+    out: &mut W,
+    stdin: &mut dyn Read,
+    clock: &dyn Clock,
+    make_runner: F,
+) -> i32
 where
     I: IntoIterator,
     I::Item: Into<OsString> + Clone,
     W: Write,
-    F: FnOnce(&Cli) -> Box<dyn AdbRunner>,
+    F: FnOnce(&Cli) -> Box<dyn AdbRunner + 'r>,
 {
     let cli = match Cli::try_parse_from(argv) {
         Ok(cli) => cli,
@@ -73,24 +61,13 @@ where
         Err(e) => return report(out, Err(CliError::Usage(e.to_string().trim().to_string()))),
     };
     let runner = make_runner(&cli);
-    report(out, execute(&cli, runner.as_ref()))
-}
-
-fn execute(cli: &Cli, runner: &dyn AdbRunner) -> Result<Value, CliError> {
-    match &cli.command {
-        Command::Call { command, args } => {
-            let args = parse_args_object(args)?;
-            protocol::call(runner, &cli.package, command, &args)
-        }
-    }
-}
-
-fn parse_args_object(text: &str) -> Result<Map<String, Value>, CliError> {
-    match serde_json::from_str::<Value>(text) {
-        Ok(Value::Object(map)) => Ok(map),
-        Ok(_) => Err(CliError::Usage("--args must be a JSON object".into())),
-        Err(e) => Err(CliError::Usage(format!("--args is not valid JSON: {e}"))),
-    }
+    let mut ctx = Ctx {
+        runner: runner.as_ref(),
+        package: &cli.package,
+        stdin,
+        clock,
+    };
+    report(out, commands::execute(&cli, &mut ctx))
 }
 
 fn report<W: Write>(out: &mut W, result: Result<Value, CliError>) -> i32 {
@@ -104,40 +81,108 @@ fn report<W: Write>(out: &mut W, result: Result<Value, CliError>) -> i32 {
 }
 
 #[cfg(test)]
-mod tests {
-    use std::rc::Rc;
+pub(crate) mod test_support {
+    use std::cell::Cell;
+    use std::time::Duration;
 
+    use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+    use base64::Engine;
+    use serde_json::{json, Value};
+
+    use crate::adb::AdbRunner;
+    use crate::launch::Clock;
+
+    /// Clock whose `sleep` only advances `now`.
+    #[derive(Default)]
+    pub struct FakeClock {
+        now: Cell<Duration>,
+        sleeps: Cell<usize>,
+    }
+
+    impl FakeClock {
+        pub fn sleeps(&self) -> usize {
+            self.sleeps.get()
+        }
+    }
+
+    impl Clock for FakeClock {
+        fn now(&self) -> Duration {
+            self.now.get()
+        }
+
+        fn sleep(&self, duration: Duration) {
+            self.now.set(self.now.get() + duration);
+            self.sleeps.set(self.sleeps.get() + 1);
+        }
+    }
+
+    /// `content call` output of a successful response with [data].
+    pub fn bundle_ok(data: Value) -> String {
+        let json = json!({"api_version": 1, "ok": true, "data": data});
+        format!("Result: Bundle[{{json={json}}}]\n")
+    }
+
+    /// `content call` output of an app error with [code].
+    pub fn bundle_err(code: &str) -> String {
+        let json = json!({"api_version": 1, "ok": false, "error": {"code": code, "message": code}});
+        format!("Result: Bundle[{{json={json}}}]\n")
+    }
+
+    /// The request JSON of a recorded `content call`.
+    pub fn decoded_request(call: &[String]) -> Value {
+        assert_eq!(call[1], "content", "not a content call: {call:?}");
+        serde_json::from_slice(&URL_SAFE_NO_PAD.decode(&call[8]).unwrap()).unwrap()
+    }
+
+    /// Runs gnctl with [argv] (without the program name); returns the exit code and the stdout JSON.
+    pub fn run_cli_runner(
+        argv: &[&str],
+        runner: &dyn AdbRunner,
+        clock: &FakeClock,
+        stdin: &[u8],
+    ) -> (i32, Value) {
+        let mut out = Vec::new();
+        let mut stdin = stdin;
+        let code = crate::run(
+            std::iter::once("gnctl").chain(argv.iter().copied()),
+            &mut out,
+            &mut stdin,
+            clock,
+            |_| Box::new(runner),
+        );
+        let text = String::from_utf8(out).unwrap();
+        let value = serde_json::from_str(&text)
+            .unwrap_or_else(|e| panic!("stdout is not JSON ({e}): {text}"));
+        (code, value)
+    }
+
+    pub fn run_cli(argv: &[&str], runner: &dyn AdbRunner, clock: &FakeClock) -> (i32, Value) {
+        run_cli_runner(argv, runner, clock, b"")
+    }
+
+    pub fn run_cli_stdin(
+        argv: &[&str],
+        runner: &dyn AdbRunner,
+        clock: &FakeClock,
+        stdin: &[u8],
+    ) -> (i32, Value) {
+        run_cli_runner(argv, runner, clock, stdin)
+    }
+}
+
+#[cfg(test)]
+mod tests {
     use serde_json::json;
 
     use super::*;
     use crate::adb::testing::FakeAdb;
-    use crate::adb::AdbOutput;
-
-    /// Lets a test keep a handle on the fake after handing it to `run`.
-    struct Shared(Rc<FakeAdb>);
-
-    impl AdbRunner for Shared {
-        fn run(&self, args: &[String]) -> Result<AdbOutput, CliError> {
-            self.0.run(args)
-        }
-    }
-
-    fn run_with(argv: &[&str], fake: &Rc<FakeAdb>) -> (i32, String) {
-        let mut out = Vec::new();
-        let fake = Rc::clone(fake);
-        let code = run(
-            std::iter::once("gnctl").chain(argv.iter().copied()),
-            &mut out,
-            move |_| Box::new(Shared(fake)),
-        );
-        (code, String::from_utf8(out).unwrap())
-    }
+    use crate::test_support::{run_cli, FakeClock};
 
     #[test]
     fn call_prints_data() {
-        let fake = Rc::new(FakeAdb::new());
+        let fake = FakeAdb::new();
         fake.push_ok(r#"Result: Bundle[{json={"api_version":1,"ok":true,"data":{"package":"app.gamenative"}}}]"#);
-        let (code, out) = run_with(
+        let (code, out) = run_cli(
             &[
                 "--package",
                 "app.gamenative",
@@ -147,54 +192,61 @@ mod tests {
                 r#"{"x":1}"#,
             ],
             &fake,
+            &FakeClock::default(),
         );
         assert_eq!(code, 0);
-        assert_eq!(
-            serde_json::from_str::<Value>(&out).unwrap(),
-            json!({"package": "app.gamenative"})
-        );
+        assert_eq!(out, json!({"package": "app.gamenative"}));
         assert_eq!(fake.calls()[0][4], "content://app.gamenative.agent");
     }
 
     #[test]
     fn app_error_prints_json_and_exits_4() {
-        let fake = Rc::new(FakeAdb::new());
+        let fake = FakeAdb::new();
         fake.push_ok(r#"Result: Bundle[{json={"api_version":1,"ok":false,"error":{"code":"DISABLED","message":"off"}}}]"#);
-        let (code, out) = run_with(&["call", "games.list"], &fake);
+        let (code, out) = run_cli(&["call", "games.list"], &fake, &FakeClock::default());
         assert_eq!(code, 4);
         assert_eq!(
-            serde_json::from_str::<Value>(&out).unwrap(),
+            out,
             json!({"ok": false, "error": {"code": "DISABLED", "message": "off"}})
         );
     }
 
     #[test]
     fn bad_args_json_is_usage_error_without_adb() {
-        let fake = Rc::new(FakeAdb::new());
+        let fake = FakeAdb::new();
         for bad in ["{", "[1]"] {
-            let (code, out) = run_with(&["call", "games.list", "--args", bad], &fake);
+            let (code, out) = run_cli(
+                &["call", "games.list", "--args", bad],
+                &fake,
+                &FakeClock::default(),
+            );
             assert_eq!(code, 3);
-            let v: Value = serde_json::from_str(&out).unwrap();
-            assert_eq!(v["error"]["code"], "USAGE_ERROR");
+            assert_eq!(out["error"]["code"], "USAGE_ERROR");
         }
         assert!(fake.calls().is_empty());
     }
 
     #[test]
     fn clap_errors_exit_3_not_2() {
-        let fake = Rc::new(FakeAdb::new());
-        let (code, out) = run_with(&["no-such-command"], &fake);
+        let fake = FakeAdb::new();
+        let (code, out) = run_cli(&["no-such-command"], &fake, &FakeClock::default());
         assert_eq!(code, 3);
-        let v: Value = serde_json::from_str(&out).unwrap();
-        assert_eq!(v["error"]["code"], "USAGE_ERROR");
+        assert_eq!(out["error"]["code"], "USAGE_ERROR");
     }
 
     #[test]
     fn help_exits_0() {
-        let fake = Rc::new(FakeAdb::new());
-        let (code, out) = run_with(&["--help"], &fake);
+        let fake = FakeAdb::new();
+        let mut out = Vec::new();
+        let code = run(
+            ["gnctl", "--help"],
+            &mut out,
+            &mut &b""[..],
+            &FakeClock::default(),
+            |_| Box::new(&fake),
+        );
         assert_eq!(code, 0);
-        assert!(out.contains("Usage: gnctl"));
+        assert!(String::from_utf8(out).unwrap().contains("Usage: gnctl"));
     }
 
     #[test]

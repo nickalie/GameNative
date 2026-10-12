@@ -33,6 +33,12 @@ pub trait AdbRunner {
     fn run(&self, args: &[String]) -> Result<AdbOutput, CliError>;
 }
 
+impl<T: AdbRunner + ?Sized> AdbRunner for &T {
+    fn run(&self, args: &[String]) -> Result<AdbOutput, CliError> {
+        (**self).run(args)
+    }
+}
+
 /// The real adb binary, optionally pinned to one device serial.
 #[derive(Debug, Clone)]
 pub struct SystemAdb {

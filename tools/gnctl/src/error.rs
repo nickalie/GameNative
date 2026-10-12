@@ -7,7 +7,7 @@ use serde_json::{json, Map, Value};
 pub const EXIT_OK: i32 = 0;
 /// adb could not be run, failed, or the device/provider could not be reached.
 pub const EXIT_ADB: i32 = 2;
-/// Bad CLI usage or an unparseable/unexpected answer from the app.
+/// Bad CLI usage, a local file error, or an unparseable/unexpected answer from the app.
 pub const EXIT_PROTOCOL: i32 = 3;
 /// The app answered with `ok=false` (or a CLI-side app-level condition such as `SESSION_BUSY`).
 pub const EXIT_APP: i32 = 4;
@@ -19,6 +19,8 @@ pub enum CliError {
     Adb(String),
     Protocol(String),
     Usage(String),
+    /// A local file could not be read or written.
+    Io(String),
     App {
         code: String,
         message: String,
@@ -36,10 +38,18 @@ impl CliError {
         }
     }
 
+    pub fn app_with(code: impl Into<String>, message: impl Into<String>, details: Value) -> Self {
+        CliError::App {
+            code: code.into(),
+            message: message.into(),
+            details: Some(details),
+        }
+    }
+
     pub fn exit_code(&self) -> i32 {
         match self {
             CliError::Adb(_) => EXIT_ADB,
-            CliError::Protocol(_) | CliError::Usage(_) => EXIT_PROTOCOL,
+            CliError::Protocol(_) | CliError::Usage(_) | CliError::Io(_) => EXIT_PROTOCOL,
             CliError::App { .. } => EXIT_APP,
             CliError::Timeout(_) => EXIT_TIMEOUT,
         }
@@ -51,6 +61,7 @@ impl CliError {
             CliError::Adb(_) => "ADB_ERROR",
             CliError::Protocol(_) => "PROTOCOL_ERROR",
             CliError::Usage(_) => "USAGE_ERROR",
+            CliError::Io(_) => "IO_ERROR",
             CliError::App { code, .. } => code,
             CliError::Timeout(_) => "TIMEOUT",
         }
@@ -61,6 +72,7 @@ impl CliError {
             CliError::Adb(m)
             | CliError::Protocol(m)
             | CliError::Usage(m)
+            | CliError::Io(m)
             | CliError::Timeout(m) => m,
             CliError::App { message, .. } => message,
         }
@@ -99,6 +111,7 @@ mod tests {
         assert_eq!(CliError::Adb("x".into()).exit_code(), 2);
         assert_eq!(CliError::Protocol("x".into()).exit_code(), 3);
         assert_eq!(CliError::Usage("x".into()).exit_code(), 3);
+        assert_eq!(CliError::Io("x".into()).exit_code(), 3);
         assert_eq!(CliError::app("NO_CONTAINER", "x").exit_code(), 4);
         assert_eq!(CliError::Timeout("x".into()).exit_code(), 5);
     }
@@ -121,6 +134,10 @@ mod tests {
         assert_eq!(
             CliError::Protocol("p".into()).to_json()["error"]["code"],
             "PROTOCOL_ERROR"
+        );
+        assert_eq!(
+            CliError::Io("i".into()).to_json()["error"]["code"],
+            "IO_ERROR"
         );
     }
 
