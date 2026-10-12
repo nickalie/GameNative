@@ -4,7 +4,6 @@ import android.content.Context
 import com.winlator.container.Container
 import com.winlator.core.envvars.EnvVars
 import java.io.File
-import kotlinx.coroutines.Job
 import timber.log.Timber
 
 /**
@@ -45,7 +44,7 @@ object AgentHooks {
 
     /**
      * The intent launch passed the funnel: takes the stored options once and starts a `launching` session.
-     * Returns its id for [watchPreLaunch], or null when a live session was kept (or the tracker failed).
+     * Returns its id for [AgentPreLaunch.start], or null when a live session was kept (or the tracker failed).
      */
     fun onLaunchRequested(appId: String): String? = runCatching {
         val tracker = trackerSource()
@@ -54,20 +53,6 @@ object AgentHooks {
         AgentDebugEnv.warningsFor(options).forEach(tracker::addWarning)
         sessionId
     }.onFailure { Timber.w(it, "Agent hook onLaunchRequested failed") }.getOrNull()
-
-    /**
-     * `preLaunchApp` stops on many paths (dialogs, failed downloads, cancel) without telling anyone. Ends
-     * the `launching` session [sessionId] once the pre-launch [job] completes unless [launched] reports
-     * that it reached the game launch; a null [job] means the pre-launch never started.
-     */
-    fun watchPreLaunch(sessionId: String?, job: Job?, launched: () -> Boolean) {
-        if (sessionId == null) return
-        if (job == null) {
-            onLaunchAborted(sessionId)
-            return
-        }
-        job.invokeOnCompletion { if (!launched()) onLaunchAborted(sessionId) }
-    }
 
     fun onLaunchAborted(sessionId: String) = guard("onLaunchAborted") { it.onLaunchAborted(sessionId) }
 

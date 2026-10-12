@@ -60,6 +60,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.agent.AgentHooks
+import app.gamenative.agent.AgentPreLaunch
 import app.gamenative.data.GameSource
 import app.gamenative.enums.AppTheme
 import app.gamenative.enums.LoginResult
@@ -164,7 +165,6 @@ import java.security.SecureRandom
 import java.util.Locale
 import java.util.Date
 import java.util.EnumSet
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -501,14 +501,13 @@ fun PluviaMain(
             }
         } else {
             MainActivity.wasLaunchedViaExternalIntent = true
-            val agentSessionId = AgentHooks.onLaunchRequested(resolvedAppId)
-            val gameLaunched = AtomicBoolean(false)
+            val agentLaunch = AgentPreLaunch.start(AgentHooks.onLaunchRequested(resolvedAppId))
             trackGameLaunched(resolvedAppId)
             viewModel.setLaunchedAppId(resolvedAppId)
             viewModel.setBootToContainer(false)
             scope.launch(Dispatchers.IO) {
-                var preLaunch: Job? = null
-                try {
+                // ends the agent's launching session if the pre-launch stops before the game launch
+                agentLaunch.follow {
                     val gameSource = ContainerUtils.extractGameSourceFromContainerId(resolvedAppId)
                     val isOffline = when {
                         gameSource != GameSource.STEAM -> false
@@ -523,23 +522,17 @@ fun PluviaMain(
                     }
                     // sync viewModel — dialog retries + replaceSteamApi read isOffline.value
                     viewModel.setOffline(isOffline)
-                    preLaunch = preLaunchApp(
+                    preLaunchApp(
                         context = context,
                         appId = resolvedAppId,
                         useTemporaryOverride = hasTemporaryOverride,
                         setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
                         setLoadingProgress = viewModel::setLoadingDialogProgress,
                         setLoadingMessage = viewModel::setLoadingDialogMessage,
-                        setMessageDialogState = setMessageDialogState,
-                        onSuccess = { launchContext, launchAppId ->
-                            gameLaunched.set(true)
-                            viewModel.launchApp(launchContext, launchAppId)
-                        },
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
                         isOffline = isOffline,
                     )
-                } finally {
-                    // ends the agent's launching session if the pre-launch stops before the game launch
-                    AgentHooks.watchPreLaunch(agentSessionId, preLaunch, gameLaunched::get)
                 }
             }
         }
@@ -1005,6 +998,12 @@ fun PluviaMain(
         }
     }
 
+    // an agent launch paused at a relaunching dialog ends once that dialog is gone without its confirm
+    // (dismissed or replaced); reads the live state, so a newer dialog is never mistaken for the old one
+    LaunchedEffect(msgDialogState) {
+        if (!relaunchesPreLaunch(msgDialogState)) AgentPreLaunch.abortPaused()
+    }
+
     val onDismissRequest: (() -> Unit)?
     val onDismissClick: (() -> Unit)?
     val onConfirmClick: (() -> Unit)?
@@ -1039,29 +1038,35 @@ fun PluviaMain(
 
         DialogType.SYNC_CONFLICT -> {
             onConfirmClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    preferredSave = SaveLocation.Remote,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        preferredSave = SaveLocation.Remote,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    preferredSave = SaveLocation.Local,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        preferredSave = SaveLocation.Local,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissRequest = {
@@ -1071,33 +1076,39 @@ fun PluviaMain(
 
         DialogType.EA_SYNC_CONFLICT -> {
             onConfirmClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    eaPreferredSave = SaveLocation.Remote,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        eaPreferredSave = SaveLocation.Remote,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    eaPreferredSave = SaveLocation.Local,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        eaPreferredSave = SaveLocation.Local,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissRequest = {
@@ -1107,33 +1118,39 @@ fun PluviaMain(
 
         DialogType.ROCKSTAR_SYNC_CONFLICT -> {
             onConfirmClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    rockstarPreferredSave = SaveLocation.Remote,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        rockstarPreferredSave = SaveLocation.Remote,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissClick = {
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    rockstarPreferredSave = SaveLocation.Local,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        rockstarPreferredSave = SaveLocation.Local,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
                 msgDialogState = MessageDialogState(false)
             }
             onDismissRequest = {
@@ -1169,17 +1186,20 @@ fun PluviaMain(
         DialogType.SYNC_IN_PROGRESS -> {
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    skipCloudSync = true,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        skipCloudSync = true,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                    )
+                }
             }
             onDismissClick = {
                 setMessageDialogState(MessageDialogState(false))
@@ -1202,18 +1222,21 @@ fun PluviaMain(
         DialogType.PENDING_UPLOAD -> {
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    ignorePendingOperations = true,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        ignorePendingOperations = true,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
             }
             onDismissClick = {
                 setMessageDialogState(MessageDialogState(false))
@@ -1226,16 +1249,19 @@ fun PluviaMain(
         DialogType.APP_SESSION_ACTIVE -> {
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    ignorePendingOperations = true,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        ignorePendingOperations = true,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                    )
+                }
             }
             onDismissClick = {
                 setMessageDialogState(MessageDialogState(false))
@@ -1248,19 +1274,22 @@ fun PluviaMain(
         DialogType.ACCOUNT_SESSION_ACTIVE -> {
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
+                val agentLaunch = AgentPreLaunch.resume()
                 viewModel.viewModelScope.launch {
-                    // Kick only the game on the other device and wait briefly for confirmation
-                    SteamService.kickPlayingSession(onlyGame = true)
-                    preLaunchApp(
-                        context = context,
-                        appId = state.launchedAppId,
-                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                        setLoadingProgress = viewModel::setLoadingDialogProgress,
-                        setLoadingMessage = viewModel::setLoadingDialogMessage,
-                        setMessageDialogState = setMessageDialogState,
-                        onSuccess = viewModel::launchApp,
-                        isOffline = viewModel.isOffline.value,
-                    )
+                    agentLaunch.follow {
+                        // Kick only the game on the other device and wait briefly for confirmation
+                        SteamService.kickPlayingSession(onlyGame = true)
+                        preLaunchApp(
+                            context = context,
+                            appId = state.launchedAppId,
+                            setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                            setLoadingProgress = viewModel::setLoadingDialogProgress,
+                            setLoadingMessage = viewModel::setLoadingDialogMessage,
+                            setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                            onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                            isOffline = viewModel.isOffline.value,
+                        )
+                    }
                 }
             }
             onDismissClick = {
@@ -1294,18 +1323,21 @@ fun PluviaMain(
         DialogType.MULTIPLE_PENDING_OPERATIONS -> {
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
-                preLaunchApp(
-                    context = context,
-                    appId = state.launchedAppId,
-                    ignorePendingOperations = true,
-                    setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
-                    setLoadingProgress = viewModel::setLoadingDialogProgress,
-                    setLoadingMessage = viewModel::setLoadingDialogMessage,
-                    setMessageDialogState = setMessageDialogState,
-                    onSuccess = viewModel::launchApp,
-                    isOffline = viewModel.isOffline.value,
-                    bootToContainer = state.bootToContainer,
-                )
+                val agentLaunch = AgentPreLaunch.resume()
+                agentLaunch.follow {
+                    preLaunchApp(
+                        context = context,
+                        appId = state.launchedAppId,
+                        ignorePendingOperations = true,
+                        setLoadingDialogVisible = viewModel::setLoadingDialogVisible,
+                        setLoadingProgress = viewModel::setLoadingDialogProgress,
+                        setLoadingMessage = viewModel::setLoadingDialogMessage,
+                        setMessageDialogState = agentLaunch.dialogs(setMessageDialogState, ::relaunchesPreLaunch),
+                        onSuccess = agentLaunch.onSuccess(viewModel::launchApp),
+                        isOffline = viewModel.isOffline.value,
+                        bootToContainer = state.bootToContainer,
+                    )
+                }
             }
             onDismissClick = {
                 setMessageDialogState(MessageDialogState(false))
@@ -2287,6 +2319,20 @@ fun PluviaMain(
         }
     }
 }
+
+// dialogs preLaunchApp stops at whose confirm handler (in PluviaMain) starts preLaunchApp again
+private val RELAUNCHING_DIALOGS = setOf(
+    DialogType.SYNC_CONFLICT,
+    DialogType.EA_SYNC_CONFLICT,
+    DialogType.ROCKSTAR_SYNC_CONFLICT,
+    DialogType.SYNC_IN_PROGRESS,
+    DialogType.PENDING_UPLOAD,
+    DialogType.APP_SESSION_ACTIVE,
+    DialogType.ACCOUNT_SESSION_ACTIVE,
+    DialogType.MULTIPLE_PENDING_OPERATIONS,
+)
+
+private fun relaunchesPreLaunch(state: MessageDialogState): Boolean = state.visible && state.type in RELAUNCHING_DIALOGS
 
 fun preLaunchApp(
     context: Context,

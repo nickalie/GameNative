@@ -29,6 +29,7 @@ class AgentDebugEnvTest {
     fun resetHooks() {
         AgentHooks.trackerSource = { AgentRuntime.tracker }
         AgentHooks.launchOptionsSource = { AgentRuntime.launchOptions }
+        AgentPreLaunch.resetForTest()
     }
 
     private class Hooked(val tracker: AgentSessionTracker, val store: AgentLaunchOptionsStore)
@@ -291,7 +292,7 @@ class AgentDebugEnvTest {
         AgentHooks.onLaunchIntent("STEAM_1", debug)
         val sessionId = AgentHooks.onLaunchRequested("STEAM_1") // PluviaMain.launchIntentApp
         val preLaunch = Job()
-        AgentHooks.watchPreLaunch(sessionId, preLaunch) { false }
+        AgentPreLaunch.start(sessionId).watch(preLaunch)
         assertEquals(AgentSessionState.LAUNCHING, h.tracker.current()!!.state)
         preLaunch.complete() // preLaunchApp showed a dialog and returned
 
@@ -316,7 +317,7 @@ class AgentDebugEnvTest {
         val h = hooked()
         val sessionId = AgentHooks.onLaunchRequested("STEAM_1")
         val preLaunch = Job()
-        AgentHooks.watchPreLaunch(sessionId, preLaunch) { false }
+        AgentPreLaunch.start(sessionId).watch(preLaunch)
         preLaunch.completeExceptionally(IllegalStateException("download failed"))
         assertEquals(AgentSessionState.EXITED, h.tracker.current()!!.state)
     }
@@ -325,7 +326,7 @@ class AgentDebugEnvTest {
     fun `hooks - pre-launch that never started ends the session`() {
         val h = hooked()
         val sessionId = AgentHooks.onLaunchRequested("STEAM_1")
-        AgentHooks.watchPreLaunch(sessionId, null) { false } // e.g. the Steam login wait threw
+        AgentPreLaunch.start(sessionId).watch(null) // e.g. the Steam login wait threw
         assertEquals(AgentSessionState.EXITED, h.tracker.current()!!.state)
     }
 
@@ -335,9 +336,9 @@ class AgentDebugEnvTest {
         AgentHooks.onLaunchIntent("STEAM_1", debug)
         val sessionId = AgentHooks.onLaunchRequested("STEAM_1")
         val preLaunch = Job()
-        var launched = false
-        AgentHooks.watchPreLaunch(sessionId, preLaunch) { launched }
-        launched = true // onSuccess -> viewModel.launchApp
+        val run = AgentPreLaunch.start(sessionId)
+        run.watch(preLaunch)
+        run.onSuccess { _, _ -> }(context, "STEAM_1") // onSuccess -> viewModel.launchApp
         preLaunch.complete()
         assertEquals(AgentSessionState.LAUNCHING, h.tracker.current()!!.state)
         assertEquals(agentLogFile("STEAM_1"), AgentHooks.logFileFor(context, "STEAM_1"))
@@ -354,7 +355,7 @@ class AgentDebugEnvTest {
         // LAUNCH_GAME again while the game runs (e.g. a GOG game, or Steam not kept alive)
         AgentHooks.onLaunchIntent("STEAM_1", AgentLaunchOptions(agentDebug = true, wineDebugChannels = "+relay"))
         assertNull(AgentHooks.onLaunchRequested("STEAM_1"))
-        AgentHooks.watchPreLaunch(null, Job().apply { complete() }) { false }
+        AgentPreLaunch.start(null).watch(Job().apply { complete() })
 
         val s = h.tracker.current()!!
         assertEquals(sessionId, s.sessionId)
@@ -372,7 +373,7 @@ class AgentDebugEnvTest {
         AgentHooks.launchOptionsSource = { throw IllegalStateException("store broken") }
         AgentHooks.onLaunchIntent("STEAM_1", debug)
         assertNull(AgentHooks.onLaunchRequested("STEAM_1"))
-        AgentHooks.watchPreLaunch("s1", null) { false }
+        AgentPreLaunch.start("s1").watch(null)
         AgentHooks.onLaunchAborted("s1")
         AgentHooks.clearLaunchOptions("STEAM_1")
         assertNull(AgentHooks.logFileFor(context, "STEAM_1"))
