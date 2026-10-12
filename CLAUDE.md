@@ -10,7 +10,11 @@
 
 ## Tests
 
-- Agent API tests: `./gradlew :app:testModernDebugUnitTest --tests 'app.gamenative.agent.*'`.
+- Agent API tests (the last two filters cover `IntentLaunchManager.parseAgentOptions` and
+  `PreInstallStepGate.kt`, which live outside the agent package):
+  ```sh
+  ./gradlew :app:testModernDebugUnitTest --tests 'app.gamenative.agent.*' --tests 'app.gamenative.utils.IntentLaunchManagerTest' --tests 'app.gamenative.ui.screen.xserver.PreInstallStepGateTest'
+  ```
 - Do not run the whole `:app:testModernDebugUnitTest` in one JVM: it hangs (also on upstream master) —
   ~78 Robolectric classes boot the real `PluviaApp`, which ends in `CrashHandler.uncaughtException` →
   `saveCrashToFile` recursion or a `PostHog.register` lock in `PluviaApp.onCreate`. Run per-package batches
@@ -36,7 +40,8 @@ composable replaces an existing argument in place (`AgentHooks.wineSetupFailedMe
 
 - App code: `app/src/main/java/app/gamenative/agent/` (`AgentProvider` content provider, `AgentDispatcher`,
   `AgentSessionTracker`, `AgentHooks` — the one entry point for hooks in existing files, `commands/`);
-  tests in `app/src/test/java/app/gamenative/agent/`.
+  tests in `app/src/test/java/app/gamenative/agent/`, plus `utils/IntentLaunchManagerTest` and
+  `ui/screen/xserver/PreInstallStepGateTest` (see Tests).
 - Toggle: `PrefManager.agentApiEnabled`, UI in `SettingsGroupDebug`. Launch extras (`agent_debug`,
   `wine_debug_channels`) are parsed in `IntentLaunchManager.parseAgentOptions`.
 - Hook call sites outside the package: `MainActivity`, `PluviaApp`, `MainViewModel`, `PluviaMain`,

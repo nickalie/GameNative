@@ -86,7 +86,7 @@ Most of the time you don't need this — if you just want to play, grab the rele
 
 An AI agent or a script on a computer connected over ADB can drive GameNative without tapping through the UI: list games and component versions, read and change a game's container config (with backups and rollback), add a folder as a custom game, install component versions from the app's manifest, launch a game with verbose Wine/DXVK logging, follow and stop the session, read logs and take screenshots.
 
-- Off by default: turn on **Settings → Debug → Agent API (ADB)**. Only `adb shell` (and root) can call it.
+- Off by default: turn on **Settings → Debug → Agent API (ADB)**. Only the shell UID (`adb shell`, and Shizuku-based apps on the device) and root can call it.
 - Host CLI: [`tools/gnctl`](tools/gnctl/README.md) (Rust, `cargo build --release`).
 - Full reference — security model, commands, error codes, launch extras: [docs/agent-api.md](docs/agent-api.md).
 - Agent skill: [`.claude/skills/gamenative-adb`](.claude/skills/gamenative-adb/SKILL.md).
