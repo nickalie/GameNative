@@ -123,6 +123,7 @@ class AgentSessionTracker(
         var logFile: String? = null
         var config: AgentConfigSnapshot? = null
         var stopRequested = false
+        var prerequisitesRunning = false
         val log = ArrayDeque<String>()
         var droppedLines = 0L
 
@@ -176,10 +177,25 @@ class AgentSessionTracker(
         }
     }
 
-    /** The first game window was mapped. */
+    /**
+     * Prerequisite installers (VC++ redist and the like) run before the game; their windows must not
+     * count as the game window, so [onRunning] is ignored until [onPrerequisitesFinished].
+     */
+    fun onPrerequisitesStarted() = synchronized(lock) {
+        val current = active() ?: return@synchronized
+        if (current.state == AgentSessionState.STARTING) current.prerequisitesRunning = true
+    }
+
+    /** The last prerequisite finished and the game executable is about to start. */
+    fun onPrerequisitesFinished() = synchronized(lock) {
+        active()?.prerequisitesRunning = false
+        Unit
+    }
+
+    /** The first game window was mapped; ignored while prerequisite installers run. */
     fun onRunning() = synchronized(lock) {
         val current = active() ?: return@synchronized
-        if (current.state == AgentSessionState.STARTING) {
+        if (current.state == AgentSessionState.STARTING && !current.prerequisitesRunning) {
             current.state = AgentSessionState.RUNNING
             current.runningAt = clock()
         }

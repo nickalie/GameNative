@@ -20,6 +20,9 @@ object AgentHooks {
      */
     internal const val FATAL_LAUNCH_ERROR_PREFIX = "Failed to setup wine"
 
+    /** The launch error XServerScreen reports when wine setup threw; built here so it always classifies as fatal. */
+    fun wineSetupFailedMessage(detail: String?): String = "$FATAL_LAUNCH_ERROR_PREFIX: $detail"
+
     fun onStarting(appId: String, container: Container?) = guard("onStarting") { it.onStarting(appId, container) }
 
     /** Called for every process output line; failures are swallowed silently to avoid log spam. */
@@ -28,6 +31,10 @@ object AgentHooks {
     }
 
     fun onRunning() = guard("onRunning") { it.onRunning() }
+
+    fun onPrerequisitesStarted() = guard("onPrerequisitesStarted") { it.onPrerequisitesStarted() }
+
+    fun onPrerequisitesFinished() = guard("onPrerequisitesFinished") { it.onPrerequisitesFinished() }
 
     fun onExiting(reason: String) = guard("onExiting") { it.onExiting(reason) }
 

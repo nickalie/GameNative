@@ -2543,7 +2543,7 @@ fun XServerScreen(
                                 Timber.e(cleanupEx, "Error cleaning up environment after setup failure")
                             }
                             PluviaApp.xEnvironment = null
-                            onGameLaunchError?.invoke("Failed to setup wine: ${e.message}")
+                            onGameLaunchError?.invoke(AgentHooks.wineSetupFailedMessage(e.message))
                         } finally {
                             setupExecutor.shutdown()
                         }
@@ -4314,9 +4314,16 @@ private fun setupXEnvironment(
         if (debugRun) DebugReportUtils.startLogcatCapture(context, appId)
     }
 
+    var logFileWritable = true
     ProcessHelper.addDebugCallback { line ->
-        if (captureLogs) {
-            logFile?.appendText(line + "\n")
+        if (captureLogs && logFileWritable) {
+            try {
+                logFile?.appendText(line + "\n")
+            } catch (e: IOException) {
+                // Stop writing the file but keep the reader alive, so the agent log buffer still fills.
+                logFileWritable = false
+                Timber.w(e, "Failed to append to process log file; file logging stopped")
+            }
         }
         AgentHooks.onLogLine(line)
     }
@@ -4554,6 +4561,7 @@ private fun setupXEnvironment(
             if (remaining.firstOrNull()?.marker == Marker.GOG_SCRIPT_INSTALLED) FEXCorePreset.STABILITY else container.fexCorePreset,
         )
         if (remaining.isEmpty()) {
+            AgentHooks.onPrerequisitesFinished()
             guestProgramLauncherComponent.setGuestExecutable(gameExecutable)
             guestProgramLauncherComponent.setTerminationCallback(gameTerminationCallback)
             return
@@ -4582,6 +4590,7 @@ private fun setupXEnvironment(
     }
 
     if (preInstallCommands.isNotEmpty()) {
+        AgentHooks.onPrerequisitesStarted()
         chainPreInstallSteps(preInstallCommands)
     } else {
         guestProgramLauncherComponent.setTerminationCallback(gameTerminationCallback)

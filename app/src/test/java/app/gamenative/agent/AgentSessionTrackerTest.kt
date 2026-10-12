@@ -604,6 +604,37 @@ class AgentSessionTrackerTest {
         assertFalse(AgentHooks.isFatalLaunchError("Game terminated with error status: 3"))
         assertFalse(AgentHooks.isFatalLaunchError("Steam could not prepare the game executable (x)"))
         assertFalse(AgentHooks.isFatalLaunchError("Error: Failed to setup wine"))
+        // XServerScreen builds its wine-setup error with this helper, so the wording cannot drift.
+        assertTrue(AgentHooks.isFatalLaunchError(AgentHooks.wineSetupFailedMessage("boom")))
+        assertTrue(AgentHooks.isFatalLaunchError(AgentHooks.wineSetupFailedMessage(null)))
+    }
+
+    @Test
+    fun `hooks - prerequisite installer windows do not mark the session running`() {
+        val t = hooked()
+        AgentHooks.onStarting("STEAM_1", null) // setupXEnvironment
+        AgentHooks.onPrerequisitesStarted() // pre-install commands found, chain started
+        now = 2_000
+        AgentHooks.onRunning() // vc_redist progress window mapped
+        assertEquals(AgentSessionState.STARTING, t.state())
+        assertNull(t.current()!!.runningAt)
+        AgentHooks.onPrerequisitesFinished() // last step done, game executable set
+        now = 3_000
+        AgentHooks.onRunning() // game window
+        assertEquals(AgentSessionState.RUNNING, t.state())
+        assertEquals(3_000L, t.current()!!.runningAt)
+    }
+
+    @Test
+    fun `hooks - pending prerequisites do not carry over to the next session`() {
+        val t = hooked()
+        AgentHooks.onStarting("STEAM_1", null)
+        AgentHooks.onPrerequisitesStarted()
+        AgentHooks.onExiting("quick_menu") // user leaves during the installer
+        AgentHooks.onExited()
+        AgentHooks.onStarting("STEAM_1", null) // next launch, no prerequisites left
+        AgentHooks.onRunning()
+        assertEquals(AgentSessionState.RUNNING, t.state())
     }
 
     @Test
