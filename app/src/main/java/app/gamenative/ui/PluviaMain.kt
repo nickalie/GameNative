@@ -59,6 +59,7 @@ import app.gamenative.NetworkMonitor
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
+import app.gamenative.agent.AgentHooks
 import app.gamenative.data.GameSource
 import app.gamenative.enums.AppTheme
 import app.gamenative.enums.LoginResult
@@ -306,6 +307,7 @@ private fun consumePendingSteamLoginError(context: Context) {
     val gameSource = ContainerUtils.extractGameSourceFromContainerId(request.appId)
     if (gameSource != GameSource.STEAM || SteamService.isLoggedIn) return
     MainActivity.consumePendingLaunchRequest()
+    AgentHooks.clearLaunchOptions(request.appId)
     SnackbarManager.show(context.getString(R.string.intent_launch_steam_login_failed))
 }
 
@@ -492,11 +494,13 @@ fun PluviaMain(
         val requestedGameId = runCatching { ContainerUtils.extractGameIdFromContainerId(resolvedAppId) }.getOrNull()
         if (SteamService.keepAlive && requestedGameId != null && ActiveGameRegistry.get()?.appId == requestedGameId) {
             Timber.i("[PluviaMain]: Game $resolvedAppId already running; bringing XServer screen forward")
+            AgentHooks.clearLaunchOptions(resolvedAppId)
             if (navController.currentDestination?.route != PluviaScreen.XServer.route) {
                 navController.navigate(PluviaScreen.XServer.route)
             }
         } else {
             MainActivity.wasLaunchedViaExternalIntent = true
+            AgentHooks.onLaunchRequested(resolvedAppId)
             trackGameLaunched(resolvedAppId)
             viewModel.setLaunchedAppId(resolvedAppId)
             viewModel.setBootToContainer(false)
@@ -556,6 +560,7 @@ fun PluviaMain(
                 is GameResolutionResult.NotFound -> {
                     val appName = ContainerUtils.resolveGameName(resolution.originalAppId)
                     Timber.w("[PluviaMain]: Game not installed: $appName (${launchRequest.appId})")
+                    AgentHooks.clearLaunchOptions(launchRequest.appId)
                     msgDialogState = MessageDialogState(
                         visible = true,
                         type = DialogType.SYNC_FAIL,
@@ -576,6 +581,7 @@ fun PluviaMain(
         MainActivity.peekPendingLaunchRequest()?.let { request ->
             if (needsDeferLaunch(context, request.appId)) {
                 Timber.tag("IntentLaunch").w("Pending launch timed out for ${request.appId}")
+                AgentHooks.clearLaunchOptions(request.appId)
                 MainActivity.consumePendingLaunchRequest()
                 SnackbarManager.show(context.getString(R.string.intent_launch_service_timeout))
             }
@@ -591,6 +597,7 @@ fun PluviaMain(
                 is GameResolutionResult.NotFound -> {
                     val appName = ContainerUtils.resolveGameName(resolution.originalAppId)
                     Timber.tag("IntentLaunch").w("Game not installed: $appName (${launchRequest.appId})")
+                    AgentHooks.clearLaunchOptions(launchRequest.appId)
                     msgDialogState = MessageDialogState(
                         visible = true,
                         type = DialogType.SYNC_FAIL,
@@ -655,6 +662,7 @@ fun PluviaMain(
                         is GameResolutionResult.NotFound -> {
                             val appName = ContainerUtils.resolveGameName(resolution.originalAppId)
                             Timber.w("[PluviaMain]: Game not installed: $appName (${event.appId})")
+                            AgentHooks.clearLaunchOptions(event.appId)
                             msgDialogState = MessageDialogState(
                                 visible = true,
                                 type = DialogType.SYNC_FAIL,

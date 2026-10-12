@@ -4302,14 +4302,16 @@ private fun setupXEnvironment(
                 "-all",
         )
     }
-    AgentHooks.onStarting(appId, container)
+    // agent_debug launch: its own log file; a debug run keeps its file and report pipeline
+    val agentLogFile = if (debugRun) null else AgentHooks.logFileFor(context, appId)
+    AgentHooks.onStarting(appId, container, agentLogFile)
     // capture debug output to file if either Wine or Box86/64 logging is enabled
     var logFile: File? = null
-    val captureLogs = debugRun || enableWineDebug || enableBox86Logs
+    val captureLogs = debugRun || enableWineDebug || enableBox86Logs || agentLogFile != null
     if (captureLogs) {
         val wineLogDir = File(context.getExternalFilesDir(null), "wine_logs")
         wineLogDir.mkdirs()
-        logFile = File(wineLogDir, if (debugRun) "debug_run_$appId.log" else "wine_debug.log")
+        logFile = agentLogFile ?: File(wineLogDir, if (debugRun) "debug_run_$appId.log" else "wine_debug.log")
         if (logFile.exists()) logFile.delete()
         if (debugRun) DebugReportUtils.startLogcatCapture(context, appId)
     }
@@ -4411,6 +4413,8 @@ private fun setupXEnvironment(
         if (debugRun) {
             DebugRunParamsHolder.get(appId)?.let { DebugRunParams.applyToDebugEnv(envVars, appId, it) }
             PerfSampler.armCpuProfile(DebugRunParamsHolder.get(appId)?.attach?.contains(DebugRunParams.ATTACH_CPU) == true)
+        } else {
+            AgentHooks.applyEnv(appId, envVars)
         }
 
         val graphicsDriverConfig = KeyValueSet(container.getGraphicsDriverConfig())

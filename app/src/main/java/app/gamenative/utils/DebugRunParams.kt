@@ -42,9 +42,9 @@ data class DebugRunParams(
         val DEFAULT_ATTACH: Set<String> = linkedSetOf(ATTACH_LOGCAT, ATTACH_PERF)
         private val ALLOWED_ATTACH = setOf(ATTACH_LOGCAT, ATTACH_PERF, ATTACH_WRAPPER_DIAG, ATTACH_CPU)
 
-        private val CHANNEL_PATTERN = Regex("^[+-]?[a-z0-9_]{1,24}$")
-        private val BANNED_CHANNELS = setOf("all", "relay", "server", "heap", "snoop", "file")
-        private const val MAX_CHANNELS = 8
+        internal val CHANNEL_PATTERN = Regex("^[+-]?[a-z0-9_]{1,24}$")
+        internal val BANNED_CHANNELS = setOf("all", "relay", "server", "heap", "snoop", "file")
+        internal const val MAX_CHANNELS = 8
 
         val ALLOWED_ENV: Set<String> = setOf(
             "DXVK_LOG_LEVEL", "DXVK_CONFIG", "VKD3D_DEBUG", "VKD3D_SHADER_DEBUG", "VKD3D_CONFIG",

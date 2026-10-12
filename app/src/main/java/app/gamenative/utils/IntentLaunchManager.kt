@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
+import app.gamenative.agent.AgentLaunchOptions
 import app.gamenative.data.GameSource
 import com.winlator.container.Container
 import com.winlator.container.ContainerData
@@ -20,6 +21,9 @@ object IntentLaunchManager {
 
     private const val EXTRA_GAME_SOURCE = "game_source"
     private const val EXTRA_CONTAINER_CONFIG = "container_config"
+    private const val EXTRA_AGENT_DEBUG = "agent_debug"
+    private const val EXTRA_WINE_DEBUG_CHANNELS = "wine_debug_channels"
+    private const val MAX_WINE_DEBUG_CHANNELS_LENGTH = 256
     private const val ACTION_LAUNCH_GAME = "app.gamenative.LAUNCH_GAME"
     private const val ACTION_VIEW = "android.intent.action.VIEW"
     private const val URI_SCHEME = "gamenative"
@@ -29,9 +33,28 @@ object IntentLaunchManager {
     data class LaunchRequest(
         val appId: String,
         val containerConfig: ContainerData? = null,
+        val agentOptions: AgentLaunchOptions = AgentLaunchOptions.NONE,
     )
 
-    fun parseLaunchIntent(intent: Intent): LaunchRequest? {
+    /**
+     * Agent API launch extras; honored only while the Agent API toggle is on, because any app can send
+     * `LAUNCH_GAME` to the exported activity. Channels stay raw here and are filtered when the env is built.
+     */
+    internal fun parseAgentOptions(intent: Intent, agentApiEnabled: Boolean): AgentLaunchOptions {
+        if (!agentApiEnabled) return AgentLaunchOptions.NONE
+        return AgentLaunchOptions(
+            agentDebug = intent.getBooleanExtra(EXTRA_AGENT_DEBUG, false),
+            wineDebugChannels = intent.getStringExtra(EXTRA_WINE_DEBUG_CHANNELS)
+                ?.trim()?.take(MAX_WINE_DEBUG_CHANNELS_LENGTH)?.ifEmpty { null },
+        )
+    }
+
+    private fun isAgentApiEnabled(): Boolean = runCatching { PrefManager.agentApiEnabled }.getOrDefault(false)
+
+    fun parseLaunchIntent(
+        intent: Intent,
+        agentApiEnabled: () -> Boolean = ::isAgentApiEnabled,
+    ): LaunchRequest? {
         Timber.d("[IntentLaunchManager]: Parsing intent: action=${intent.action}")
 
         if (intent.action != ACTION_LAUNCH_GAME && intent.action != ACTION_VIEW) {
@@ -41,6 +64,7 @@ object IntentLaunchManager {
         val gameId: Int
         val gameSource: String?
         val containerConfig: ContainerData?
+        val agentOptions: AgentLaunchOptions
 
         if (intent.action == ACTION_VIEW) {
             val data = intent.data
@@ -51,6 +75,7 @@ object IntentLaunchManager {
             gameId = data.getQueryParameter("appid")?.toIntOrNull() ?: -1
             gameSource = data.getQueryParameter("gamesource")?.uppercase(java.util.Locale.ROOT)
             containerConfig = null
+            agentOptions = AgentLaunchOptions.NONE
         } else {
             gameId = intent.getIntExtra(EXTRA_APP_ID, -1)
             Timber.d("[IntentLaunchManager]: Extracted app_id: $gameId from intent extras")
@@ -65,6 +90,8 @@ object IntentLaunchManager {
                     null
                 }
             }
+            val hasAgentExtras = intent.hasExtra(EXTRA_AGENT_DEBUG) || intent.hasExtra(EXTRA_WINE_DEBUG_CHANNELS)
+            agentOptions = if (hasAgentExtras) parseAgentOptions(intent, agentApiEnabled()) else AgentLaunchOptions.NONE
         }
 
         if (gameId <= 0) {
@@ -81,7 +108,7 @@ object IntentLaunchManager {
         val appId = "${gameSource}_$gameId"
         Timber.d("[IntentLaunchManager]: Converted to appId: $appId")
 
-        return LaunchRequest(appId, containerConfig)
+        return LaunchRequest(appId, containerConfig, agentOptions)
     }
 
     fun applyTemporaryConfigOverride(context: Context, appId: String, configOverride: ContainerData) {

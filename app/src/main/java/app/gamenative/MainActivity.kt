@@ -35,6 +35,7 @@ import coil.intercept.Interceptor
 import coil.request.CachePolicy
 import app.gamenative.BuildConfig
 import app.gamenative.PrefManager
+import app.gamenative.agent.AgentHooks
 import app.gamenative.events.AndroidEvent
 import app.gamenative.mods.NexusAuthManager
 import app.gamenative.mods.NexusDownloadLinkInbox
@@ -361,6 +362,7 @@ class MainActivity : ComponentActivity() {
             val launchRequest = IntentLaunchManager.parseLaunchIntent(intent)
             if (launchRequest != null) {
                 Timber.d("[IntentLaunch]: Received external launch intent for app ${launchRequest.appId}")
+                AgentHooks.onLaunchIntent(launchRequest.appId, launchRequest.agentOptions)
 
                 if (isNewIntent) {
                     // supersedes any stale pending request

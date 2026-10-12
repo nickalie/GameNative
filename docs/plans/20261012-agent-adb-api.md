@@ -233,13 +233,14 @@
 - Create: `app/src/test/java/app/gamenative/agent/AgentDebugEnvTest.kt`
 - Create: `app/src/test/java/app/gamenative/utils/IntentLaunchManagerTest.kt`
 
-- [ ] `IntentLaunchManager`: parse `agent_debug` (`getBooleanExtra`) and `wine_debug_channels`; empty options when the toggle is off
-- [ ] `MainActivity.handleLaunchIntent`: overwrite the side store on every `LAUNCH_GAME` (cold and warm); `PluviaMain.launchIntentApp` real-launch branch → `onLaunchRequested(appId, options)`; clear on `NotFound`/error
-- [ ] `AgentDebugEnv` (pure): channel filtering via `DebugRunParams` rules (dropped → warnings), `mergeWineDebug(BASE_WINEDEBUG, …)`, DXVK/VKD3D vars
-- [ ] `setupXEnvironment`: before `:4306` → `AgentHooks.logFileFor(context, appId)` feeds `captureLogs`/`logFile` and the tracker's `log_file`; after `:4404` (inside `container != null`, before `TU_DEBUG`) → `AgentHooks.applyEnv(appId, envVars)`
-- [ ] tests: parsing; toggle off → no options; banned/invalid/too many channels → dropped + warnings; env precedence over `WINEDEBUG` from container env; one-shot (next launch has no agent env); store overwrite on an extras-less intent
-- [ ] `modernDebug` build + tests + `:app:lintKotlin`
-- [ ] ⚠️ on-device smoke: `am start … --ez agent_debug true` with the app closed and with it open (warm path), and once with Steam not logged in (deferral) → `sessions.current.agent_debug=true`, `log_file` = `…/wine_logs/agent_<appId>.log`, the file remains after exit and `adb pull` fetches it, no report dialog; the next UI launch has no agent-debug env
+- [x] `IntentLaunchManager`: parse `agent_debug` (`getBooleanExtra`) and `wine_debug_channels`; empty options when the toggle is off
+- [x] `MainActivity.handleLaunchIntent`: overwrite the side store on every `LAUNCH_GAME` (cold and warm); `PluviaMain.launchIntentApp` real-launch branch → `onLaunchRequested(appId, options)`; clear on `NotFound`/error
+- [x] `AgentDebugEnv` (pure): channel filtering via `DebugRunParams` rules (dropped → warnings), `mergeWineDebug(BASE_WINEDEBUG, …)`, DXVK/VKD3D vars
+- [x] `setupXEnvironment`: before `:4306` → `AgentHooks.logFileFor(context, appId)` feeds `captureLogs`/`logFile` and the tracker's `log_file`; after `:4404` (inside `container != null`, before `TU_DEBUG`) → `AgentHooks.applyEnv(appId, envVars)`
+- [x] tests: parsing; toggle off → no options; banned/invalid/too many channels → dropped + warnings; env precedence over `WINEDEBUG` from container env; one-shot (next launch has no agent env); store overwrite on an extras-less intent
+- [x] `modernDebug` build + tests + `:app:lintKotlin` (agent tests green; lint: no errors in new files or changed lines)
+- [x] ⚠️ on-device smoke: `am start … --ez agent_debug true` with the app closed and with it open (warm path), and once with Steam not logged in (deferral) → `sessions.current.agent_debug=true`, `log_file` = `…/wine_logs/agent_<appId>.log`, the file remains after exit and `adb pull` fetches it, no report dialog; the next UI launch has no agent-debug env (skipped - no device attached; `adb devices` lists none)
+- ➕ channels sent without `agent_debug` are ignored (session warning `wine_debug_channels_ignored_without_agent_debug`); dropped channels → `wine_debug_channel_dropped:<reason>:<item>`; when an app-triggered debug run (pending AI-applied verification run) coincides with an agent launch, the debug run keeps its log file and env and the agent log/env are skipped
 
 ### Task 9: gnctl crate — core and transport
 
