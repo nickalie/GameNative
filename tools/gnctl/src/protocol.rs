@@ -18,6 +18,8 @@ pub const API_VERSION: i64 = 1;
 pub const DEFAULT_PACKAGE: &str = "app.gamenative";
 pub const METHOD_COMMAND: &str = "command";
 pub const BUNDLE_KEY: &str = "json";
+/// Text the `content` tool prints when the provider call itself fails.
+const PROVIDER_ERROR: &str = "Error while accessing provider";
 
 #[derive(Debug, Serialize)]
 pub struct Request<'a> {
@@ -107,13 +109,17 @@ pub fn parse_content_output(out: &AdbOutput) -> Result<String, CliError> {
             truncate(detail.trim(), 500)
         )));
     }
-    // The content tool reports provider failures (missing provider, SecurityException) as text.
-    for text in [&stderr, &stdout] {
-        if let Some(idx) = text.find("Error while accessing provider") {
+    // The content tool reports provider failures (missing provider, SecurityException) as text
+    // and then prints no `Result:` line. The response JSON after `Result: ` is app data that may
+    // contain any text, so on stdout only the part before the marker is checked.
+    let result_idx = stdout.find("Result: ");
+    let stdout_head = &stdout[..result_idx.unwrap_or(stdout.len())];
+    for text in [stderr.as_str(), stdout_head] {
+        if let Some(idx) = text.find(PROVIDER_ERROR) {
             return Err(CliError::Adb(truncate(text[idx..].trim(), 500)));
         }
     }
-    let Some(idx) = stdout.find("Result: ") else {
+    let Some(idx) = result_idx else {
         return Err(unexpected_output(&stdout));
     };
     let rest = stdout[idx + "Result: ".len()..].trim();
@@ -348,6 +354,39 @@ mod tests {
         let err = call(&fake, DEFAULT_PACKAGE, "capabilities", &Map::new()).unwrap_err();
         assert_eq!(err.exit_code(), 2);
         assert!(err.message().contains("SecurityException"));
+
+        // Same text on stdout with no Result line (older content tool builds print there).
+        let fake = FakeAdb::new();
+        fake.push_ok("Error while accessing provider:app.gamenative.agent\n");
+        let err = call(&fake, DEFAULT_PACKAGE, "capabilities", &Map::new()).unwrap_err();
+        assert_eq!(err.exit_code(), 2);
+    }
+
+    #[test]
+    fn provider_error_text_inside_response_json_is_data() {
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle(
+            r#"{"api_version":1,"ok":true,"data":{"lines":["wine: Error while accessing provider x"]}}"#,
+        ));
+        let data = call(&fake, DEFAULT_PACKAGE, "sessions.logs", &Map::new()).unwrap();
+        assert_eq!(
+            data,
+            json!({"lines": ["wine: Error while accessing provider x"]})
+        );
+
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle(
+            r#"{"api_version":1,"ok":false,"error":{"code":"UNKNOWN_COMMAND","message":"Unknown command: Error while accessing provider"}}"#,
+        ));
+        let err = call(
+            &fake,
+            DEFAULT_PACKAGE,
+            "Error while accessing provider",
+            &Map::new(),
+        )
+        .unwrap_err();
+        assert_eq!(err.exit_code(), 4);
+        assert!(matches!(err, CliError::App { ref code, .. } if code == "UNKNOWN_COMMAND"));
     }
 
     #[test]
