@@ -261,6 +261,27 @@ class SessionCommandsTest {
     }
 
     @Test
+    fun stop_whilePrerequisitesRun_forceClosesWithoutWaitingForThem() {
+        // A stuck installer must be stoppable: the force close kills it, and the installer chain itself
+        // refuses to advance during exit (advancePreInstallChain), so the step stays not done.
+        tracker.onStarting("STEAM_123", container = null)
+        tracker.onPrerequisitesStarted()
+        val dispatcher = dispatcher(
+            forceClose = {
+                forceCloses++
+                tracker.onExiting(AgentSessionTracker.REASON_FORCE_CLOSE)
+            },
+        )
+
+        data(call(dispatcher, SessionCommands.STOP))
+        drainMain()
+
+        assertEquals(1, forceCloses)
+        assertEquals(AgentSessionState.EXITING, tracker.current()!!.state)
+        assertEquals(AgentSessionTracker.REASON_AGENT_STOP, tracker.current()!!.exitReason)
+    }
+
+    @Test
     fun stop_whileStarting_isDroppedWhenTheSessionEndsOtherwise() {
         tracker.onStarting("STEAM_123", container = null)
         environmentReady = false

@@ -49,8 +49,10 @@ class SessionCommands(
      * While the session is `starting` the setup worker has not published the environment yet; closing the
      * screen then would tear nothing down while the worker goes on to start wine and the game, so the stop
      * waits (polling every [STOP_POLL_MS]) until the environment is published, or ends unused when the
-     * session finishes some other way. Repeating the stop is safe. Any state other than `starting` or
-     * `running` → `NO_ACTIVE_SESSION`.
+     * session finishes some other way. Prerequisite installers run after the environment is published and
+     * the stop does not wait for them: teardown kills the installer, and the installer chain does not
+     * advance once the screen is exiting (`advancePreInstallChain`). Repeating the stop is safe. Any state
+     * other than `starting` or `running` → `NO_ACTIVE_SESSION`.
      */
     fun stop(): JsonElement {
         val before = tracker.current()

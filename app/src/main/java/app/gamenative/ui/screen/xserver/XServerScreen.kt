@@ -4568,24 +4568,31 @@ private fun setupXEnvironment(
         }
         guestProgramLauncherComponent.setGuestExecutable(remaining.first().executable)
         guestProgramLauncherComponent.setTerminationCallback { _ ->
-            val current = remaining.first()
-            PreInstallSteps.markStepDone(container, current.marker)
-            guestProgramLauncherComponent.setPreUnpack(null)
-            try {
-                guestProgramLauncherComponent.execShellCommand("wineserver -k")
-            } catch (e: Exception) {
-                Timber.w(e, "wineserver -k between pre-install steps (non-fatal)")
-            }
-            val nextRemaining = remaining.drop(1)
-            if (nextRemaining.isEmpty() && container.isLaunchHeadlessSteam && gameSource == GameSource.STEAM && !bootToContainer) {
-                PluviaApp.events.emit(AndroidEvent.SetBootingSplashText(context.getString(R.string.steam_starting)))
-            } else if (nextRemaining.isEmpty()) {
-                PluviaApp.events.emit(AndroidEvent.SetBootingSplashText("Launching game..."))
-            } else {
-                PluviaApp.events.emit(AndroidEvent.SetBootingSplashText("Installing prerequisites..."))
-            }
-            chainPreInstallSteps(nextRemaining)
-            guestProgramLauncherComponent.start()
+            advancePreInstallChain(
+                exiting = isExiting::get,
+                completeStep = {
+                    val current = remaining.first()
+                    PreInstallSteps.markStepDone(container, current.marker)
+                    guestProgramLauncherComponent.setPreUnpack(null)
+                    try {
+                        guestProgramLauncherComponent.execShellCommand("wineserver -k")
+                    } catch (e: Exception) {
+                        Timber.w(e, "wineserver -k between pre-install steps (non-fatal)")
+                    }
+                },
+                startNext = {
+                    val nextRemaining = remaining.drop(1)
+                    if (nextRemaining.isEmpty() && container.isLaunchHeadlessSteam && gameSource == GameSource.STEAM && !bootToContainer) {
+                        PluviaApp.events.emit(AndroidEvent.SetBootingSplashText(context.getString(R.string.steam_starting)))
+                    } else if (nextRemaining.isEmpty()) {
+                        PluviaApp.events.emit(AndroidEvent.SetBootingSplashText("Launching game..."))
+                    } else {
+                        PluviaApp.events.emit(AndroidEvent.SetBootingSplashText("Installing prerequisites..."))
+                    }
+                    chainPreInstallSteps(nextRemaining)
+                    guestProgramLauncherComponent.start()
+                },
+            )
         }
     }
 
