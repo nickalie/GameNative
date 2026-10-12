@@ -48,8 +48,9 @@ The provider authority is derived from the package name: `app.gamenative.agent` 
   raw process output. The shell can read it anyway. Config backups under the container directory store the
   full `envVars` string, unmasked.
 - **What an enabled API allows.** Persistent config changes within the AI-suggestion boundary (below),
-  launching and stopping games. It cannot download components, change drives, controls or the container
-  variant, and cannot read other app data.
+  adding folders as custom games, installing component versions listed in the app's component manifest,
+  launching and stopping games. It cannot install anything outside that manifest, change drives, controls or
+  the container variant, and cannot read other app data.
 
 ## Transport
 
@@ -84,11 +85,12 @@ adb shell content call --uri content://app.gamenative.agent --method command --a
 | `UNSUPPORTED_API_VERSION` | `api_version` is not 1; `details.supported` lists the supported versions. |
 | `GAME_NOT_FOUND` | Reserved; no v1 command returns it. |
 | `NO_CONTAINER` | The game has no container yet (never launched). Launch it once normally. |
-| `MISSING_COMPONENTS` | `containers.set` needs component versions the device does not have; `details` is an array of `{name, type?, downloadable}`. Nothing is written. |
+| `MISSING_COMPONENTS` | `containers.set` needs component versions the device does not have; `details` is an array of `{name, type?, downloadable}`. Nothing is written. Install the `downloadable` ones with `components.install`. |
 | `CONTAINER_INVALID` | The container's current `videoPciDeviceID` is unknown to the app; fix it in the container settings first. |
 | `NO_ACTIVE_SESSION` | `sessions.stop` while no session is `starting` or `running`; `details.state` is the current state, if any. |
 | `SESSION_ACTIVE` | `containers.set`/`restore` while the game has a session that has not exited. |
 | `NO_BACKUP` | `containers.restore` with an unknown backup id, or no baseline yet. |
+| `STORAGE_ACCESS_DENIED` | `games.add_custom` for a folder outside the app's own storage while the app has no All files access. |
 | `NOT_READY` | The app process is still starting. Retry. |
 | `DISABLED` | The Agent API toggle is off. |
 | `RESPONSE_TOO_LARGE` | The response exceeds 256 KB; `details` has `size` and `limit`. Use a filter or a smaller `tail`. |
@@ -102,8 +104,8 @@ App ids have the shape `<SOURCE>_<number>`, e.g. `STEAM_123`, `CUSTOM_GAME_7`; s
 ### `capabilities`
 
 `{api_version, app_version, package, commands[]}` — `commands` lists every registered command, sorted:
-`capabilities`, `components.list`, `containers.backups`, `containers.get`, `containers.restore`,
-`containers.set`, `device.info`, `games.list`, `sessions.current`, `sessions.logs`, `sessions.stop`.
+`capabilities`, `components.install`, `components.list`, `containers.backups`, `containers.get`, `containers.restore`,
+`containers.set`, `device.info`, `games.add_custom`, `games.list`, `sessions.current`, `sessions.logs`, `sessions.stop`.
 
 ### `device.info`
 
@@ -120,6 +122,29 @@ id (`null` when the store id is not numeric). Custom game folders imported as a 
 as the Steam entry. `has_container=false` means the game was never launched: config commands answer
 `NO_CONTAINER` until it is. Unknown `source` → `BAD_ARGS` with `details.sources`.
 
+### `games.add_custom {path}`
+
+Adds a folder on the device as a custom game, as the library's folder picker does:
+`{app_id, game_id, game_source, name, path, added, has_container, executable}`.
+
+- `path` is an absolute device path, taken verbatim (whitespace is part of a name). `.`/`..` and a trailing
+  slash are normalized and `/sdcard/X` becomes `/storage/emulated/<user>/X`; other symlinks are kept, as the
+  folder picker keeps them. `path` in the answer is that form.
+- With **Import custom games as Steam games** on, a folder named like the install dir of an owned Steam game
+  becomes that Steam game (`STEAM_<id>`), as in the UI.
+- `added=false`: the folder was already in the list of added folders; nothing changed. Adding is idempotent.
+- `executable` is the exe the first launch picks by itself (relative to the folder), or `null` when the
+  folder and its direct subfolders hold no exe or more than one (always `null` for a Steam entry). With `null`
+  the first launch creates the container, ends the session at once with `launch_error` ("Launch aborted before
+  the game started") and leaves a "Cannot Launch" dialog on screen: dismiss it, then set `executablePath` with
+  `containers.set` — relative to the folder (`bin\game.exe`) or an absolute Windows path (`Z:` is the device
+  root).
+- A folder outside the app's own storage needs storage access, else `STORAGE_ACCESS_DENIED`; the message
+  carries the adb command that grants it: Android 11+ `adb shell appops set <package> MANAGE_EXTERNAL_STORAGE
+  allow`, Android 10 and earlier `adb shell pm grant <package> android.permission.READ_EXTERNAL_STORAGE`.
+  Granting All files access restarts the app process (`NOT_READY` until it is up again).
+- Not a directory, or a folder the app refuses → `BAD_ARGS`. The folder is never copied or moved.
+
 ### `components.list {target?}`
 
 `[{target, value, label, installed, downloadable, variant?}]` — component versions a config may reference.
@@ -135,9 +160,30 @@ as the Steam entry. `has_container=false` means the game was never launched: con
 | `fexcoreVersion` | FEXCore versions. |
 
 Sources are the same as the app's own config validation: bundled entries, installed content and the
-component manifest. `installed=false, downloadable=true` entries must be installed from the app before a
-config can use them. The manifest is read from the offline cache only; `components.list` never touches the
-network and does not refresh a stale cache. Unknown `target` → `BAD_ARGS` with `details.targets`.
+component manifest. `installed=false, downloadable=true` entries must be installed (`components.install`)
+before a config can use them. The manifest is read from the offline cache only; `components.list` never
+touches the network and does not refresh a stale cache (an empty list of downloadable entries on a fresh
+install means the cache is empty; `containers.set` or `components.install` fill it). Unknown `target` →
+`BAD_ARGS` with `details.targets`.
+
+### `components.install {target, value, variant?}`
+
+Downloads and installs a version from the component manifest, the way the config dialog does:
+`{target, value, variant?, state, progress, message?}`.
+
+- `target` is one of the `components.list` targets; `value` the version as listed there (case-insensitive).
+  `variant` is needed only when the manifest has that id in several variants (Box64 and WoWBox64 share ids) —
+  `BAD_ARGS` with `details.variants` says which.
+- The download runs in the background, one at a time; the answer comes at once. `state`: `queued`,
+  `downloading` (`progress` 0–1), `installed`, `failed` (`message` says why). Asking again for the same
+  component reports the job instead of starting a second download. A failure is answered once (`failed`); the
+  call after that starts a new attempt. Jobs live in the app process: after a restart a finished install shows
+  up as `installed` through `components.list`.
+- Installed content without a variant counts for every variant except `arm64ec`: WoWBox64 is installed
+  separately even when Box64 with the same id is present.
+- Already installed → `state=installed` at once, nothing is downloaded.
+- Not in the cached manifest → the manifest is fetched over the network when the cache is empty or a day old,
+  then looked up again; still unknown → `BAD_ARGS`.
 
 ### `containers.get {app_id}`
 
@@ -174,7 +220,7 @@ Persistently changes the config, exactly within the boundary of an AI config sug
    `emulator`, `fexcoreVersion`, `fexcorePreset`, `graphicsDriver`, `graphicsDriverVersion`,
    `graphicsDriverConfig`), the components are checked: versions that are
    downloadable but not installed, or unknown → `MISSING_COMPONENTS`; a config the validator refuses outright
-   → `BAD_ARGS`. Nothing is downloaded. A driver alias is rewritten to the id the runtime resolves.
+   → `BAD_ARGS`. Nothing is downloaded here: install first with `components.install`. A driver alias is rewritten to the id the runtime resolves.
 6. A backup of the current config is taken, then the config is saved (`applyToContainer`, `saveToDisk=true`)
    and marked as applied by `agent_api`. A failed save → `INTERNAL` (the backup is kept).
 

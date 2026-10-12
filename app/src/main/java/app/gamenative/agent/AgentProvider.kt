@@ -17,6 +17,8 @@ import app.gamenative.BuildConfig
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.commands.ComponentCommands
+import app.gamenative.agent.commands.ComponentInstallDeps
+import app.gamenative.agent.commands.ComponentInstallQueue
 import app.gamenative.agent.commands.ContainerCommands
 import app.gamenative.agent.commands.CustomFolderDeps
 import app.gamenative.agent.commands.ContainerWriteDeps
@@ -118,6 +120,7 @@ class AgentProvider : ContentProvider() {
             tracker: AgentSessionTracker = AgentRuntime.tracker,
             postToMain: (Runnable, Long) -> Unit = { task, delayMs -> Handler(Looper.getMainLooper()).postDelayed(task, delayMs) },
             environmentReady: () -> Boolean = { PluviaApp.xEnvironment != null },
+            componentInstalls: ComponentInstallQueue = AgentRuntime.componentInstalls,
         ): AgentDispatcher {
             val dispatcher = AgentDispatcher(
                 isEnabled = isEnabled,
@@ -139,7 +142,9 @@ class AgentProvider : ContentProvider() {
                 containerIds = { GameCommands.containerIdsFrom(context) },
                 customFolders = CustomFolderDeps.forApp(context),
             ).register(dispatcher)
-            ComponentCommands { ComponentCommands.loadSources(context) }.register(dispatcher)
+            ComponentCommands(installs = ComponentInstallDeps.forApp(context, componentInstalls)) {
+                ComponentCommands.loadSources(context)
+            }.register(dispatcher)
             ContainerCommands(
                 loadContainer = { ContainerCommands.load(context, it) },
                 writes = ContainerWriteDeps.forApp(context, tracker),

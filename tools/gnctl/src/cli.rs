@@ -34,7 +34,7 @@ pub enum Command {
     /// Device information
     #[command(subcommand)]
     Device(DeviceCommand),
-    /// Installed games
+    /// Installed games; add custom game folders
     #[command(subcommand)]
     Games(GamesCommand),
     /// Component versions usable in container configs
@@ -81,6 +81,12 @@ pub enum GamesCommand {
         #[arg(long)]
         source: Option<String>,
     },
+    /// Add a folder on the device as a custom game (needs the app's All files access)
+    Add {
+        /// Absolute device path of the game folder, e.g. /sdcard/Games/PC/MyGame
+        #[arg(value_name = "PATH")]
+        path: String,
+    },
 }
 
 #[derive(Debug, Subcommand)]
@@ -90,6 +96,22 @@ pub enum ComponentsCommand {
         /// Only this config key, e.g. wineVersion or dxwrapperConfig.version
         #[arg(long)]
         target: Option<String>,
+    },
+    /// Download and install a downloadable version from the component manifest
+    Install {
+        /// Config key the version is for, e.g. wineVersion or dxwrapperConfig.version
+        target: String,
+        /// Version as `components list` reports it, e.g. proton-11.0-2-arm64ec-1
+        value: String,
+        /// Variant, when the manifest has the version in several (e.g. box64Version 0.4.4-1: bionic or arm64ec)
+        #[arg(long)]
+        variant: Option<String>,
+        /// Wait until the install finished or failed
+        #[arg(long)]
+        wait: bool,
+        /// Seconds to wait with --wait
+        #[arg(long, default_value_t = DEFAULT_WAIT_SECS, requires = "wait")]
+        timeout: u64,
     },
 }
 

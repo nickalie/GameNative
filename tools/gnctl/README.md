@@ -57,7 +57,9 @@ without `--source` is a usage error.
 ```sh
 gnctl capabilities
 gnctl games list --source STEAM
+gnctl games add /sdcard/Games/PC/MyGame          # add a folder as a custom game
 gnctl components list --target dxwrapperConfig.version
+gnctl components install wineVersion proton-11.0-2-arm64ec-1 --wait --timeout 900
 gnctl containers get STEAM_123
 
 # change the config (backup first); FILE or - for stdin
@@ -115,7 +117,7 @@ Usage: gnctl [OPTIONS] <COMMAND>
 Commands:
   capabilities  API version, app version, package and the commands the app supports
   device        Device information
-  games         Installed games
+  games         Installed games; add custom game folders
   components    Component versions usable in container configs
   containers    Read and persistently change a game's container config
   sessions      The current (or last finished) game session
@@ -182,12 +184,13 @@ Options:
 ### `gnctl games`
 
 ```text
-Installed games
+Installed games; add custom game folders
 
 Usage: gnctl games [OPTIONS] <COMMAND>
 
 Commands:
   list  Installed games
+  add   Add a folder on the device as a custom game (needs the app's All files access)
   help  Print this message or the help of the given subcommand(s)
 
 Options:
@@ -212,6 +215,23 @@ Options:
   -h, --help               Print help
 ```
 
+### `gnctl games add`
+
+```text
+Add a folder on the device as a custom game (needs the app's All files access)
+
+Usage: gnctl games add [OPTIONS] <PATH>
+
+Arguments:
+  <PATH>  Absolute device path of the game folder, e.g. /sdcard/Games/PC/MyGame
+
+Options:
+      --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
+      --adb <ADB>          Path to the adb binary [default: adb]
+      --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+  -h, --help               Print help
+```
+
 ### `gnctl components`
 
 ```text
@@ -220,8 +240,9 @@ Component versions usable in container configs
 Usage: gnctl components [OPTIONS] <COMMAND>
 
 Commands:
-  list  Installed and downloadable component versions
-  help  Print this message or the help of the given subcommand(s)
+  list     Installed and downloadable component versions
+  install  Download and install a downloadable version from the component manifest
+  help     Print this message or the help of the given subcommand(s)
 
 Options:
       --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
@@ -242,6 +263,27 @@ Options:
       --target <TARGET>    Only this config key, e.g. wineVersion or dxwrapperConfig.version
       --adb <ADB>          Path to the adb binary [default: adb]
       --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+  -h, --help               Print help
+```
+
+### `gnctl components install`
+
+```text
+Download and install a downloadable version from the component manifest
+
+Usage: gnctl components install [OPTIONS] <TARGET> <VALUE>
+
+Arguments:
+  <TARGET>  Config key the version is for, e.g. wineVersion or dxwrapperConfig.version
+  <VALUE>   Version as `components list` reports it, e.g. proton-11.0-2-arm64ec-1
+
+Options:
+      --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
+      --variant <VARIANT>  Variant, when the manifest has the version in several (e.g. box64Version 0.4.4-1: bionic or arm64ec)
+      --adb <ADB>          Path to the adb binary [default: adb]
+      --wait               Wait until the install finished or failed
+      --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+      --timeout <TIMEOUT>  Seconds to wait with --wait [default: 300]
   -h, --help               Print help
 ```
 

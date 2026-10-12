@@ -314,6 +314,7 @@ class AgentProviderTest {
             "games.list",
             "games.add_custom",
             "components.list",
+            "components.install",
             "containers.get",
             "containers.set",
             "containers.restore",

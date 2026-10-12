@@ -6,6 +6,16 @@ import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import app.gamenative.agent.commands.ComponentCommands
+import app.gamenative.agent.commands.ComponentInstallDeps
+import app.gamenative.agent.commands.ComponentInstallQueue
+import app.gamenative.agent.commands.InstallPlan
+import app.gamenative.utils.ManifestContentTypes
+import app.gamenative.utils.ManifestInstallResult
+import com.winlator.contents.ContentProfile
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.serialization.json.double
 import app.gamenative.agent.commands.ComponentSources
 import app.gamenative.agent.commands.ContainerCommands
 import app.gamenative.agent.commands.CustomFolderDeps
@@ -87,7 +97,7 @@ class ReadCommandsTest {
 
         val commands = dispatcher.commands()
 
-        listOf(DeviceCommands.INFO, GameCommands.LIST, GameCommands.ADD_CUSTOM, ComponentCommands.LIST, ContainerCommands.GET).forEach {
+        listOf(DeviceCommands.INFO, GameCommands.LIST, GameCommands.ADD_CUSTOM, ComponentCommands.LIST, ComponentCommands.INSTALL, ContainerCommands.GET).forEach {
             assertTrue("$it registered", it in commands)
         }
     }
@@ -347,6 +357,189 @@ class ReadCommandsTest {
 
         assertEquals(AgentErrorCode.BAD_ARGS, error.code)
         assertTrue(folders.added.isEmpty())
+    }
+
+    // --- components.install ---
+
+    private class FakeInstalls(
+        val fresh: ManifestData = ManifestData.empty(),
+        val result: (InstallPlan) -> ManifestInstallResult = { ManifestInstallResult(true, "installed ${it.entry.id}") },
+    ) {
+        val scope = TestScope()
+        val queue = ComponentInstallQueue(scope)
+        val ran = mutableListOf<InstallPlan>()
+        var gate: CompletableDeferred<Unit>? = null
+
+        fun deps() = ComponentInstallDeps(
+            queue = queue,
+            freshManifest = { fresh },
+            run = { plan, onProgress ->
+                ran += plan
+                onProgress(0.5f)
+                gate?.await()
+                result(plan)
+            },
+        )
+    }
+
+    private fun installs(fake: FakeInstalls, manifest: ManifestData = ManifestData.empty()) =
+        ComponentCommands(installs = fake.deps()) { sources(manifest) }
+
+    private fun installArgs(target: String, value: String, variant: String? = null) = buildJsonObject {
+        put("target", target)
+        put("value", value)
+        variant?.let { put("variant", it) }
+    }
+
+    private fun manifestOf(vararg items: Pair<String, List<ManifestEntry>>) = ManifestData(version = 1, updatedAt = null, items = mapOf(*items))
+
+    @Test
+    fun componentsInstall_downloadsInTheBackgroundAndReportsProgress() {
+        val fake = FakeInstalls().apply { gate = CompletableDeferred() }
+        val commands = installs(fake, manifestOf(ManifestContentTypes.DXVK to listOf(entry("2.3.1-1-gplasync-0"))))
+        val request = installArgs(ComponentCommands.TARGET_DXVK, "2.3.1-1-GPLASYNC-0")
+
+        val queued = commands.install(request).jsonObject
+        fake.scope.runCurrent()
+        val downloading = commands.install(request).jsonObject
+        fake.gate!!.complete(Unit)
+        fake.scope.runCurrent()
+        val done = commands.install(request).jsonObject
+
+        assertEquals("queued", queued.str("state"))
+        assertEquals("2.3.1-1-gplasync-0", queued.str("value"))
+        assertEquals("downloading", downloading.str("state"))
+        assertEquals(0.5, downloading["progress"]!!.jsonPrimitive.double, 0.0)
+        assertEquals("installed", done.str("state"))
+        assertEquals("installed 2.3.1-1-gplasync-0", done.str("message"))
+        val plan = fake.ran.single()
+        assertEquals("one download for three requests", ContentProfile.ContentType.CONTENT_TYPE_DXVK, plan.contentType)
+        assertFalse(plan.isDriver)
+    }
+
+    @Test
+    fun componentsInstall_installedVersionIsNotDownloaded() {
+        val fake = FakeInstalls()
+
+        val data = installs(fake, manifestOf(ManifestContentTypes.DXVK to listOf(entry("2.7.1"))))
+            .install(installArgs(ComponentCommands.TARGET_DXVK, "2.7.1")).jsonObject
+        fake.scope.runCurrent()
+
+        assertEquals("installed", data.str("state"))
+        assertTrue(fake.ran.isEmpty())
+    }
+
+    @Test
+    fun componentsInstall_failedDownloadIsAnsweredOnceWithWhyThenRetried() {
+        val fake = FakeInstalls(result = { ManifestInstallResult(false, "Download failed: timeout") })
+        val commands = installs(fake, manifestOf(ManifestContentTypes.FEXCORE to listOf(entry("2609-0"))))
+        val request = installArgs(ComponentCommands.TARGET_FEXCORE, "2609-0")
+
+        commands.install(request)
+        fake.scope.runCurrent()
+        val failed = commands.install(request).jsonObject
+        val retried = commands.install(request).jsonObject
+        fake.scope.runCurrent()
+
+        assertEquals("failed", failed.str("state"))
+        assertEquals("Download failed: timeout", failed.str("message"))
+        assertEquals("the call after the failure retries", "queued", retried.str("state"))
+        assertEquals(2, fake.ran.size)
+    }
+
+    @Test
+    fun componentsInstall_runsOneDownloadAtATime() {
+        val fake = FakeInstalls().apply { gate = CompletableDeferred() }
+        val manifest = manifestOf(ManifestContentTypes.FEXCORE to listOf(entry("2609-0"), entry("2608-0")))
+        val commands = installs(fake, manifest)
+
+        commands.install(installArgs(ComponentCommands.TARGET_FEXCORE, "2609-0"))
+        commands.install(installArgs(ComponentCommands.TARGET_FEXCORE, "2608-0"))
+        fake.scope.runCurrent()
+
+        assertEquals(listOf("2609-0"), fake.ran.map { it.entry.id })
+        assertEquals(ComponentInstallQueue.State.QUEUED, fake.queue.find(ComponentCommands.TARGET_FEXCORE, "2608-0", null)!!.state)
+        fake.gate!!.complete(Unit)
+        fake.scope.runCurrent()
+        assertEquals(listOf("2609-0", "2608-0"), fake.ran.map { it.entry.id })
+    }
+
+    @Test
+    fun componentsInstall_sharedBox64IdNeedsAVariant() {
+        val fake = FakeInstalls()
+        val manifest = manifestOf(
+            ManifestContentTypes.BOX64 to listOf(entry("0.4.4-1", "bionic")),
+            ManifestContentTypes.WOWBOX64 to listOf(entry("0.4.4-1")),
+        )
+        val commands = installs(fake, manifest)
+
+        val ambiguous = failure { commands.install(installArgs(ComponentCommands.TARGET_BOX64, "0.4.4-1")) }
+        commands.install(installArgs(ComponentCommands.TARGET_BOX64, "0.4.4-1", variant = "arm64ec"))
+        fake.scope.runCurrent()
+
+        assertEquals(AgentErrorCode.BAD_ARGS, ambiguous.code)
+        assertEquals(listOf("bionic", "arm64ec"), ambiguous.details!!.jsonObject["variants"]!!.jsonArray.map { it.jsonPrimitive.content })
+        assertEquals(ContentProfile.ContentType.CONTENT_TYPE_WOWBOX64, fake.ran.single().contentType)
+    }
+
+    @Test
+    fun componentsInstall_installedBox64DoesNotStandInForWowBox64() {
+        val fake = FakeInstalls()
+        val manifest = manifestOf(
+            ManifestContentTypes.BOX64 to listOf(entry("0.4.4-1", "bionic")),
+            ManifestContentTypes.WOWBOX64 to listOf(entry("0.4.4-1")),
+        )
+        val base = sources(manifest)
+        val withBox64 = base.copy(installed = base.installed.copy(box64 = listOf("0.4.4-1")))
+        val commands = ComponentCommands(installs = fake.deps()) { withBox64 }
+
+        val bionic = commands.install(installArgs(ComponentCommands.TARGET_BOX64, "0.4.4-1", variant = "bionic")).jsonObject
+        val arm64ec = commands.install(installArgs(ComponentCommands.TARGET_BOX64, "0.4.4-1", variant = "arm64ec")).jsonObject
+        val noVariant = failure { commands.install(installArgs(ComponentCommands.TARGET_BOX64, "0.4.4-1")) }
+        fake.scope.runCurrent()
+
+        assertEquals("installed Box64 serves bionic", "installed", bionic.str("state"))
+        assertEquals("but not WoWBox64", "queued", arm64ec.str("state"))
+        assertEquals(ContentProfile.ContentType.CONTENT_TYPE_WOWBOX64, fake.ran.single().contentType)
+        assertEquals("a shared id still needs a variant", AgentErrorCode.BAD_ARGS, noVariant.code)
+    }
+
+    @Test
+    fun componentsInstall_looksUpAStaleManifestWhenTheCacheHasNoEntry() {
+        val fake = FakeInstalls(
+            fresh = manifestOf(
+                ManifestContentTypes.PROTON to listOf(entry("proton-11.0-2-arm64ec-1", "bionic")),
+                ManifestContentTypes.DRIVER to listOf(entry("Turnip v26.2.0 R4")),
+            ),
+        )
+        val commands = installs(fake)
+
+        commands.install(installArgs(ComponentCommands.TARGET_WINE, "proton-11.0-2-arm64ec-1"))
+        commands.install(installArgs(ComponentCommands.TARGET_DRIVER, "Turnip v26.2.0 R4"))
+        fake.scope.runCurrent()
+        fake.scope.runCurrent()
+        val unknown = failure { commands.install(installArgs(ComponentCommands.TARGET_WINE, "proton-99")) }
+
+        assertEquals(ContentProfile.ContentType.CONTENT_TYPE_PROTON, fake.ran[0].contentType)
+        assertTrue("drivers install through the driver path", fake.ran[1].isDriver)
+        assertEquals(AgentErrorCode.BAD_ARGS, unknown.code)
+    }
+
+    @Test
+    fun componentsInstall_badArgs() {
+        val commands = installs(FakeInstalls())
+        val cases = listOf(
+            JsonObject(emptyMap()),
+            args("target" to "wineVersion"),
+            args("target" to "wineVersion", "value" to " "),
+            args("target" to "envVars", "value" to "x"),
+            buildJsonObject {
+                put("target", "wineVersion")
+                put("value", 1)
+            },
+        )
+
+        cases.forEach { case -> assertEquals("$case", AgentErrorCode.BAD_ARGS, failure { commands.install(case) }.code) }
     }
 
     // --- components.list ---

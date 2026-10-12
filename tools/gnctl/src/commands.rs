@@ -4,6 +4,7 @@
 use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use serde_json::{json, Map, Value};
 
@@ -18,6 +19,10 @@ use crate::protocol;
 
 /// Code of the error for `logs pull` when the session has no log file.
 pub const NO_LOG_FILE: &str = "NO_LOG_FILE";
+/// Code of the error for `components install` when the download or install failed.
+pub const INSTALL_FAILED: &str = "INSTALL_FAILED";
+/// How often `components install --wait` asks for the job's progress.
+const INSTALL_POLL: Duration = Duration::from_secs(1);
 /// Keys a `containers set` file may contain (the `containers.set` args besides `app_id`).
 const SET_KEYS: [&str; 3] = ["values", "env", "app_id"];
 const SET_SHAPE: &str =
@@ -51,9 +56,19 @@ pub fn execute(cli: &Cli, ctx: &mut Ctx) -> Result<Value, CliError> {
         Command::Games(GamesCommand::List { source }) => {
             ctx.call("games.list", optional("source", source.as_deref()))
         }
+        Command::Games(GamesCommand::Add { path }) => {
+            ctx.call("games.add_custom", json!({ "path": path }))
+        }
         Command::Components(ComponentsCommand::List { target }) => {
             ctx.call("components.list", optional("target", target.as_deref()))
         }
+        Command::Components(ComponentsCommand::Install {
+            target,
+            value,
+            variant,
+            wait,
+            timeout,
+        }) => components_install(ctx, target, value, variant.as_deref(), *wait, *timeout),
         Command::Containers(command) => containers(ctx, command),
         Command::Sessions(command) => sessions(ctx, command),
         Command::Launch(args) => launch::launch(ctx, args),
@@ -63,6 +78,54 @@ pub fn execute(cli: &Cli, ctx: &mut Ctx) -> Result<Value, CliError> {
             let args = parse_args_object(args)?;
             ctx.call(command, Value::Object(args))
         }
+    }
+}
+
+/// `components.install`; with [wait], asked again until the job is `installed` or `failed`. The app keeps
+/// one job per component, so asking again reports progress instead of starting a second download.
+fn components_install(
+    ctx: &Ctx,
+    target: &str,
+    value: &str,
+    variant: Option<&str>,
+    wait: bool,
+    timeout: u64,
+) -> Result<Value, CliError> {
+    let mut args = json!({ "target": target, "value": value });
+    if let Some(variant) = variant {
+        args["variant"] = Value::String(variant.into());
+    }
+    let deadline = ctx.clock.now() + Duration::from_secs(timeout);
+    loop {
+        let job = ctx.call("components.install", args.clone())?;
+        let state = job
+            .get("state")
+            .and_then(Value::as_str)
+            .ok_or_else(|| CliError::Protocol("components.install has no string 'state'".into()))?
+            .to_string();
+        match state.as_str() {
+            "failed" => {
+                let reason = job
+                    .get("message")
+                    .and_then(Value::as_str)
+                    .unwrap_or("no reason given");
+                return Err(CliError::app_with(
+                    INSTALL_FAILED,
+                    format!("installing {value} failed: {reason}"),
+                    job,
+                ));
+            }
+            "installed" => return Ok(job),
+            _ if !wait => return Ok(job),
+            _ => {}
+        }
+        let now = ctx.clock.now();
+        if now >= deadline {
+            return Err(CliError::Timeout(format!(
+                "{value} is still {state} after {timeout}s"
+            )));
+        }
+        ctx.clock.sleep(INSTALL_POLL.min(deadline - now));
     }
 }
 
@@ -270,6 +333,104 @@ mod tests {
         dir.join(name)
     }
 
+    fn job(state: &str) -> Value {
+        json!({"target": "fexcoreVersion", "value": "2609-0", "state": state, "progress": 0.5, "message": "why"})
+    }
+
+    #[test]
+    fn components_install_wait_polls_until_installed() {
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle_ok(job("queued")));
+        fake.push_ok(bundle_ok(job("downloading")));
+        fake.push_ok(bundle_ok(job("installed")));
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &[
+                "components",
+                "install",
+                "fexcoreVersion",
+                "2609-0",
+                "--wait",
+            ],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(out["state"], "installed");
+        assert_eq!(clock.sleeps(), 2);
+    }
+
+    #[test]
+    fn components_install_without_wait_answers_once() {
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle_ok(job("queued")));
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &[
+                "components",
+                "install",
+                "box64Version",
+                "0.4.4-1",
+                "--variant",
+                "arm64ec",
+            ],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 0, "{out}");
+        assert_eq!(out["state"], "queued");
+        assert_eq!(clock.sleeps(), 0);
+        let request = decoded_request(&fake.calls()[0]);
+        assert_eq!(request["command"], "components.install");
+        assert_eq!(
+            request["args"],
+            json!({"target": "box64Version", "value": "0.4.4-1", "variant": "arm64ec"})
+        );
+    }
+
+    #[test]
+    fn components_install_failure_and_timeout_are_errors() {
+        let fake = FakeAdb::new();
+        fake.push_ok(bundle_ok(job("downloading")));
+        fake.push_ok(bundle_ok(job("failed")));
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &[
+                "components",
+                "install",
+                "fexcoreVersion",
+                "2609-0",
+                "--wait",
+            ],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 4, "{out}");
+        assert_eq!(out["error"]["code"], INSTALL_FAILED);
+        assert_eq!(out["error"]["details"]["state"], "failed");
+
+        let fake = FakeAdb::new();
+        for _ in 0..3 {
+            fake.push_ok(bundle_ok(job("downloading")));
+        }
+        let clock = FakeClock::default();
+        let (code, out) = run_cli(
+            &[
+                "components",
+                "install",
+                "fexcoreVersion",
+                "2609-0",
+                "--wait",
+                "--timeout",
+                "2",
+            ],
+            &fake,
+            &clock,
+        );
+        assert_eq!(code, 5, "{out}");
+        assert_eq!(out["error"]["code"], "TIMEOUT");
+    }
+
     #[test]
     fn wrappers_send_the_right_commands() {
         let cases: Vec<(Vec<&str>, Value)> = vec![
@@ -288,6 +449,10 @@ mod tests {
             (
                 vec!["games", "list", "--source", "GOG"],
                 json!({"command": "games.list", "args": {"source": "GOG"}}),
+            ),
+            (
+                vec!["games", "add", "/sdcard/Games/PC/My Game"],
+                json!({"command": "games.add_custom", "args": {"path": "/sdcard/Games/PC/My Game"}}),
             ),
             (
                 vec!["components", "list", "--target", "wineVersion"],

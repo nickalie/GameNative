@@ -21,7 +21,9 @@ description: Drive GameNative on an Android device over ADB with the gnctl CLI �
 
 ```sh
 gnctl games list                                        # app_id, has_container
+gnctl games add /sdcard/Games/PC/MyGame                 # folder → CUSTOM_GAME_<id>; see "Custom games"
 gnctl components list --target dxwrapperConfig.version  # valid values; installed / downloadable
+gnctl components install fexcoreVersion 2609-0 --wait   # fetch a downloadable version
 gnctl containers get STEAM_123                          # current values, env, read_only
 echo '{"values":{"dxwrapperConfig.version":"2.4.1"}}' | gnctl containers set STEAM_123 -
                                                         # note its backup_id: the config this session started from
@@ -55,14 +57,28 @@ gnctl containers get STEAM_123                          # confirm it matches the
 - **`containerVariant` is UI-only** (glibc/bionic); `containers set` rejects it. So are the fexcore TSO/X87/
   MultiBlock modes, the whole `envVars`/`dxwrapperConfig`/`graphicsDriverConfig`/`wincomponents` strings
   (use dotted keys and `env`), and `WINEDEBUG` in `env` (use `--debug --wine-debug`).
-- **`MISSING_COMPONENTS`** → nothing was written. Pick an installed version from `components list`, or ask the
-  user to install the downloadable one in the app; the API never downloads.
+- **`MISSING_COMPONENTS`** → nothing was written. Install each `downloadable` one with `gnctl components install
+  <target> <value> --wait` (one download at a time; Wine/Proton take minutes), then repeat the `containers set`.
+  Only an entry with `downloadable=false` needs a different version from `components list`.
+- **Never send the user to the app** for something gnctl can do. If gnctl lacks a command for it, add the command
+  to the Agent API instead of asking for a manual step.
 - **`SESSION_ACTIVE`** → configs cannot change while the game has a session that has not exited. Check
   `gnctl sessions current` and clear it per state, as for `SESSION_BUSY` below.
 - **`needs_unpacking`** → the next launch unpacks the game again and takes longer.
 - **Channels:** `--wine-debug` needs `--debug`; at most 8, no `all`/`relay`/`server`/`heap`/`snoop`/`file`,
   nothing the base already sets (`seh`, `loaddll`, `process`, `timestamp`, `pid`, `tid`). gnctl refuses bad
   ones with exit 3 before launching.
+
+## Custom games
+
+- `games add PATH` adds a folder on the device to the library; it is idempotent (`added=false` when the folder
+  was already there). `STORAGE_ACCESS_DENIED` → run the adb command from its message (it depends on the
+  Android version), wait for `capabilities` to answer again (the grant restarts the app), then retry.
+- `executable` in the answer is the exe the first launch picks. `null` (several exes, or the exe sits deeper
+  than one subfolder) → launch once anyway to create the container: the session ends at once with
+  `launch_error` and a "Cannot Launch" dialog stays up. Dismiss it with `adb shell input keyevent BACK`, then
+  set the exe: `{"values":{"executablePath":"runtime\\media\\game.exe"}}` (relative to the game folder), or an
+  absolute Windows path — `Z:` is the device root — when the exe computes paths relative to itself.
 
 ## Sessions and waits
 

@@ -8,7 +8,10 @@ import app.gamenative.utils.ManifestComponentHelper
 import app.gamenative.utils.ManifestContentTypes
 import app.gamenative.utils.ManifestData
 import app.gamenative.utils.ManifestEntry
+import app.gamenative.utils.ManifestInstallResult
+import app.gamenative.utils.ManifestInstaller
 import app.gamenative.utils.ManifestRepository
+import com.winlator.contents.ContentProfile
 import com.winlator.core.StringUtils
 import java.util.Locale
 import kotlinx.coroutines.runBlocking
@@ -48,16 +51,106 @@ data class ComponentEntry(
     val variant: String?,
 )
 
+/** What `components.install` needs from the app; replaced in tests. */
+class ComponentInstallDeps(
+    val queue: ComponentInstallQueue,
+    /** The manifest, fetched over the network when the cache is empty or a day old. */
+    val freshManifest: () -> ManifestData,
+    /** Downloads and installs one manifest entry the way the config dialog does. */
+    val run: suspend (InstallPlan, onProgress: (Float) -> Unit) -> ManifestInstallResult,
+) {
+    companion object {
+        fun forApp(context: Context, queue: ComponentInstallQueue) = ComponentInstallDeps(
+            queue = queue,
+            freshManifest = { runBlocking { ManifestRepository.loadManifest(context) } },
+            run = { plan, onProgress ->
+                ManifestInstaller.installManifestEntry(context, plan.entry, plan.isDriver, plan.contentType, onProgress)
+            },
+        )
+    }
+}
+
 /**
  * `components.list {target?}`: component versions a container config may reference, from the same
  * sources `BestConfigService.validateComponentVersions` checks (bundled entries, installed content,
- * the component manifest). The manifest is read from the offline cache only: a binder call never
- * touches the network.
+ * the component manifest). The manifest is read from the offline cache only: listing never touches the
+ * network.
+ *
+ * `components.install {target, value, variant?}`: downloads a `downloadable` version in the background and
+ * answers with the job's state; asking again for the same component reports its progress. A version missing
+ * from the cached manifest makes it fetch the manifest on the calling (binder) thread when the cache is stale.
  */
-class ComponentCommands(private val sources: () -> ComponentSources) {
+class ComponentCommands(
+    private val installs: ComponentInstallDeps? = null,
+    private val sources: () -> ComponentSources,
+) {
 
     fun register(dispatcher: AgentDispatcher) {
         dispatcher.register(LIST) { list(it) }
+        if (installs != null) dispatcher.register(INSTALL) { install(it) }
+    }
+
+    fun install(args: JsonObject): JsonElement {
+        val deps = installs ?: throw IllegalStateException("components.install is not wired")
+        val target = CommandArgs.optString(args, "target")
+        if (target.isNullOrEmpty()) throw CommandArgs.badArgs("target is required")
+        if (target !in TARGETS) {
+            throw CommandArgs.badArgs(
+                "unknown target: ${target.take(64)}",
+                JsonObject(mapOf("targets" to JsonArray(TARGETS.map { JsonPrimitive(it) }))),
+            )
+        }
+        val value = CommandArgs.optString(args, "value")
+        if (value.isNullOrBlank()) throw CommandArgs.badArgs("value is required")
+        val variant = CommandArgs.optString(args, "variant")
+
+        val current = sources()
+        // Resolved first: a shared Box64/WoWBox64 id without a variant is refused before anything else, and the
+        // installed check below compares within the variant that would be installed.
+        val cachedPlan = planFor(target, value, variant, current.manifest)
+        val wanted = variant ?: cachedPlan?.variant
+
+        deps.queue.find(target, value, wanted)?.let { job ->
+            // An installed job answers too: the installed name may not match the manifest id the catalog compares.
+            if (job.isActive || job.state == ComponentInstallQueue.State.INSTALLED) return jobJson(job)
+            // A failure is answered once, so a poll sees it and why; the call after that retries.
+            if (job.takeFailure()) return jobJson(job)
+        }
+        val installedHere = catalog(current)
+            .filter { it.target == target && it.installed && sameVariant(it.variant, wanted) }
+            .flatMap { listOf(it.label, it.value) }
+        if (ManifestComponentHelper.versionExists(value, installedHere)) {
+            return buildJsonObject {
+                put("target", target)
+                put("value", value)
+                wanted?.let { put("variant", it) }
+                put("state", "installed")
+                put("progress", 1.0)
+            }
+        }
+        val plan = cachedPlan
+            ?: planFor(target, value, variant, deps.freshManifest())
+            ?: throw CommandArgs.badArgs("$value is neither installed nor in the component manifest for $target; see ${LIST}")
+        return jobJson(deps.queue.enqueue(plan, deps.run))
+    }
+
+    /**
+     * Whether an installed entry of [entryVariant] provides [wanted]. Installed content without a variant
+     * serves every variant except `arm64ec`: WoWBox64 is a separate install that shares Box64's version ids.
+     */
+    private fun sameVariant(entryVariant: String?, wanted: String?): Boolean = when {
+        wanted == null || entryVariant == wanted -> true
+        entryVariant == null -> wanted != VARIANT_ARM64EC
+        else -> false
+    }
+
+    private fun jobJson(job: ComponentInstallQueue.Job) = buildJsonObject {
+        put("target", job.plan.target)
+        put("value", job.plan.entry.id)
+        job.plan.variant?.let { put("variant", it) }
+        put("state", job.state.name.lowercase(Locale.ROOT))
+        put("progress", job.progress.toDouble())
+        job.message?.let { put("message", it) }
     }
 
     fun list(args: JsonObject): JsonElement {
@@ -117,6 +210,7 @@ class ComponentCommands(private val sources: () -> ComponentSources) {
 
     companion object {
         const val LIST = "components.list"
+        const val INSTALL = "components.install"
 
         const val TARGET_WINE = "wineVersion"
         const val TARGET_DXVK = "dxwrapperConfig.version"
@@ -137,6 +231,51 @@ class ComponentCommands(private val sources: () -> ComponentSources) {
         private val identifier: (String) -> String = { StringUtils.parseIdentifier(it) }
 
         private fun manifestVariant(entry: ManifestEntry): String? = entry.variant?.lowercase(Locale.ROOT)?.ifBlank { null }
+
+        /** The manifest types a target's downloadable versions come from, with how each one installs. */
+        private class ManifestSource(
+            val type: String,
+            val contentType: ContentProfile.ContentType?,
+            val variant: (ManifestEntry) -> String?,
+        ) {
+            val isDriver: Boolean get() = contentType == null
+        }
+
+        private fun manifestSources(target: String): List<ManifestSource> = when (target) {
+            TARGET_WINE -> listOf(
+                ManifestSource(ManifestContentTypes.WINE, ContentProfile.ContentType.CONTENT_TYPE_WINE, ::manifestVariant),
+                ManifestSource(ManifestContentTypes.PROTON, ContentProfile.ContentType.CONTENT_TYPE_PROTON, ::manifestVariant),
+            )
+            TARGET_DXVK -> listOf(ManifestSource(ManifestContentTypes.DXVK, ContentProfile.ContentType.CONTENT_TYPE_DXVK, ::manifestVariant))
+            TARGET_VKD3D -> listOf(ManifestSource(ManifestContentTypes.VKD3D, ContentProfile.ContentType.CONTENT_TYPE_VKD3D, ::manifestVariant))
+            TARGET_DRIVER -> listOf(ManifestSource(ManifestContentTypes.DRIVER, null, ::manifestVariant))
+            TARGET_BOX64 -> listOf(
+                ManifestSource(ManifestContentTypes.BOX64, ContentProfile.ContentType.CONTENT_TYPE_BOX64, ::manifestVariant),
+                ManifestSource(ManifestContentTypes.WOWBOX64, ContentProfile.ContentType.CONTENT_TYPE_WOWBOX64) { VARIANT_ARM64EC },
+            )
+            TARGET_FEXCORE -> listOf(ManifestSource(ManifestContentTypes.FEXCORE, ContentProfile.ContentType.CONTENT_TYPE_FEXCORE, ::manifestVariant))
+            else -> emptyList()
+        }
+
+        /**
+         * The manifest entry [value] names under [target] (ids compare case-insensitively), or null when the
+         * manifest has none. Several entries with that id (Box64 and WoWBox64 share version ids) need
+         * [variant] to tell them apart.
+         */
+        internal fun planFor(target: String, value: String, variant: String?, manifest: ManifestData): InstallPlan? {
+            val candidates = manifestSources(target).flatMap { source ->
+                manifest.items[source.type].orEmpty()
+                    .filter { it.id.equals(value.trim(), ignoreCase = true) }
+                    .map { InstallPlan(target, source.variant(it), it, source.isDriver, source.contentType) }
+            }.filter { variant == null || it.variant == variant }
+            if (candidates.size > 1) {
+                throw CommandArgs.badArgs(
+                    "$value exists in several variants; pass variant",
+                    JsonObject(mapOf("variants" to JsonArray(candidates.map { JsonPrimitive(it.variant) }))),
+                )
+            }
+            return candidates.singleOrNull()
+        }
 
         fun catalog(sources: ComponentSources): List<ComponentEntry> {
             val items = sources.manifest.items
