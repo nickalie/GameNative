@@ -13,6 +13,7 @@ import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.InstalledGame
 import app.gamenative.data.GameSource
 import app.gamenative.utils.ContainerUtils
+import app.gamenative.utils.DeviceInfo
 import app.gamenative.utils.FakeDataStore
 import app.gamenative.utils.ManifestComponentHelper
 import app.gamenative.utils.ManifestData
@@ -24,10 +25,13 @@ import com.winlator.container.Container
 import com.winlator.container.ContainerData
 import com.winlator.core.envvars.EnvVars
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
 import java.io.File
 import java.nio.file.Files
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.atomic.AtomicInteger
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
@@ -108,6 +112,35 @@ class ReadCommandsTest {
         assertTrue(props.containsKey("model"))
         assertTrue(props.containsKey("android_sdk"))
         assertTrue(props.containsKey("storage_free_bytes"))
+    }
+
+    @Test
+    fun deviceInfo_stuckGpuProbeIsSharedAcrossRequests() {
+        val release = CountDownLatch(1)
+        val probes = AtomicInteger()
+        DeviceCommands.resetGpuProbe()
+        mockkObject(DeviceInfo)
+        try {
+            every { DeviceInfo.gpuProperties(any()) } answers {
+                probes.incrementAndGet()
+                release.await()
+                mapOf("gpu_name" to "Adreno 750")
+            }
+
+            repeat(3) { assertFalse(DeviceCommands.collect(context, gpuTimeoutMs = 50).containsKey("gpu_name")) }
+            assertEquals("timed-out probe is reused, not restarted", 1, probes.get())
+
+            release.countDown()
+            assertEquals("Adreno 750", DeviceCommands.collect(context, gpuTimeoutMs = 2_000)["gpu_name"])
+            assertEquals(1, probes.get())
+
+            assertEquals("Adreno 750", DeviceCommands.collect(context, gpuTimeoutMs = 2_000)["gpu_name"])
+            assertEquals("finished probe is dropped, next request probes again", 2, probes.get())
+        } finally {
+            release.countDown()
+            unmockkObject(DeviceInfo)
+            DeviceCommands.resetGpuProbe()
+        }
     }
 
     // --- games.list ---

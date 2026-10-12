@@ -184,10 +184,11 @@ class ComponentCommands(private val sources: () -> ComponentSources) {
 
         /**
          * Reads the component sources from resources, installed content and the cached manifest.
-         * [manifestJson] is the offline cache; `ManifestRepository.loadManifest` is never called because
-         * it fetches over the network when the cache is stale.
+         * The manifest comes from the offline cache in `PrefManager.componentManifestJson`;
+         * `ManifestRepository.loadManifest` is never called because it fetches over the network when the
+         * cache is stale.
          */
-        fun loadSources(context: Context, manifestJson: () -> String = { PrefManager.componentManifestJson }): ComponentSources {
+        fun loadSources(context: Context): ComponentSources {
             val res = context.resources
             fun entries(id: Int): List<String> = res.getStringArray(id).toList()
             val installed = runBlocking { ManifestComponentHelper.loadInstalledContentLists(context) }
@@ -203,7 +204,7 @@ class ComponentCommands(private val sources: () -> ComponentSources) {
                 drivers = ManifestComponentHelper.bundledGraphicsDriverBase(entries(R.array.wrapper_graphics_driver_version_entries)),
                 installed = installed.installed,
                 installedDrivers = installed.installedDrivers,
-                manifest = ManifestRepository.parseManifest(manifestJson()) ?: ManifestData.empty(),
+                manifest = ManifestRepository.parseManifest(PrefManager.componentManifestJson) ?: ManifestData.empty(),
             )
         }
     }
