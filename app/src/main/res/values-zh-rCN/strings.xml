@@ -662,7 +662,6 @@
     <string name="game_feedback_issues_question">选择您遇到的任何问题：</string>
 
     <!-- 个人资料与菜单 -->
-    <string name="help_and_support">帮助与支持</string>
     <string name="go_online">进入在线模式</string>
     <string name="go_offline">进入离线模式</string>
     <string name="log_out">登出</string>
@@ -937,7 +936,6 @@
     <string name="select_wine_debug_channels">选择 Wine 调试通道</string>
     <string name="cpu_label">CPU%d</string>
     <string name="describe_what_happened">描述发生了什么</string>
-    <string name="get_support_on_discord">在 Discord 上获取支持</string>
 
     <!-- 驱动程序管理器 -->
     <string name="driver_manager">驱动程序管理</string>
@@ -983,18 +981,6 @@
     <string name="gamenative_account_load_failed">无法加载你的账户信息。选择以重试。</string>
     <string name="gamenative_account_sign_out">退出登录</string>
     <string name="gamenative_account_sign_out_subtitle">在此设备上退出你的 GameNative 账户。</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">未连接 › 连接</string>
-    <string name="gamenative_account_discord_connected">已连接 › 断开连接</string>
-    <string name="gamenative_account_discord_connected_as">已连接为 %1$s › 断开连接</string>
-    <string name="gamenative_account_discord_link_scan">用手机扫描此代码，或在其他设备上打开此地址以连接 Discord。</string>
-    <string name="gamenative_account_discord_link_this_device">或在此设备上打开</string>
-    <string name="gamenative_account_discord_link_waiting">正在等待你完成 Discord 连接。</string>
-    <string name="gamenative_account_discord_link_starting">正在准备代码。</string>
-    <string name="gamenative_account_discord_link_expired">此代码已过期。选择重试以获取新代码。</string>
-    <string name="gamenative_account_discord_link_failed">目前无法连接 Discord。请检查网络连接后重试。</string>
-    <string name="gamenative_account_discord_link_connected_as">已连接为 %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">未找到可打开 Discord 的浏览器。请改用其他设备扫描代码。</string>
     <string name="gamenative_sign_in_title">登录 GameNative</string>
     <string name="gamenative_sign_in_scan">用手机扫描此二维码进行登录。你也可以在此设备上登录。</string>
     <string name="gamenative_sign_in_code">代码：%1$s</string>
@@ -1011,7 +997,6 @@
     <string name="support_refresh">刷新</string>
     <string name="support_signed_out_title">获取游戏问题帮助</string>
     <string name="support_signed_out_body">登录你的 GameNative 账户，即可查看支持对话，并与我们的 AI 讨论游戏中遇到的问题。</string>
-    <string name="support_signed_out_discord">你也可以在我们的 Discord 获取帮助</string>
     <string name="support_empty_title">暂无对话</string>
     <string name="support_empty_body">要开始对话，请在游戏库中的游戏上选择“获取 AI 帮助”。玩到问题出现后关闭游戏，然后描述出了什么问题。</string>
     <string name="support_state_waiting">等待回复</string>
@@ -1021,7 +1006,7 @@
     <string name="support_started">开始于 %1$s</string>
     <string name="support_last_activity">最近活动 %1$s</string>
     <string name="support_problem_network">无法连接。请检查网络连接后重试。</string>
-    <string name="support_problem_unavailable">应用内支持聊天尚未开放。在此之前，AI 帮助仍在我们的 Discord 中进行。</string>
+    <string name="support_problem_unavailable">应用内支持聊天尚未开放。</string>
     <string name="support_problem_unauthorized">无法确认你的 GameNative 账户。请稍后重试，或在设置中退出后重新登录。</string>
     <string name="support_problem_rate_limited">你在短时间内发送了较多内容。请稍等片刻后重试。</string>
     <string name="support_problem_not_found">找不到此对话。</string>
@@ -1073,8 +1058,6 @@
     <string name="support_run_check_send_last">发送上次运行</string>
     <string name="support_uploading">正在上传日志</string>
     <string name="support_share_file">打开文件</string>
-    <string name="debug_report_use_discord">改用 Discord</string>
-    <string name="debug_report_use_app">改用应用内聊天</string>
     <string name="settings_emulation_orientations_title">允许的屏幕方向</string>
     <string name="settings_emulation_orientations_subtitle">选择游戏中可使用的屏幕方向</string>
     <string name="settings_emulation_default_config_title">修改默认配置</string>
@@ -1224,10 +1207,6 @@
     <string name="main_recent_crash_title">最近应用程序崩溃</string>
     <string name="main_recent_crash_message">若能了解您最近遇到的问题，将有助于我们改善应用程序。\n您可在应用程序设置中查看并导出最近的崩溃日志，将其附加至项目源代码仓库的 Github Issue中\nGithub 源代码仓库的链接亦位于设置页面内</string>
     <string name="main_share">分享</string>
-    <string name="main_share_text">试试 GameNative - 在 Android 上畅玩您的 PC Steam 游戏，完整支持云存档！\nhttps://gamenative.app\n加入社区：https://discord.gg/2hKv4VfZfE</string>
-    <string name="main_discord_support_title">游戏运行正常吗？</string>
-    <string name="main_discord_support_message">加入 Discord 社区，获取游戏修复与性能优化的支持</string>
-    <string name="main_open_discord">打开 Discord</string>
 
     <!-- 主界面：游戏启动 -->
     <string name="main_downloading_steam">正在下载 Steam...</string>
@@ -1710,7 +1689,6 @@
     <string name="option_open_container">打开容器</string>
     <string name="option_edit_container">编辑容器</string>
     <string name="option_reset_to_defaults">重置容器</string>
-    <string name="option_get_support">获取支持</string>
     <string name="option_submit_feedback">提交反馈</string>
     <string name="option_test_graphics">测试图形渲染</string>
     <string name="option_fetch_game_images">获取游戏封面</string>
@@ -1846,7 +1824,6 @@
     <string name="game_launch_tip_14">提示：你可以通过设备的返回键调出键盘。</string>
     <string name="game_launch_tip_15">提示：在容器中用双指点击可以模拟鼠标右键。</string>
     <string name="game_launch_tip_16">提示：使用屏幕手柄时，可以禁用鼠标以防止误触。</string>
-    <string name="game_launch_tip_17">提示：在 Discord 上报告问题，以便我们修复。</string>
     <string name="game_launch_tip_18">提示：如果你使用的是 8 Elite 设备，请使用 Turnip Gen8 V25/V30 或 MrPurple T26 驱动。</string>
     <string name="game_launch_tip_19">提示：在游戏中通过快捷菜单降低分辨率并使用 FSR 可以提升性能。</string>
     <string name="game_launch_tip_20">提示：如果加载游戏后整个应用都崩溃，说明你的设备 RAM 不足。</string>
@@ -2027,25 +2004,19 @@
     <string name="debug_report_what_went_wrong">出了什么问题？</string>
     <string name="debug_report_send">发送</string>
     <string name="debug_report_share_instead">改为分享</string>
-    <string name="debug_report_connect_hint">连接你的 Discord 账号，我们的 AI 就能在支持帖子中回复你。</string>
-    <string name="debug_report_connect_discord">连接 Discord</string>
     <string name="debug_report_sending">正在发送报告…</string>
-    <string name="debug_report_success_title">报告已发送</string>
-    <string name="debug_report_success_message">我们的 Discord 中已创建一个支持帖子。我们的 AI 正在阅读你的日志，并会在那里回复。</string>
-    <string name="debug_report_open_discord">打开 Discord</string>
     <string name="debug_report_failed_title">无法发送报告</string>
     <string name="debug_report_failed_message">报告已保存在此设备上。恢复联网后可重试，或改为分享日志。</string>
     <string name="debug_report_retry">重试</string>
     <string name="debug_report_share_log_title">分享调试日志</string>
-    <string name="debug_report_discord_linked">Discord 已连接</string>
     <string name="debug_report_no_log">本次运行未捕获调试日志。</string>
     <string name="debug_offer_title">获取 AI 帮助解决此崩溃</string>
     <string name="debug_offer_message">该会话提前结束了。开启调试日志再运行一次 %1$s，我们的 AI 会阅读日志并告诉你需要更改什么。</string>
     <string name="debug_offer_confirm">开始调试运行</string>
     <string name="debug_prerun_title">获取 AI 帮助</string>
-    <string name="debug_prerun_message_1">以调试日志运行游戏，退出后将日志分享给我们在 Discord 上的 AI。请一直运行游戏，直到出现问题。</string>
-    <string name="debug_prerun_message_1_app">以调试日志运行游戏。退出后，日志会发送给我们的 AI，回答会发到我们的 Discord；如果你使用 GameNative 账户登录，回答会显示在应用内。请一直运行游戏，直到出现问题。</string>
+    <string name="debug_prerun_message_1_app">以调试日志运行游戏。退出后，日志会发送给我们的 AI；如果你使用 GameNative 账户登录，回答会显示在应用内。请一直运行游戏，直到出现问题。</string>
     <string name="debug_prerun_message_1_neutral">游戏将以调试日志运行。退出后，日志会发送给我们的 AI。请一直运行游戏，直到出现问题。</string>
+    <string name="debug_prerun_message_1_share">游戏将以调试日志运行。退出后，你可以分享日志。请一直运行游戏，直到出现问题。</string>
     <string name="debug_prerun_message_3">任何人都可以分享报告以获得人工帮助。</string>
     <string name="diagnostics_share_title">分享诊断日志</string>
     <string name="diagnostics_share_none">尚无诊断日志。请先使用「诊断运行」。</string>

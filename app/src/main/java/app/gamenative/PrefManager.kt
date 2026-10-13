@@ -92,6 +92,15 @@ object PrefManager {
                 removePref(oldRefreshToken)
             }
         }
+
+        // Note: Should remove after a few release versions. Discord integration was removed;
+        // drop its leftover state (relay credential, linked name, link flow flags).
+        removePref(stringPreferencesKey("discord_relay_token"))
+        removePref(byteArrayPreferencesKey("discord_relay_token_enc"))
+        removePref(stringPreferencesKey("discord_oauth_nonce"))
+        removePref(booleanPreferencesKey("discord_merge_pending"))
+        removePref(stringPreferencesKey("discord_linked_name"))
+        removePref(stringPreferencesKey("ai_help_preferred_path"))
     }
 
     fun clearPreferences() {
@@ -1082,65 +1091,11 @@ object PrefManager {
             setPref(ALLOWED_ORIENTATION, Orientation.toInt(value))
         }
 
-    private val DISCORD_RELAY_TOKEN = stringPreferencesKey("discord_relay_token")
-    private val DISCORD_RELAY_TOKEN_ENC = byteArrayPreferencesKey("discord_relay_token_enc")
-    val discordRelayTokenPresent = mutableStateOf(false)
-    var discordRelayToken: String
-        get() {
-            val encryptedBytes = getPref(DISCORD_RELAY_TOKEN_ENC, ByteArray(0))
-            if (encryptedBytes.isNotEmpty()) {
-                return String(Crypto.decrypt(encryptedBytes))
-            }
-            val legacy = getPref(DISCORD_RELAY_TOKEN, "")
-            if (legacy.isNotEmpty()) {
-                setPref(DISCORD_RELAY_TOKEN_ENC, Crypto.encrypt(legacy.toByteArray()))
-                removePref(DISCORD_RELAY_TOKEN)
-            }
-            return legacy
-        }
-        set(value) {
-            if (value.isEmpty()) {
-                removePref(DISCORD_RELAY_TOKEN_ENC)
-            } else {
-                setPref(DISCORD_RELAY_TOKEN_ENC, Crypto.encrypt(value.toByteArray()))
-            }
-            removePref(DISCORD_RELAY_TOKEN)
-            discordRelayTokenPresent.value = value.isNotEmpty()
-        }
-
-    private val DISCORD_OAUTH_NONCE = stringPreferencesKey("discord_oauth_nonce")
-    var discordOauthNonce: String
-        get() = getPref(DISCORD_OAUTH_NONCE, "")
-        set(value) {
-            setPref(DISCORD_OAUTH_NONCE, value)
-        }
-
-    private val DISCORD_MERGE_PENDING = booleanPreferencesKey("discord_merge_pending")
-    var discordMergePending: Boolean
-        get() = getPref(DISCORD_MERGE_PENDING, false)
-        set(value) {
-            setPref(DISCORD_MERGE_PENDING, value)
-        }
-
-    private val DISCORD_LINKED_NAME = stringPreferencesKey("discord_linked_name")
-    var discordLinkedName: String
-        get() = getPref(DISCORD_LINKED_NAME, "")
-        set(value) {
-            setPref(DISCORD_LINKED_NAME, value)
-        }
-
     private val SUPPORT_LAST_SEEN = stringPreferencesKey("support_last_seen")
     var supportLastSeen: String
         get() = getPref(SUPPORT_LAST_SEEN, "")
         set(value) {
             setPref(SUPPORT_LAST_SEEN, value)
-        }
-
-    private val AI_HELP_PREFERRED_PATH = stringPreferencesKey("ai_help_preferred_path")
-    var aiHelpPreferredPath: String
-        get() = getPref(AI_HELP_PREFERRED_PATH, "")
-        set(value) {
-            setPref(AI_HELP_PREFERRED_PATH, value)
         }
 
     private val GAMENATIVE_ACCESS_TOKEN_ENC = byteArrayPreferencesKey("gamenative_access_token_enc")

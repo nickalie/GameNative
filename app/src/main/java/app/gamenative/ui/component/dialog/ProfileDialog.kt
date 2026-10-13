@@ -18,7 +18,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AirplaneTicket
-import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ReplyAll
@@ -48,7 +47,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -86,7 +84,6 @@ fun ProfileDialog(
         onDismissRequest = onDismiss,
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                val uriHandler = LocalUriHandler.current
                 /* Icon, Name, and Status */
                 ListItem(
                     colors = ListItemDefaults.colors(
@@ -153,12 +150,6 @@ fun ProfileDialog(
                                     Icon(imageVector = Icons.Default.Settings, contentDescription = null)
                                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
                                     Text(text = stringResource(R.string.settings_text))
-                                }
-
-                                FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = { uriHandler.openUri("https://discord.gg/2hKv4VfZfE") }) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.Help, contentDescription = null)
-                                    Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
-                                    Text(text = stringResource(R.string.help_and_support))
                                 }
 
                                 FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = { showArtCredits = true }) {

@@ -673,7 +673,6 @@
 
 
     <!-- Profile & Menu -->
-    <string name="help_and_support">Aiuto &amp; Supporto</string>
     <string name="go_online">Vai Online</string>
     <string name="go_offline">Vai Offline</string>
     <string name="log_out">Disconnetti</string>
@@ -943,7 +942,6 @@
     <string name="select_wine_debug_channels">Seleziona Canali Debug Wine</string>
     <string name="cpu_label">CPU%d</string>
     <string name="describe_what_happened">Descrivi cosa è successo</string>
-    <string name="get_support_on_discord">Ottieni supporto su Discord</string>
 
     <!-- Driver Manager -->
     <string name="driver_manager">Gestione Driver</string>
@@ -989,18 +987,6 @@
     <string name="gamenative_account_load_failed">Non è stato possibile caricare i dati del tuo account. Seleziona per riprovare.</string>
     <string name="gamenative_account_sign_out">Esci</string>
     <string name="gamenative_account_sign_out_subtitle">Esci dal tuo account GameNative su questo dispositivo.</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">Non connesso › Connetti</string>
-    <string name="gamenative_account_discord_connected">Connesso › Disconnetti</string>
-    <string name="gamenative_account_discord_connected_as">Connesso come %1$s › Disconnetti</string>
-    <string name="gamenative_account_discord_link_scan">Scansiona questo codice con il telefono o apri questo indirizzo su un altro dispositivo per collegare Discord.</string>
-    <string name="gamenative_account_discord_link_this_device">Oppure apri su questo dispositivo</string>
-    <string name="gamenative_account_discord_link_waiting">In attesa che tu completi il collegamento a Discord.</string>
-    <string name="gamenative_account_discord_link_starting">Preparazione del codice.</string>
-    <string name="gamenative_account_discord_link_expired">Questo codice è scaduto. Seleziona Riprova per ottenere un nuovo codice.</string>
-    <string name="gamenative_account_discord_link_failed">Il collegamento a Discord non è disponibile ora. Controlla la connessione e riprova.</string>
-    <string name="gamenative_account_discord_link_connected_as">Connesso come %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">Nessun browser trovato per aprire Discord. Scansiona il codice con un altro dispositivo.</string>
     <string name="gamenative_sign_in_title">Accedi a GameNative</string>
     <string name="gamenative_sign_in_scan">Scansiona questo codice con il telefono per accedere. Puoi anche accedere su questo dispositivo.</string>
     <string name="gamenative_sign_in_code">Codice: %1$s</string>
@@ -1017,7 +1003,6 @@
     <string name="support_refresh">Aggiorna</string>
     <string name="support_signed_out_title">Ricevi aiuto con i tuoi giochi</string>
     <string name="support_signed_out_body">Accedi al tuo account GameNative per vedere le tue conversazioni di assistenza e parlare con la nostra AI dei problemi con i tuoi giochi.</string>
-    <string name="support_signed_out_discord">Puoi anche ricevere aiuto nel nostro Discord</string>
     <string name="support_empty_title">Ancora nessuna conversazione</string>
     <string name="support_empty_body">Per iniziarne una, scegli “Ottieni aiuto dall\'AI” su un gioco della tua libreria. Gioca finché il problema si verifica, chiudi il gioco e poi descrivi cosa è andato storto.</string>
     <string name="support_state_waiting">In attesa di risposta</string>
@@ -1027,7 +1012,7 @@
     <string name="support_started">Iniziata il %1$s</string>
     <string name="support_last_activity">Ultima attività %1$s</string>
     <string name="support_problem_network">Impossibile connettersi. Controlla la connessione e riprova.</string>
-    <string name="support_problem_unavailable">La chat di assistenza nell\'app non è ancora disponibile. Nel frattempo, l\'aiuto dell\'AI continua sul nostro Discord.</string>
+    <string name="support_problem_unavailable">La chat di assistenza nell\'app non è ancora disponibile.</string>
     <string name="support_problem_unauthorized">Non è stato possibile confermare il tuo account GameNative. Riprova più tardi, oppure esci e accedi di nuovo nelle Impostazioni.</string>
     <string name="support_problem_rate_limited">Hai inviato molto in poco tempo. Attendi un po\' e riprova.</string>
     <string name="support_problem_not_found">Questa conversazione non è stata trovata.</string>
@@ -1080,8 +1065,6 @@
     <string name="support_run_check_send_last">Invia l\'ultima esecuzione</string>
     <string name="support_uploading">Caricamento dei log</string>
     <string name="support_share_file">Apri file</string>
-    <string name="debug_report_use_discord">Usa Discord</string>
-    <string name="debug_report_use_app">Usa la chat nell\'app</string>
     <string name="settings_emulation_orientations_title">Orientamenti Consentiti</string>
     <string name="settings_emulation_orientations_subtitle">Scegli quali orientamenti possono essere ruotati durante il gioco</string>
     <string name="settings_emulation_default_config_title">Modifica Config Predefinita</string>
@@ -1236,10 +1219,6 @@
     <string name="main_recent_crash_title">Crash Recente</string>
     <string name="main_recent_crash_message">Ci dispiace!\nSarebbe utile conoscere il problema recente che hai avuto.\nPuoi visualizzare ed esportare il log del crash più recente nelle impostazioni dell\'app e allegarlo come issue GitHub nel repository del progetto.\nIl link al repository Github è anche nelle impostazioni!</string>
     <string name="main_share">Condividi</string>
-    <string name="main_share_text">Scopri GameNative - gioca ai tuoi giochi Steam PC su Android, con supporto completo per i salvataggi cloud!\nhttps://gamenative.app\nUnisciti alla community: https://discord.gg/2hKv4VfZfE</string>
-    <string name="main_discord_support_title">Il gioco ha funzionato?</string>
-    <string name="main_discord_support_message">Unisciti al Discord per ottenere supporto per correggere il tuo gioco o migliorare le prestazioni.</string>
-    <string name="main_open_discord">Apri Discord</string>
     <string name="main_downloading_entry">Download di %s in corso</string>
 
     <!-- PluviaMain: Game Launch -->
@@ -1692,7 +1671,6 @@
     <string name="option_open_container">Apri container</string>
     <string name="option_edit_container">Modifica container</string>
     <string name="option_reset_to_defaults">Reimposta container</string>
-    <string name="option_get_support">Ottieni supporto</string>
     <string name="option_submit_feedback">Invia feedback</string>
     <string name="option_reset_drm">Reimposta DRM</string>
     <string name="option_use_known_config">Usa config nota</string>
@@ -1789,7 +1767,6 @@
     <string name="game_launch_tip_14">Suggerimento: puoi richiamare la tastiera con il tasto indietro del tuo dispositivo.</string>
     <string name="game_launch_tip_15">Suggerimento: puoi toccare con due dita all\'interno del container per fare clic destro.</string>
     <string name="game_launch_tip_16">Suggerimento: se stai usando il controller sullo schermo, puoi disabilitare il mouse per evitare tocchi accidentali.</string>
-    <string name="game_launch_tip_17">Suggerimento: segnala i problemi su Discord in modo che possiamo risolverli.</string>
     <string name="game_launch_tip_18">Suggerimento: usa il driver Turnip Gen8 V25/V30 o MrPurple T26 se hai un dispositivo 8 Elite.</string>
     <string name="game_launch_tip_19">Suggerimento: abbassa la risoluzione e usa FSR dal menu rapido in-game per aumentare le prestazioni.</string>
     <string name="game_launch_tip_20">Suggerimento: se l\'intera app si blocca dopo aver caricato un gioco, il tuo dispositivo sta esaurendo la RAM.</string>
@@ -2002,25 +1979,19 @@
     <string name="debug_report_what_went_wrong">Cosa è andato storto?</string>
     <string name="debug_report_send">Invia</string>
     <string name="debug_report_share_instead">Condividi invece</string>
-    <string name="debug_report_connect_hint">Collega il tuo account Discord così la nostra AI potrà risponderti in un thread di supporto.</string>
-    <string name="debug_report_connect_discord">Collega Discord</string>
     <string name="debug_report_sending">Invio del report in corso…</string>
-    <string name="debug_report_success_title">Report inviato</string>
-    <string name="debug_report_success_message">È stato aperto un thread di supporto sul nostro Discord. La nostra AI sta leggendo il tuo log e ti risponderà lì.</string>
-    <string name="debug_report_open_discord">Apri Discord</string>
     <string name="debug_report_failed_title">Impossibile inviare il report</string>
     <string name="debug_report_failed_message">Il report è salvato su questo dispositivo. Riprova quando torni online, oppure condividi il log.</string>
     <string name="debug_report_retry">Riprova</string>
     <string name="debug_report_share_log_title">Condividi log di debug</string>
-    <string name="debug_report_discord_linked">Discord collegato</string>
     <string name="debug_report_no_log">Nessun log di debug è stato acquisito per questa esecuzione.</string>
     <string name="debug_offer_title">Ottieni aiuto dall\'AI per questo crash</string>
     <string name="debug_offer_message">La sessione è terminata in anticipo. Avvia %1$s ancora una volta con il logging di debug: la nostra AI leggerà il log e ti dirà cosa cambiare.</string>
     <string name="debug_offer_confirm">Avvia esecuzione di debug</string>
     <string name="debug_prerun_title">Ottieni aiuto dall\'AI</string>
-    <string name="debug_prerun_message_1">Avvia il gioco con i log di debug e li condivide con la nostra AI su Discord alla chiusura. Gioca finché il problema non si presenta.</string>
-    <string name="debug_prerun_message_1_app">Avvia il gioco con i log di debug. Quando esci, il log va alla nostra AI e la risposta arriva nel nostro Discord, oppure nell\'app se accedi con un account GameNative. Gioca finché il problema non si presenta.</string>
+    <string name="debug_prerun_message_1_app">Avvia il gioco con i log di debug. Quando esci, il log va alla nostra AI e la risposta arriva nell\'app se accedi con un account GameNative. Gioca finché il problema non si presenta.</string>
     <string name="debug_prerun_message_1_neutral">Il gioco si avvia con i log di debug. Quando esci, il log va alla nostra AI. Gioca finché il problema non si presenta.</string>
+    <string name="debug_prerun_message_1_share">Il gioco si avvia con i log di debug. Quando esci, puoi condividere il log. Gioca finché il problema non si presenta.</string>
     <string name="debug_prerun_message_3">Chiunque può condividere il report per ricevere aiuto umano.</string>
     <string name="diagnostics_share_title">Condividi il log di diagnostica</string>
     <string name="diagnostics_share_none">Nessun log di diagnostica. Usa prima \"Esecuzione diagnostica\".</string>

@@ -416,7 +416,7 @@ ignored.
 
 ## After the game exits
 
-- The game-feedback dialog appears after the first run of a game (the one-time Discord/support prompt) and
+- The game-feedback dialog appears once after the first run of a game and
   after every run that followed a config change (every `containers.set`/`restore` write); custom games are
   exempt. For runs that end without a game window or within 90 s the
   app may instead offer an AI debug run (at most every 3 days per game). Dismiss them with

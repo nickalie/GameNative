@@ -22,8 +22,6 @@ object AccountApi {
     data class Account(
         val id: String,
         val email: String,
-        val discordLinked: Boolean,
-        val discordName: String? = null,
     )
 
     data class DeviceStart(
@@ -91,8 +89,6 @@ object AccountApi {
         Account(
             id = json.optString("id"),
             email = json.optString("email"),
-            discordLinked = json.optBoolean("discord_linked", false),
-            discordName = json.optString("discord_username").takeIf { !json.isNull("discord_username") && it.isNotBlank() },
         )
 
     private fun logFailure(name: String, e: Exception) {
@@ -346,11 +342,6 @@ object AccountApi {
             tokenMutex.withLock {
                 if (session == expectedSession && tokenState is TokenState.Present) {
                     account.value = result.data
-                }
-            }
-            withContext(Dispatchers.IO) {
-                if (!result.data.discordLinked && PrefManager.discordRelayToken.isNotEmpty()) {
-                    PrefManager.discordMergePending = true
                 }
             }
         }

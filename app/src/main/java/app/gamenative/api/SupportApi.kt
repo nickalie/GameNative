@@ -3,7 +3,6 @@ package app.gamenative.api
 import android.os.SystemClock
 import app.gamenative.utils.DebugReportUtils
 import androidx.compose.runtime.mutableStateOf
-import app.gamenative.PrefManager
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -33,9 +32,8 @@ import java.util.concurrent.TimeUnit
 
 object SupportApi {
 
-    const val BASE_URL = "${DebugReportApi.RELAY_BASE_URL}/api/app"
-    private const val RELAY_TOKEN_HEADER = "x-gn-relay-token"
-    private const val LINK_NONCE_HEADER = "x-gn-link-nonce"
+    const val RELAY_BASE_URL = "https://relay.gamenative.app"
+    const val BASE_URL = "$RELAY_BASE_URL/api/app"
     const val TEXT_MAX = 1800
     const val NOT_SIGNED_IN = "not_signed_in"
     const val FEATURES_HEADER = "x-gn-features"
@@ -371,15 +369,11 @@ object SupportApi {
         parse: (JSONObject) -> T,
     ): ApiResult<T> = withContext(Dispatchers.IO) {
         try {
-            val relayToken = if (PrefManager.discordMergePending) PrefManager.discordRelayToken.ifEmpty { null } else null
             val raw = AccountApi.sendAuthorized({ builder ->
-                build(builder).header(FEATURES_HEADER, FEATURES).also { if (relayToken != null) it.header(RELAY_TOKEN_HEADER, relayToken) }
+                build(builder).header(FEATURES_HEADER, FEATURES)
             }) { Raw(it.code, it.body.string()) }
                 ?: return@withContext ApiResult.HttpError(401, NOT_SIGNED_IN)
             val reason = if (raw.code !in 200..299) errorReason(raw.body) else null
-            if (relayToken != null && (raw.code in 200..499 || (raw.code == 502 && reason == "link_failed"))) {
-                PrefManager.discordMergePending = false
-            }
             if (tracksAvailability) markAvailability(raw.code)
             if (reason != null) {
                 Timber.tag(TAG).w("$name HTTP ${raw.code}: $reason")
@@ -514,77 +508,6 @@ object SupportApi {
             build = { it.url("$BASE_URL/conversations").post(body) },
             parse = { parseConversation(it.getJSONObject("conversation")) },
         )
-    }
-
-    suspend fun startDiscordLink(appState: String): ApiResult<String> =
-        call(
-            name = "link-discord/start",
-            build = {
-                it.url("$BASE_URL/link-discord/start")
-                    .post(JSONObject().put("app_state", appState).toString().toRequestBody("application/json".toMediaType()))
-            },
-            parse = { it.getString("url") },
-        )
-
-    data class DiscordLinkCode(
-        val code: String,
-        val nonce: String,
-        val url: String,
-        val qrUrl: String,
-        val expiresIn: Int,
-        val pollIntervalS: Int,
-    )
-
-    data class DiscordLinkStatus(val status: String, val token: String?, val name: String?)
-
-    suspend fun createDiscordLinkCode(device: String, signedIn: Boolean): ApiResult<DiscordLinkCode> {
-        val build: (Request.Builder) -> Request.Builder = {
-            it.url("$BASE_URL/link-discord/qr")
-                .post(JSONObject().put("device", device).toString().toRequestBody(JSON_TYPE))
-        }
-        val parse: (JSONObject) -> DiscordLinkCode = { json ->
-            val url = json.getString("url")
-            DiscordLinkCode(
-                code = json.getString("code"),
-                nonce = json.getString("nonce"),
-                url = url,
-                qrUrl = json.str("qr_url") ?: url,
-                expiresIn = json.optInt("expires_in", 600),
-                pollIntervalS = json.optInt("poll_interval_s", 3),
-            )
-        }
-        return if (signedIn) call("link-discord/qr", build = build, parse = parse) else anonymousCall("link-discord/qr", build, parse)
-    }
-
-    suspend fun pollDiscordLinkCode(code: String, nonce: String, signedIn: Boolean): ApiResult<DiscordLinkStatus> {
-        val build: (Request.Builder) -> Request.Builder = {
-            it.url("$BASE_URL/link-discord/qr/$code").header(LINK_NONCE_HEADER, nonce).get()
-        }
-        val parse: (JSONObject) -> DiscordLinkStatus = { json ->
-            DiscordLinkStatus(status = json.optString("status"), token = json.str("token"), name = json.str("name"))
-        }
-        return if (signedIn) call("link-discord/qr/poll", build = build, parse = parse) else anonymousCall("link-discord/qr/poll", build, parse)
-    }
-
-    private suspend fun <T> anonymousCall(
-        name: String,
-        build: (Request.Builder) -> Request.Builder,
-        parse: (JSONObject) -> T,
-    ): ApiResult<T> = withContext(Dispatchers.IO) {
-        try {
-            val raw = GameNativeApi.httpClient.newCall(build(Request.Builder()).build()).execute().use { Raw(it.code, it.body.string()) }
-            if (raw.code !in 200..299) {
-                val reason = errorReason(raw.body)
-                Timber.tag(TAG).w("$name HTTP ${raw.code}: $reason")
-                return@withContext ApiResult.HttpError(raw.code, reason)
-            }
-            ApiResult.Success(parse(JSONObject(raw.body)))
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logFailure(name, e)
-            ApiResult.NetworkError(e)
-        }
     }
 
     suspend fun listConversations(): ApiResult<List<Conversation>> =
@@ -729,7 +652,7 @@ object SupportApi {
         }
         try {
             destination.parentFile?.mkdirs()
-            val code = AccountApi.sendAuthorized({ it.url(DebugReportApi.RELAY_BASE_URL + path).get() }) { response ->
+            val code = AccountApi.sendAuthorized({ it.url(RELAY_BASE_URL + path).get() }) { response ->
                 if (response.isSuccessful) {
                     response.body.byteStream().use { input ->
                         destination.outputStream().use { output -> input.copyTo(output) }

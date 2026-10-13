@@ -32,7 +32,6 @@ fun GameFeedbackDialog(
     onStateChange: (GameFeedbackDialogState) -> Unit,
     onSubmit: (GameFeedbackDialogState) -> Unit,
     onDismiss: () -> Unit,
-    onDiscordSupport: () -> Unit,
 ) {
     if (state.visible) {
         Dialog(
@@ -137,14 +136,6 @@ fun GameFeedbackDialog(
                                 .padding(bottom = 16.dp),
                             maxLines = 5,
                         )
-
-                        // Discord support link
-                        TextButton(
-                            onClick = onDiscordSupport,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        ) {
-                            Text(stringResource(R.string.get_support_on_discord))
-                        }
                     }
 
                     // Dialog action buttons

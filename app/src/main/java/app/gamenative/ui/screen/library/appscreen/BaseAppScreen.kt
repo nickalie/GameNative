@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.core.content.FileProvider
-import androidx.core.net.toUri
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
@@ -873,20 +872,6 @@ abstract class BaseAppScreen {
         )
     }
 
-    @Composable
-    private fun getGetSupportOption(context: Context): AppMenuOption {
-        return AppMenuOption(
-            optionType = AppOptionMenuType.GetSupport,
-            onClick = {
-                val browserIntent = Intent(
-                    Intent.ACTION_VIEW,
-                    ("https://discord.gg/2hKv4VfZfE").toUri(),
-                )
-                context.startActivity(browserIntent)
-            },
-        )
-    }
-
     protected open fun onRunContainerClick(
         context: Context,
         libraryItem: LibraryItem,
@@ -1231,7 +1216,6 @@ abstract class BaseAppScreen {
             menuOptions.add(getFavoriteOption(libraryItem))
         }
         menuOptions.add(getSubmitFeedbackOption(context, libraryItem))
-        menuOptions.add(getGetSupportOption(context))
 
         // Add any source-specific options
         menuOptions.addAll(getSourceSpecificMenuOptions(context, libraryItem, onEditContainer, onBack, onClickPlay, isInstalled))
