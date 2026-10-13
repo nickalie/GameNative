@@ -15,14 +15,14 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
 
 /**
  * Applies a Settings → Stores switch at runtime: persists it in [StoreToggles], then brings the store's
  * service in line with it. On: the service starts (when signed in). Off: the service stops through its
- * normal stop path; one that is downloading or syncing (Steam: or running a game) is watched and stopped
- * once that work ends, if the switch is still off. Stopping never logs out or deletes anything.
+ * normal stop path; one that is downloading or syncing (Steam: also running a game, signing in or importing
+ * a component) is watched and stopped once that work ends, if the switch is still off. Stopping never logs
+ * out or deletes anything.
  *
  * Each store has one worker that applies the switch's current value, so flipping it off and on quickly ends
  * with the service matching the switch: a start waits for a stop in progress. The watch lasts as long as the
@@ -67,17 +67,37 @@ object StoreServices {
         signals.getValue(source).trySend(Unit)
     }
 
-    /** Reads the switch afresh on every step, so a change while waiting is picked up. */
+    /**
+     * Reads the switch afresh on every step, so a change while waiting is picked up. After a stop is issued
+     * the pass waits for the service to go down whatever the switch says, so an "on" that arrives meanwhile
+     * still starts it instead of being skipped as "running". A stop that outlasts [STOP_TIMEOUT_MS] is logged
+     * and then polled every [BUSY_POLL_MS].
+     */
     private suspend fun apply(context: Context, source: GameSource) {
+        var stopWaitMs = -1L
         while (true) {
+            val running = isRunning(source)
+            if (stopWaitMs >= 0 && running) {
+                if (stopWaitMs < STOP_TIMEOUT_MS) {
+                    delay(STOP_POLL_MS)
+                    stopWaitMs += STOP_POLL_MS
+                    if (stopWaitMs >= STOP_TIMEOUT_MS) {
+                        Timber.w("[StoreServices] The %s service did not stop in time", source)
+                    }
+                } else {
+                    delay(BUSY_POLL_MS)
+                }
+                continue
+            }
             if (StoreToggles.isEnabled(source)) {
                 start(context, source)
                 return
             }
-            if (!isRunning(source)) return
+            if (!running) return
             if (!isBusy(source)) {
-                stopAndAwait(context, source)
-                return
+                if (!requestStop(context, source)) return
+                stopWaitMs = 0L
+                continue
             }
             delay(BUSY_POLL_MS)
         }
@@ -92,7 +112,11 @@ object StoreServices {
     }
 
     private fun isBusy(source: GameSource): Boolean = when (source) {
-        GameSource.STEAM -> SteamService.hasActiveOperations() || SteamService.keepAlive
+        // The same guards MainActivity.onStop checks before it stops Steam.
+        GameSource.STEAM -> SteamService.hasActiveOperations() ||
+            SteamService.keepAlive ||
+            SteamService.isLoginInProgress ||
+            SteamService.isImporting
         GameSource.GOG -> GOGService.hasActiveOperations()
         GameSource.EPIC -> EpicService.hasActiveOperations()
         GameSource.AMAZON -> AmazonService.hasActiveOperations()
@@ -118,8 +142,8 @@ object StoreServices {
         }
     }
 
-    /** Stops the service and waits until it is down, so a following start is not skipped as "running". */
-    private suspend fun stopAndAwait(context: Context, source: GameSource) {
+    /** Asks the service to stop through its normal stop path; false when the store has no service. */
+    private fun requestStop(context: Context, source: GameSource): Boolean {
         when (source) {
             // Through onDestroy, which disconnects a connected client and clears one that is still connecting
             // or waiting to retry; SteamService.stop() leaves the latter's service in the foreground.
@@ -127,11 +151,8 @@ object StoreServices {
             GameSource.GOG -> GOGService.stop()
             GameSource.EPIC -> EpicService.stop()
             GameSource.AMAZON -> AmazonService.stop()
-            GameSource.CUSTOM_GAME -> return
+            GameSource.CUSTOM_GAME -> return false
         }
-        val stopped = withTimeoutOrNull(STOP_TIMEOUT_MS) {
-            while (isRunning(source)) delay(STOP_POLL_MS)
-        }
-        if (stopped == null) Timber.w("[StoreServices] The %s service did not stop in time", source)
+        return true
     }
 }

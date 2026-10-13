@@ -4389,9 +4389,12 @@ class SteamService : Service(), IChallengeUrlChanged {
             scope.launch {
                 while (isRunning) {
                     // logD("runWaitCallbacks")
+                    // isRunning is shared by all instances; callbackManager is this instance's and nulled by
+                    // its clearValues, so this loop ends even when a newer instance has set isRunning again.
+                    val manager = callbackManager ?: break
 
                     try {
-                        callbackManager!!.runWaitCallbacks(1000L)
+                        manager.runWaitCallbacks(1000L)
                     } catch (e: Exception) {
                         Timber.e("runWaitCallbacks failed: $e")
                     }
@@ -5220,7 +5223,9 @@ class SteamService : Service(), IChallengeUrlChanged {
      * Results are returned in a [PICSChangesCallback]
      */
     private fun continuousPICSChangesChecker(): Job = scope.launch {
-        while (isActive && isLoggedIn) {
+        // This instance's client rather than isLoggedIn (the current instance's), so a stopped instance's
+        // checker ends instead of polling on behind a newer one.
+        while (isActive && steamClient?.steamID?.isValid == true) {
             // Initial delay before each check
             delay(60.seconds)
 

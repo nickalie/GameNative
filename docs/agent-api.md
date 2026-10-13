@@ -166,8 +166,8 @@ sign-in are kept.
 Turns a store on or off, as the Settings switch does: `{source, enabled, changed}` (`changed=false` when it
 already had that value). On: the store's service starts when the account is signed in (Steam reconnects
 with its stored session). Off: the service stops through its normal stop path; one that is downloading or
-syncing (Steam: or running a game) is stopped once that work ends, if the switch is still off. Nothing is
-logged out or deleted. Both happen in the background after the answer, and a quick off → on still ends with
+syncing (Steam: also running a game, signing in or importing a component) is stopped once that work ends, if
+the switch is still off. Nothing is logged out or deleted. Both happen in the background after the answer, and a quick off → on still ends with
 the service running. It does not sign in: a store that was never signed in on the device stays empty.
 Container commands (`containers.*`) work for any game, whatever its store's switch. `source` is case-insensitive; a missing or unknown `source` or a non-boolean `enabled` →
 `BAD_ARGS`.
