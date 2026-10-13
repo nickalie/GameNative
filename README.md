@@ -92,6 +92,8 @@ An AI agent or a script on a computer connected over ADB can drive GameNative wi
 
 This build has no analytics SDK. It sends no usage events, game launch/exit stats or device details to an analytics service.
 
+There is no GameNative account: no sign-in of its own, and no request carries an account token. Debug-run logs stay on the device unless you share or save them.
+
 The full [Privacy Policy](PrivacyPolicy/README.md) has the details.
 
 ## Star history
