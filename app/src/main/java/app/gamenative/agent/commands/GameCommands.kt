@@ -112,13 +112,6 @@ class GameCommands(
 
     fun addCustom(args: JsonObject): JsonElement {
         val path = folderPath(args)
-        if (!isStoreEnabled(GameSource.CUSTOM_GAME)) {
-            throw AgentException(
-                AgentErrorCode.STORE_DISABLED,
-                "Custom Games is turned off in Settings → Stores",
-                buildJsonObject { put("source", GameSource.CUSTOM_GAME.name) },
-            )
-        }
         if (!customFolders.hasStorageAccess(path)) {
             throw AgentException(
                 AgentErrorCode.STORAGE_ACCESS_DENIED,
@@ -126,6 +119,15 @@ class GameCommands(
             )
         }
         if (!File(path).isDirectory) throw CommandArgs.badArgs("path is not a directory: $path")
+        // After the path checks, so a wrong path is BAD_ARGS whatever the switch; before libraryEntry, which
+        // may write (a folder imported as a Steam game).
+        if (!isStoreEnabled(GameSource.CUSTOM_GAME)) {
+            throw AgentException(
+                AgentErrorCode.STORE_DISABLED,
+                "Custom Games is turned off in Settings → Stores",
+                buildJsonObject { put("source", GameSource.CUSTOM_GAME.name) },
+            )
+        }
         val game = customFolders.libraryEntry(path) ?: throw CommandArgs.badArgs("the app refused the folder: $path")
         val added = customFolders.addFolder(path)
         if (added) customFolders.notifyLibrary(game)

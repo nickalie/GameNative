@@ -784,6 +784,14 @@ class GOGService : Service() {
             Timber.w(e, "[GOGService] startForeground not allowed, continuing as a background service")
         }
 
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no sync, and
+        // stop unless a download or sync is still running.
+        if (!StoreToggles.isEnabled(GameSource.GOG)) {
+            Timber.i("[GOGService] GOG is turned off in Settings, not syncing")
+            if (!hasActiveOperations()) stopSelf()
+            return START_NOT_STICKY
+        }
+
         // Determine if we should sync based on the action
         val shouldSync = when (intent?.action) {
             ACTION_MANUAL_SYNC -> {

@@ -849,6 +849,14 @@ class AmazonService : Service() {
             Timber.w(e, "[Amazon] startForeground not allowed, continuing as a background service")
         }
 
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no sync, and
+        // stop unless a download or sync is still running.
+        if (!StoreToggles.isEnabled(GameSource.AMAZON)) {
+            Timber.i("[Amazon] Amazon is turned off in Settings, not syncing")
+            if (!hasActiveOperations()) stopSelf()
+            return START_NOT_STICKY
+        }
+
         val shouldSync = when (intent?.action) {
             ACTION_MANUAL_SYNC -> {
                 Timber.i("[Amazon] Manual sync requested — bypassing throttle")

@@ -704,6 +704,14 @@ class EpicService : Service() {
             Timber.tag("EPIC").w(e, "startForeground not allowed, continuing as a background service")
         }
 
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no sync, and
+        // stop unless a download or sync is still running.
+        if (!StoreToggles.isEnabled(GameSource.EPIC)) {
+            Timber.tag("EPIC").i("Epic is turned off in Settings, not syncing")
+            if (!hasActiveOperations()) stopSelf()
+            return START_NOT_STICKY
+        }
+
         // Determine if we should sync based on the action
         val shouldSync = when (intent?.action) {
             ACTION_MANUAL_SYNC -> {

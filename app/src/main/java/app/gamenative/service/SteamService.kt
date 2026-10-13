@@ -38,6 +38,7 @@ import app.gamenative.data.SteamApp
 import app.gamenative.data.SteamControllerConfigDetail
 import app.gamenative.data.SteamFriend
 import app.gamenative.data.SteamLicense
+import app.gamenative.data.StoreToggles
 import app.gamenative.data.UserFileInfo
 import app.gamenative.db.PluviaDatabase
 import app.gamenative.db.dao.AppInfoDao
@@ -4311,6 +4312,13 @@ class SteamService : Service(), IChallengeUrlChanged {
 
                 return START_NOT_STICKY
             }
+        }
+
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no connect.
+        if (!StoreToggles.isEnabled(GameSource.STEAM)) {
+            Timber.i("Steam is turned off in Settings, not connecting")
+            if (!isRunning) stopSelf()
+            return START_NOT_STICKY
         }
 
         if (!isRunning) {

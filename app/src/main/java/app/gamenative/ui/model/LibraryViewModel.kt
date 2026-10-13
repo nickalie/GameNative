@@ -388,9 +388,13 @@ class LibraryViewModel @Inject constructor(
             if (StoreToggles.isEnabled(GameSource.STEAM)) CuratedListRepository.refreshFourThreeIfNeeded()
         }
 
-        // Settings → Stores switched: drop or restore the store's tab, games and recommendations.
+        // Settings → Stores switched: drop or restore the store's tab, games and recommendations, and fetch
+        // the curated lists skipped at start while Steam was off (the refresh is throttled).
         viewModelScope.launch(Dispatchers.IO) {
-            StoreToggles.enabled.drop(1).collect {
+            StoreToggles.enabled.drop(1).collect { enabled ->
+                if (GameSource.STEAM in enabled) {
+                    viewModelScope.launch(Dispatchers.IO) { CuratedListRepository.refreshFourThreeIfNeeded() }
+                }
                 updateVisibleLibraryTabs(PrefManager.libraryTabs)
                 onFilterApps(paginationCurrentPage)
                 refreshRecommendationHero()

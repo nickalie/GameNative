@@ -366,6 +366,19 @@ class ReadCommandsTest {
     }
 
     @Test
+    fun addCustom_badPathWhileCustomGamesIsOffIsStillBadArgs() {
+        val folders = FakeCustomFolders()
+        val missing = File(gameFolder(), "missing").path
+
+        val error = failure {
+            gameCommands(folders = folders, enabledStores = setOf(GameSource.STEAM)).addCustom(args("path" to missing))
+        }
+
+        assertEquals(AgentErrorCode.BAD_ARGS, error.code)
+        assertTrue(folders.added.isEmpty())
+    }
+
+    @Test
     fun addCustom_badPathsAreBadArgs() {
         val file = File(gameFolder(), "game.exe").apply { writeText("MZ") }
         val folders = FakeCustomFolders()

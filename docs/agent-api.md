@@ -150,8 +150,8 @@ Adds a folder on the device as a custom game, as the library's folder picker doe
   allow`, Android 10 and earlier `adb shell pm grant <package> android.permission.READ_EXTERNAL_STORAGE`.
   Granting All files access restarts the app process (`NOT_READY` until it is up again).
 - Not a directory, or a folder the app refuses → `BAD_ARGS`. The folder is never copied or moved.
-- While Custom Games is off in Settings → Stores → `STORE_DISABLED` (checked after the path is validated);
-  nothing is added.
+- While Custom Games is off in Settings → Stores → `STORE_DISABLED`, checked after storage access and the
+  directory check (a wrong path is still `BAD_ARGS`, no access still `STORAGE_ACCESS_DENIED`); nothing is added.
 
 ### `stores.list`
 
@@ -165,10 +165,11 @@ sign-in are kept.
 
 Turns a store on or off, as the Settings switch does: `{source, enabled, changed}` (`changed=false` when it
 already had that value). On: the store's service starts when the account is signed in (Steam reconnects
-with its stored session). Off: the service stops through its normal stop path unless it is downloading or
-syncing (then it stops once idle); nothing is logged out or deleted. It does not sign in: a store that was
-never signed in on the device stays empty. Container commands (`containers.*`) work for any game, whatever
-its store's switch. `source` is case-insensitive; a missing or unknown `source` or a non-boolean `enabled` →
+with its stored session). Off: the service stops through its normal stop path; one that is downloading or
+syncing (Steam: or running a game) is stopped once that work ends, if the switch is still off. Nothing is
+logged out or deleted. Both happen in the background after the answer, and a quick off → on still ends with
+the service running. It does not sign in: a store that was never signed in on the device stays empty.
+Container commands (`containers.*`) work for any game, whatever its store's switch. `source` is case-insensitive; a missing or unknown `source` or a non-boolean `enabled` →
 `BAD_ARGS`.
 
 ### `components.list {target?}`

@@ -67,12 +67,6 @@ import kotlinx.coroutines.flow.filterNotNull
 import timber.log.Timber
 
 /**
- * Calculates the installed games count based on the current filter state.
- *
- * @param state The current library state containing filters and visibility settings
- * @return The number of installed games, respecting current filters and source visibility
- */
-/**
  * Whether [source]'s games count towards the library: shown by the user's source filter, on in
  * Settings → Stores and, for GOG, Epic and Amazon, signed in.
  */
@@ -87,6 +81,12 @@ private fun countsSource(context: android.content.Context, state: LibraryState, 
     }
 }
 
+/**
+ * Calculates the installed games count based on the current filter state.
+ *
+ * @param state The current library state containing filters and visibility settings
+ * @return The number of installed games, respecting current filters and source visibility
+ */
 private fun calculateInstalledCount(context: android.content.Context, state: LibraryState): Int {
     if (state.appInfoSortType.contains(AppFilter.INSTALLED)) {
         return state.totalAppsInFilter
