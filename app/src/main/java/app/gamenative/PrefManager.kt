@@ -1,7 +1,6 @@
 package app.gamenative
 
 import android.content.Context
-import androidx.compose.runtime.mutableStateOf
 import androidx.datastore.core.DataStore
 import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
@@ -102,6 +101,13 @@ object PrefManager {
         removePref(booleanPreferencesKey("discord_merge_pending"))
         removePref(stringPreferencesKey("discord_linked_name"))
         removePref(stringPreferencesKey("ai_help_preferred_path"))
+
+        // Note: Should remove after a few release versions. The GameNative account and the in-app
+        // support chat it gated were removed; drop the stored session tokens and the chat's state.
+        removePref(byteArrayPreferencesKey("gamenative_access_token_enc"))
+        removePref(byteArrayPreferencesKey("gamenative_refresh_token_enc"))
+        removePref(stringPreferencesKey("support_last_seen"))
+        removePref(booleanPreferencesKey("hide_ai_features"))
     }
 
     fun clearPreferences() {
@@ -1094,50 +1100,6 @@ object PrefManager {
             setPref(ALLOWED_ORIENTATION, Orientation.toInt(value))
         }
 
-    private val SUPPORT_LAST_SEEN = stringPreferencesKey("support_last_seen")
-    var supportLastSeen: String
-        get() = getPref(SUPPORT_LAST_SEEN, "")
-        set(value) {
-            setPref(SUPPORT_LAST_SEEN, value)
-        }
-
-    private val GAMENATIVE_ACCESS_TOKEN_ENC = byteArrayPreferencesKey("gamenative_access_token_enc")
-    val gameNativeAccessToken: String
-        get() {
-            val encryptedBytes = getPref(GAMENATIVE_ACCESS_TOKEN_ENC, ByteArray(0))
-            return if (encryptedBytes.isEmpty()) "" else String(Crypto.decrypt(encryptedBytes))
-        }
-
-    private val GAMENATIVE_REFRESH_TOKEN_ENC = byteArrayPreferencesKey("gamenative_refresh_token_enc")
-    val gameNativeSignedIn = mutableStateOf(false)
-    val gameNativeRefreshToken: String
-        get() {
-            val encryptedBytes = getPref(GAMENATIVE_REFRESH_TOKEN_ENC, ByteArray(0))
-            return if (encryptedBytes.isEmpty()) "" else String(Crypto.decrypt(encryptedBytes))
-        }
-
-    suspend fun saveGameNativeTokens(accessToken: String, refreshToken: String) {
-        val encryptedAccess = if (accessToken.isEmpty()) null else Crypto.encrypt(accessToken.toByteArray())
-        val encryptedRefresh = Crypto.encrypt(refreshToken.toByteArray())
-        gameNativeSignedIn.value = true
-        dataStore.edit { pref ->
-            if (encryptedAccess == null) {
-                pref.remove(GAMENATIVE_ACCESS_TOKEN_ENC)
-            } else {
-                pref[GAMENATIVE_ACCESS_TOKEN_ENC] = encryptedAccess
-            }
-            pref[GAMENATIVE_REFRESH_TOKEN_ENC] = encryptedRefresh
-        }
-    }
-
-    suspend fun clearGameNativeTokens() {
-        gameNativeSignedIn.value = false
-        dataStore.edit { pref ->
-            pref.remove(GAMENATIVE_ACCESS_TOKEN_ENC)
-            pref.remove(GAMENATIVE_REFRESH_TOKEN_ENC)
-        }
-    }
-
     private val APP_THEME = intPreferencesKey("app_theme")
     var appTheme: AppTheme
         get() {
@@ -1382,13 +1344,6 @@ object PrefManager {
         get() = getPref(BOOT_SCREEN_ADS_ENABLED, true)
         set(value) {
             setPref(BOOT_SCREEN_ADS_ENABLED, value)
-        }
-
-    private val HIDE_AI_FEATURES = booleanPreferencesKey("hide_ai_features")
-    var hideAiFeatures: Boolean
-        get() = getPref(HIDE_AI_FEATURES, false)
-        set(value) {
-            setPref(HIDE_AI_FEATURES, value)
         }
 
     /**

@@ -443,18 +443,6 @@ fun SettingsGroupInterface(
             },
         )
 
-        var hideAiFeatures by rememberSaveable { mutableStateOf(PrefManager.hideAiFeatures) }
-        SettingsSwitch(
-            colors = settingsTileColorsAlt(),
-            title = { Text(text = stringResource(R.string.settings_hide_ai_title)) },
-            subtitle = { Text(text = stringResource(R.string.settings_hide_ai_subtitle)) },
-            state = hideAiFeatures,
-            onCheckedChange = {
-                hideAiFeatures = it
-                PrefManager.hideAiFeatures = it
-            },
-        )
-
         // Boot-splash cards are recommendation surfaces: only configurable while the master
         // "Show game recommendations" switch is on.
         if (showRecommendations) {

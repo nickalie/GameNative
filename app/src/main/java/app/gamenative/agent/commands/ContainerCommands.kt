@@ -72,7 +72,7 @@ class ContainerWriteDeps(
         )
 
         /**
-         * Persists [data] the way the config dialog and AI suggestions do, but fails instead of
+         * Persists [data] the way the config dialog does, but fails instead of
          * reporting success when the `.container` file could not be written.
          */
         fun write(context: Context, container: Container, data: ContainerData, source: String) {
@@ -121,7 +121,7 @@ class ContainerWriteDeps(
 }
 
 /**
- * `containers.*` commands. The readable and editable keys are the AI-suggestion boundary
+ * `containers.*` commands. The readable and editable keys are the editable config boundary
  * (`SuggestionConfigKeys.APPLICABLE_CONFIG_KEYS`); `containerVariant` is reported but read-only.
  * Writes are persistent and always preceded by a backup that `containers.restore` can roll back to.
  */

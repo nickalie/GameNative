@@ -51,15 +51,15 @@ import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.RestartAlt
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SdStorage
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.SmartToy
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Sync
+import androidx.compose.material.icons.filled.Troubleshoot
 import androidx.compose.material.icons.filled.Update
 import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material.icons.filled.VerifiedUser
@@ -351,7 +351,7 @@ private fun getIconForOption(type: AppOptionMenuType): ImageVector {
         AppOptionMenuType.TestGraphics -> Icons.Default.Build
         AppOptionMenuType.PlayWithDiagnostics -> Icons.Default.BugReport
         AppOptionMenuType.ShareDiagnostics -> Icons.Default.Share
-        AppOptionMenuType.AiDebugRun -> Icons.Default.SmartToy
+        AppOptionMenuType.DebugRun -> Icons.Default.Troubleshoot
         AppOptionMenuType.ImportConfig -> Icons.Default.ArrowDownward
         AppOptionMenuType.ExportConfig -> Icons.Default.ArrowUpward
         AppOptionMenuType.ImportSaves -> Icons.Default.ArrowDownward
@@ -380,7 +380,7 @@ private fun groupOptions(options: List<AppMenuOption>): Map<OptionCategory, List
             // Quick Actions
             AppOptionMenuType.EditContainer,
             AppOptionMenuType.RunContainer,
-            AppOptionMenuType.AiDebugRun,
+            AppOptionMenuType.DebugRun,
             AppOptionMenuType.CreateShortcut,
             AppOptionMenuType.ExportFrontend,
             AppOptionMenuType.CopyLaunchLink,

@@ -59,21 +59,13 @@ object GameNativeApi {
         if (integrityToken != null) {
             builder.header("X-Integrity-Token", integrityToken)
         }
-        addAccountAuthorization(builder)
 
         return builder.build()
     }
 
-    suspend fun buildGetRequest(url: String): Request {
-        val builder = Request.Builder()
+    fun buildGetRequest(url: String): Request =
+        Request.Builder()
             .url(url)
             .get()
-        addAccountAuthorization(builder)
-        return builder.build()
-    }
-
-    private suspend fun addAccountAuthorization(builder: Request.Builder) {
-        val accessToken = AccountApi.currentAccessTokenOrNull() ?: return
-        builder.header("Authorization", "Bearer $accessToken")
-    }
+            .build()
 }

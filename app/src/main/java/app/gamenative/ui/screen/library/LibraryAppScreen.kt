@@ -869,7 +869,7 @@ fun AppScreen(
     onClickPlay: (Boolean) -> Unit,
     onTestGraphics: () -> Unit,
     onPlayWithDiagnostics: () -> Unit,
-    onAiDebugRun: () -> Unit,
+    onDebugRun: () -> Unit,
     onBack: () -> Unit,
 ) {
     // Get the appropriate screen model based on game source
@@ -889,7 +889,7 @@ fun AppScreen(
         onClickPlay = onClickPlay,
         onTestGraphics = onTestGraphics,
         onPlayWithDiagnostics = onPlayWithDiagnostics,
-        onAiDebugRun = onAiDebugRun,
+        onDebugRun = onDebugRun,
         onBack = onBack,
     )
 }

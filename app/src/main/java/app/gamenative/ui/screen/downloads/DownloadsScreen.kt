@@ -117,7 +117,7 @@ fun HomeDownloadsScreen(
     onClickPlay: (String, Boolean) -> Unit,
     onTestGraphics: (String) -> Unit,
     onPlayWithDiagnostics: (String) -> Unit,
-    onAiDebugRun: (String) -> Unit,
+    onDebugRun: (String) -> Unit,
     viewModel: DownloadsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -181,9 +181,9 @@ fun HomeDownloadsScreen(
                     onPlayWithDiagnostics(libraryItem.appId)
                 }
             },
-            onAiDebugRun = {
+            onDebugRun = {
                 selectedLibraryItem?.let { libraryItem ->
-                    onAiDebugRun(libraryItem.appId)
+                    onDebugRun(libraryItem.appId)
                 }
             },
         )

@@ -29,7 +29,7 @@ internal fun LibraryDetailPane(
     onClickPlay: (Boolean) -> Unit,
     onTestGraphics: () -> Unit,
     onPlayWithDiagnostics: () -> Unit,
-    onAiDebugRun: () -> Unit,
+    onDebugRun: () -> Unit,
     onBack: () -> Unit,
 ) {
     Surface {
@@ -77,7 +77,7 @@ internal fun LibraryDetailPane(
                 onClickPlay = onClickPlay,
                 onTestGraphics = onTestGraphics,
                 onPlayWithDiagnostics = onPlayWithDiagnostics,
-                onAiDebugRun = onAiDebugRun,
+                onDebugRun = onDebugRun,
                 onBack = onBack,
             )
         }
@@ -104,7 +104,7 @@ private fun Preview_LibraryDetailPane() {
             onClickPlay = { },
             onTestGraphics = { },
             onPlayWithDiagnostics = { },
-            onAiDebugRun = { },
+            onDebugRun = { },
             onBack = { },
         )
     }

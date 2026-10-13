@@ -54,10 +54,8 @@ object LsfgVkManager {
     private const val LIB_FILENAME = "liblsfg-vk-layer.so"
     private const val MANIFEST_FILENAME = "VkLayer_LS_frame_generation.json"
     private const val VERSION_FILENAME = ".lsfg_vk_runtime_version"
-    const val LAYER_LIB_FILENAME = LIB_FILENAME
-    const val LAYER_MANIFEST_FILENAME = MANIFEST_FILENAME
 
-    // Layer builds installed from support component cards live under files/lsfg_layers/<version>/ and are
+    // Layer builds installed by the former in-app support chat live under files/lsfg_layers/<version>/ and stay
     // pinned to a container through the lsfgLayerVersion extra.
     private const val LAYERS_DIR = "lsfg_layers"
     const val EXTRA_LAYER_VERSION = "lsfgLayerVersion"
@@ -118,12 +116,7 @@ object LsfgVkManager {
 
     fun layerDir(context: Context, version: String): File = File(File(context.filesDir, LAYERS_DIR), version)
 
-    fun installedLayerVersions(context: Context): List<String> =
-        File(context.filesDir, LAYERS_DIR).listFiles().orEmpty()
-            .filter { it.isDirectory && LAYER_VERSION_RE.matches(it.name) && File(it, LIB_FILENAME).isFile }
-            .map { it.name }
-
-    /** The layer build pinned to this container by a support card, or null for the bundled layer. */
+    /** The layer build pinned to this container by the former support chat, or null for the bundled layer. */
     private fun pinnedLayer(context: Context, container: Container): Pair<String, File>? {
         val version = container.getExtra(EXTRA_LAYER_VERSION, "").trim()
         if (!LAYER_VERSION_RE.matches(version)) return null

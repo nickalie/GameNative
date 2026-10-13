@@ -63,7 +63,6 @@ import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.ui.component.focusRing
 import app.gamenative.ui.enums.LibraryTab
-import app.gamenative.ui.screen.support.SupportReplyWatcher
 import app.gamenative.ui.theme.PluviaTheme
 import app.gamenative.ui.util.WindowWidthClass
 import app.gamenative.ui.util.rememberWindowWidthClass
@@ -308,26 +307,13 @@ private fun CompactLibraryTabBar(
                     onClick = onAddGameClick,
                 )
             }
-            Box {
-                CompactIconButton(
-                    icon = Icons.Default.Menu,
-                    contentDescription = stringResource(R.string.menu),
-                    onClick = onMenuClick,
-                )
-                SupportUnreadDot(modifier = Modifier.align(Alignment.TopEnd))
-            }
+            CompactIconButton(
+                icon = Icons.Default.Menu,
+                contentDescription = stringResource(R.string.menu),
+                onClick = onMenuClick,
+            )
         }
     }
-}
-
-@Composable
-private fun SupportUnreadDot(modifier: Modifier = Modifier) {
-    if (SupportReplyWatcher.unread.value.isEmpty()) return
-    Box(
-        modifier = modifier
-            .size(10.dp)
-            .background(MaterialTheme.colorScheme.primary, CircleShape),
-    )
 }
 
 /**
@@ -545,14 +531,11 @@ private fun ExpandedLibraryTabBar(
                 )
             }
 
-            Box {
-                IconActionButton(
-                    icon = Icons.Default.Menu,
-                    contentDescription = stringResource(R.string.menu),
-                    onClick = onMenuClick,
-                )
-                SupportUnreadDot(modifier = Modifier.align(Alignment.TopEnd))
-            }
+            IconActionButton(
+                icon = Icons.Default.Menu,
+                contentDescription = stringResource(R.string.menu),
+                onClick = onMenuClick,
+            )
         }
     }
 }

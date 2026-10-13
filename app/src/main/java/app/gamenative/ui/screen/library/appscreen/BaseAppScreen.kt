@@ -519,15 +519,14 @@ abstract class BaseAppScreen {
     }
 
     @Composable
-    protected open fun getAiDebugRunOption(
+    protected open fun getDebugRunOption(
         context: Context,
         libraryItem: LibraryItem,
-        onAiDebugRun: () -> Unit,
+        onDebugRun: () -> Unit,
     ): AppMenuOption? {
-        if (PrefManager.hideAiFeatures) return null
         return AppMenuOption(
-            AppOptionMenuType.AiDebugRun,
-            onClick = { onAiDebugRun() },
+            AppOptionMenuType.DebugRun,
+            onClick = { onDebugRun() },
         )
     }
 
@@ -1189,7 +1188,7 @@ abstract class BaseAppScreen {
         onClickPlay: (Boolean) -> Unit,
         onTestGraphics: () -> Unit,
         onPlayWithDiagnostics: () -> Unit,
-        onAiDebugRun: () -> Unit,
+        onDebugRun: () -> Unit,
         exportFrontendLauncher: ActivityResultLauncher<String>,
     ): List<AppMenuOption> {
         val isInstalled = isInstalled(context, libraryItem)
@@ -1203,7 +1202,7 @@ abstract class BaseAppScreen {
             getRunContainerOption(context, libraryItem, onClickPlay)?.let { menuOptions.add(it) }
             getTestGraphicsOption(context, libraryItem, onTestGraphics)?.let { menuOptions.add(it) }
             getPlayWithDiagnosticsOption(context, libraryItem, onPlayWithDiagnostics)?.let { menuOptions.add(it) }
-            getAiDebugRunOption(context, libraryItem, onAiDebugRun)?.let { menuOptions.add(it) }
+            getDebugRunOption(context, libraryItem, onDebugRun)?.let { menuOptions.add(it) }
             getShareDiagnosticsOption(context, libraryItem)?.let { menuOptions.add(it) }
             getResetContainerOption(context, libraryItem)?.let { menuOptions.add(it) }
             getCreateShortcutOption(context, libraryItem)?.let { menuOptions.add(it) }
@@ -1264,7 +1263,7 @@ abstract class BaseAppScreen {
         onClickPlay: (Boolean) -> Unit,
         onTestGraphics: () -> Unit,
         onPlayWithDiagnostics: () -> Unit,
-        onAiDebugRun: () -> Unit,
+        onDebugRun: () -> Unit,
         onBack: () -> Unit,
     ) {
         val context = LocalContext.current
@@ -1764,7 +1763,7 @@ abstract class BaseAppScreen {
             onClickPlay,
             onTestGraphics,
             onPlayWithDiagnostics,
-            onAiDebugRun,
+            onDebugRun,
             exportFrontendLauncher,
         )
 
