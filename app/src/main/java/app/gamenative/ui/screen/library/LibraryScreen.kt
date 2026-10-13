@@ -81,6 +81,7 @@ import app.gamenative.R
 import app.gamenative.data.GameCompatibilityStatus
 import app.gamenative.data.FavoritesManager
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.data.LibraryItem
 import app.gamenative.events.AndroidEvent
 import app.gamenative.ui.component.GamepadAction
@@ -224,6 +225,8 @@ private fun LibraryScreenContent(
 ) {
     val context = LocalContext.current
     val lifecycleScope = LocalLifecycleOwner.current.lifecycleScope
+    // Stores on in Settings → Stores; the rest have no tab, collections or add button here.
+    val enabledStores by StoreToggles.enabled.collectAsStateWithLifecycle()
 
     val gogOAuthLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult(),
@@ -1172,7 +1175,7 @@ private fun LibraryScreenContent(
                         onTabSelected = onTabChanged,
                         onOptionsClick = { onOptionsPanelToggle(true) },
                         onSearchClick = { onIsSearching(true) },
-                        onAddGameClick = onAddCustomGameClick,
+                        onAddGameClick = onAddCustomGameClick.takeIf { GameSource.CUSTOM_GAME in enabledStores },
                         onMenuClick = { isSystemMenuOpen = true },
                         onNavigateDownToGrid = {
                             if (isListFocusable()) {
@@ -1303,8 +1306,8 @@ private fun LibraryScreenContent(
                 selectedSteamCollectionIds = state.selectedSteamCollectionIds,
                 steamCollectionCounts = state.steamCollectionCounts,
                 skippedDynamicCollections = state.skippedDynamicCollections,
-                isSteamConnected = isSteamConnected,
-                hasSteamCredentials = SteamUtils.hasStoredCredentials(),
+                isSteamConnected = isSteamConnected && GameSource.STEAM in enabledStores,
+                hasSteamCredentials = SteamUtils.hasStoredCredentials() && GameSource.STEAM in enabledStores,
                 isOffline = isOffline,
                 onSteamCollectionToggle = onSteamCollectionToggle,
                 onClearSteamCollections = onClearSteamCollections,

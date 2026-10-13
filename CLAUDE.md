@@ -36,6 +36,15 @@ Hooks go into the separate functions (`setupXEnvironment`, its nested `chainPreI
 `PreInstallStepGate.kt`, or call into `app.gamenative.agent.AgentHooks`. The only agent change inside the
 composable replaces an existing argument in place (`AgentHooks.wineSetupFailedMessage`), no new locals.
 
+## Stores (Settings → Stores)
+
+- Per-store switches: `data/StoreToggles` (state flow, default Steam + Custom Games on), runtime start/stop in
+  `service/StoreServices`. GOG/Epic/Amazon `start()`/`triggerLibrarySync()` refuse while their store is off;
+  Steam is gated at its start sites in `PluviaMain`. Library filtering goes through
+  `StoreToggles.librarySources`, tabs through `LibraryTab.store`/`visibleFor` (the one rule for visible
+  tabs: store on, and Recommended also needs `PrefManager.showRecommendations`). A store that is off keeps
+  its data and credentials.
+
 ## Agent API (ADB)
 
 - App code: `app/src/main/java/app/gamenative/agent/` (`AgentProvider` content provider, `AgentDispatcher`,

@@ -355,7 +355,8 @@ fn wait(
                 ),
                 (None, Some(app_id)) => format!(
                     "no new session for {app_id} appeared within {secs}s \
-                     (game not installed, or the launch did not start)"
+                     (game not installed, its store is off in Settings → Stores, \
+                     or the launch did not start)"
                 ),
                 (None, None) => format!("nothing happened within {secs}s"),
             }));

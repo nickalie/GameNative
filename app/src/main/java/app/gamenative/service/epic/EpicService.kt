@@ -18,6 +18,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.service.download.GameDownloadService
 import app.gamenative.service.download.NativeTreeDelete
 import app.gamenative.utils.ContainerUtils
@@ -63,7 +64,10 @@ class EpicService : Service() {
             get() = instance != null
 
         fun start(context: Context) {
-
+            if (!StoreToggles.isEnabled(GameSource.EPIC)) {
+                Timber.tag("EPIC").d("Epic is turned off in Settings, skipping start")
+                return
+            }
             Timber.tag("EPIC").d("Starting service...")
             // If already running, do nothing
             if (isRunning) {
@@ -97,6 +101,7 @@ class EpicService : Service() {
         }
 
         fun triggerLibrarySync(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.EPIC)) return
             Timber.tag("EPIC").i("Triggering manual library sync (bypasses throttle)")
             val intent = Intent(context, EpicService::class.java)
             intent.action = ACTION_MANUAL_SYNC
@@ -697,6 +702,14 @@ class EpicService : Service() {
             notificationHelper.markActive(NotificationHelper.NOTIFICATION_ID_EPIC)
         } catch (e: Exception) {
             Timber.tag("EPIC").w(e, "startForeground not allowed, continuing as a background service")
+        }
+
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no sync, and
+        // stop unless a download or sync is still running.
+        if (!StoreToggles.isEnabled(GameSource.EPIC)) {
+            Timber.tag("EPIC").i("Epic is turned off in Settings, not syncing")
+            if (!hasActiveOperations()) stopSelf()
+            return START_NOT_STICKY
         }
 
         // Determine if we should sync based on the action

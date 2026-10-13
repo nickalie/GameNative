@@ -58,6 +58,8 @@ without `--source` is a usage error.
 gnctl capabilities
 gnctl games list --source STEAM
 gnctl games add /sdcard/Games/PC/MyGame          # add a folder as a custom game
+gnctl stores list                                # Settings → Stores switches
+gnctl stores set GOG on                          # show GOG games, start its service (no login)
 gnctl components list --target dxwrapperConfig.version
 gnctl components install wineVersion proton-11.0-2-arm64ec-1 --wait --timeout 900
 gnctl containers get STEAM_123
@@ -92,8 +94,9 @@ Notes:
   `WINEDEBUG`, more than 8) are refused with exit 3 before adb is called.
 - `--wait exited` / `sessions wait --until exited` succeed for any normal exit; only `launch_error` and
   `launch_timeout` exits fail with `SESSION_EXITED`.
-- A launch the app defers (store service not ready) or a game that is not installed creates no session:
-  `--wait` then ends with `TIMEOUT` ("no new session … appeared").
+- A launch the app defers (store service not ready), a game that is not installed, or a game whose store is
+  off in Settings → Stores (by default only Steam and Custom Games are on; see `stores list`) creates no
+  session: `--wait` then ends with `TIMEOUT` ("no new session … appeared").
 - `sessions wait` uses one deadline (`--timeout`, default 300 s) for both a cold-starting app (`NOT_READY`) and
   the wait; `NOT_READY` until the deadline → `TIMEOUT`.
 - `screenshot` drops any text `screencap` prints before the PNG (multi-display warning). Output `{file, bytes}`.
@@ -118,6 +121,7 @@ Commands:
   capabilities  API version, app version, package and the commands the app supports
   device        Device information
   games         Installed games; add custom game folders
+  stores        Which game stores are on (Settings → Stores); turn them on or off
   components    Component versions usable in container configs
   containers    Read and persistently change a game's container config
   sessions      The current (or last finished) game session
@@ -224,6 +228,57 @@ Usage: gnctl games add [OPTIONS] <PATH>
 
 Arguments:
   <PATH>  Absolute device path of the game folder, e.g. /sdcard/Games/PC/MyGame
+
+Options:
+      --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
+      --adb <ADB>          Path to the adb binary [default: adb]
+      --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+  -h, --help               Print help
+```
+
+### `gnctl stores`
+
+```text
+Which game stores are on (Settings → Stores); turn them on or off
+
+Usage: gnctl stores [OPTIONS] <COMMAND>
+
+Commands:
+  list  Every store with its switch
+  set   Turn a store on or off (starts or stops its service; never logs in or out)
+  help  Print this message or the help of the given subcommand(s)
+
+Options:
+      --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
+      --adb <ADB>          Path to the adb binary [default: adb]
+      --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+  -h, --help               Print help
+```
+
+### `gnctl stores list`
+
+```text
+Every store with its switch
+
+Usage: gnctl stores list [OPTIONS]
+
+Options:
+      --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)
+      --adb <ADB>          Path to the adb binary [default: adb]
+      --package <PACKAGE>  GameNative package name (the provider authority is <package>.agent) [default: app.gamenative]
+  -h, --help               Print help
+```
+
+### `gnctl stores set`
+
+```text
+Turn a store on or off (starts or stops its service; never logs in or out)
+
+Usage: gnctl stores set [OPTIONS] <SOURCE> <STATE>
+
+Arguments:
+  <SOURCE>  STEAM, CUSTOM_GAME, GOG, EPIC or AMAZON
+  <STATE>   on or off [possible values: on, off]
 
 Options:
       --serial <SERIAL>    Device serial (default: $ANDROID_SERIAL, else adb's only device)

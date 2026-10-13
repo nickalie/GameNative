@@ -7,6 +7,7 @@ import app.gamenative.agent.AgentHooks
 import app.gamenative.agent.AgentLaunchOptions
 import app.gamenative.agent.AgentLaunchOptionsStore
 import app.gamenative.agent.AgentRuntime
+import app.gamenative.data.GameSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -121,5 +122,16 @@ class IntentLaunchManagerTest {
         val plain = parse(launchIntent())!!
         AgentHooks.onLaunchIntent(plain.appId, plain.agentOptions)
         assertEquals(AgentLaunchOptions.NONE, store.peek("STEAM_123"))
+    }
+
+    @Test
+    fun `disabledStoreOf names the store of a game whose store is off`() {
+        val enabled = setOf(GameSource.STEAM, GameSource.CUSTOM_GAME)
+
+        assertEquals(GameSource.GOG, IntentLaunchManager.disabledStoreOf("GOG_1207658924") { it in enabled })
+        assertEquals(GameSource.AMAZON, IntentLaunchManager.disabledStoreOf("AMAZON_42") { it in enabled })
+        assertNull(IntentLaunchManager.disabledStoreOf("STEAM_123") { it in enabled })
+        assertNull(IntentLaunchManager.disabledStoreOf("CUSTOM_GAME_7") { it in enabled })
+        assertEquals(GameSource.STEAM, IntentLaunchManager.disabledStoreOf("STEAM_123") { false })
     }
 }

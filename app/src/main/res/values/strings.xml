@@ -229,6 +229,7 @@
     <string name="intent_launch_service_pending">Game will launch when service is ready</string>
     <string name="intent_launch_steam_login_failed">Steam login failed — game launch cancelled</string>
     <string name="intent_launch_service_timeout">Game service failed to start — game launch cancelled</string>
+    <string name="intent_launch_store_disabled">Could not launch game: %1$s is turned off in Settings → Stores</string>
     <string name="back_press_exit_warning">Press back again to exit</string>
     <string name="game_executable_not_found_title">Cannot Launch</string>
     <string name="game_executable_not_found">The executable could not be auto-selected. Please set the executable path in container settings.</string>
@@ -1164,6 +1165,8 @@
     <!-- Settings: Emulation Group -->
     <string name="settings_emulation_title">Emulation</string>
     <string name="settings_accounts_title">Game launcher accounts</string>
+    <string name="settings_stores_title">Stores</string>
+    <string name="settings_stores_description">A store that is off disappears from the app: its games, library tab and sign-in are hidden and its background service does not run. Installed games and sign-ins are kept and come back when you turn it on again.</string>
     <string name="settings_accounts_signed_out">Not signed in</string>
     <string name="settings_accounts_ea_title">EA account</string>
     <string name="settings_accounts_rockstar_title">Rockstar account</string>

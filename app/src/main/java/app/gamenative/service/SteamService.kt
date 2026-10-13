@@ -38,6 +38,7 @@ import app.gamenative.data.SteamApp
 import app.gamenative.data.SteamControllerConfigDetail
 import app.gamenative.data.SteamFriend
 import app.gamenative.data.SteamLicense
+import app.gamenative.data.StoreToggles
 import app.gamenative.data.UserFileInfo
 import app.gamenative.db.PluviaDatabase
 import app.gamenative.db.dao.AppInfoDao
@@ -2338,14 +2339,14 @@ class SteamService : Service(), IChallengeUrlChanged {
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
             if (variant == Container.BIONIC) {
-                val dest = File(instance!!.filesDir, "imagefs_bionic.txz")
+                val dest = File(context.filesDir, "imagefs_bionic.txz")
                 Timber.d("Downloading imagefs_bionic to " + dest.toString())
                 fetchFileWithFallback("imagefs_bionic.txz", dest, context, onDownloadProgress)
             } else {
-                Timber.d("Downloading imagefs_gamenative to " + File(instance!!.filesDir, "imagefs_gamenative.txz"));
+                Timber.d("Downloading imagefs_gamenative to " + File(context.filesDir, "imagefs_gamenative.txz"))
                 fetchFileWithFallback(
                     "imagefs_gamenative.txz",
-                    File(instance!!.filesDir, "imagefs_gamenative.txz"),
+                    File(context.filesDir, "imagefs_gamenative.txz"),
                     context,
                     onDownloadProgress,
                 )
@@ -2358,7 +2359,7 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "imagefs_patches_gamenative.tzst")
+            val dest = File(context.filesDir, "imagefs_patches_gamenative.tzst")
             Timber.d("Downloading imagefs_patches_gamenative.tzst to " + dest.toString())
             fetchFileWithFallback("imagefs_patches_gamenative.tzst", dest, context, onDownloadProgress)
         }
@@ -2382,7 +2383,7 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "steam.tzst")
+            val dest = File(context.filesDir, "steam.tzst")
             Timber.d("Downloading steam.tzst to " + dest.toString())
             fetchFileWithFallback("steam.tzst", dest, context, onDownloadProgress)
         }
@@ -4313,6 +4314,13 @@ class SteamService : Service(), IChallengeUrlChanged {
             }
         }
 
+        // Off in Settings → Stores (e.g. Android restarting the sticky service after the switch): no connect.
+        if (!StoreToggles.isEnabled(GameSource.STEAM)) {
+            Timber.i("Steam is turned off in Settings, not connecting")
+            if (!isRunning) stopSelf()
+            return START_NOT_STICKY
+        }
+
         if (!isRunning) {
             Timber.i("Using server list path: $serverListPath")
 
@@ -4381,9 +4389,12 @@ class SteamService : Service(), IChallengeUrlChanged {
             scope.launch {
                 while (isRunning) {
                     // logD("runWaitCallbacks")
+                    // isRunning is shared by all instances; callbackManager is this instance's and nulled by
+                    // its clearValues, so this loop ends even when a newer instance has set isRunning again.
+                    val manager = callbackManager ?: break
 
                     try {
-                        callbackManager!!.runWaitCallbacks(1000L)
+                        manager.runWaitCallbacks(1000L)
                     } catch (e: Exception) {
                         Timber.e("runWaitCallbacks failed: $e")
                     }
@@ -5212,7 +5223,9 @@ class SteamService : Service(), IChallengeUrlChanged {
      * Results are returned in a [PICSChangesCallback]
      */
     private fun continuousPICSChangesChecker(): Job = scope.launch {
-        while (isActive && isLoggedIn) {
+        // This instance's client rather than isLoggedIn (the current instance's), so a stopped instance's
+        // checker ends instead of polling on behind a newer one.
+        while (isActive && steamClient?.steamID?.isValid == true) {
             // Initial delay before each check
             delay(60.seconds)
 

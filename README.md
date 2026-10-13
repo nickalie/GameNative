@@ -33,7 +33,7 @@ It's still early. Not every game runs yet, and some need tweaking to play well, 
 
 ## What you get
 
-- Play games you actually own on Steam, Epic, GOG and Amazon
+- Play games you actually own on Steam, Epic, GOG and Amazon (turn each store on in Settings → Stores; Steam and custom games are on by default)
 - Cloud saves that carry over between your PC and your phone
 - Automatically applied known configs, so many games just work out of the box with no tweaking required
 - Controller and touch support, with a custom control editor and on-screen HUD

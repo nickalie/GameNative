@@ -240,6 +240,7 @@
     <string name="intent_launch_service_pending">服务就绪后将启动游戏</string>
     <string name="intent_launch_steam_login_failed">Steam 登录失败 — 游戏启动已取消</string>
     <string name="intent_launch_service_timeout">游戏服务启动失败 — 游戏启动已取消</string>
+    <string name="intent_launch_store_disabled">无法启动游戏：%1$s 已在 设置 → 商店 中关闭</string>
     <string name="back_press_exit_warning">再次按返回键退出</string>
     <string name="game_executable_not_found_title">无法启动</string>
     <string name="game_executable_not_found">无法自动选择可执行文件。请在容器设置中指定可执行文件路径。</string>
@@ -971,6 +972,8 @@
     <!-- 设置：模拟组 -->
     <string name="settings_emulation_title">模拟设置</string>
     <string name="settings_accounts_title">游戏启动器账户</string>
+    <string name="settings_stores_title">商店</string>
+    <string name="settings_stores_description">关闭的商店会从应用中消失：其游戏、库标签页和登录入口将被隐藏，后台服务也不会运行。已安装的游戏和登录信息会保留，重新开启后即可恢复。</string>
     <string name="settings_accounts_signed_out">未登录</string>
     <string name="settings_accounts_ea_title">EA 账户</string>
     <string name="settings_accounts_rockstar_title">Rockstar 账户</string>

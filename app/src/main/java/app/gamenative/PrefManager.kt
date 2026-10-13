@@ -17,6 +17,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import app.gamenative.data.EulaInfo
 import app.gamenative.data.GameSource
 import app.gamenative.data.SteamApp
+import app.gamenative.data.StoreToggles
 import app.gamenative.data.filterForCountry
 import app.gamenative.powercontrol.autotuning.DeviceGate
 import app.gamenative.enums.AppTheme
@@ -1223,6 +1224,18 @@ object PrefManager {
         set(value) {
             setPref(ITEMS_PER_PAGE, value)
         }
+
+    // Stores switched on in Settings → Stores (read through app.gamenative.data.StoreToggles).
+    // One key per GameSource: store_enabled_steam, store_enabled_custom_game, store_enabled_gog, …
+    private fun storeEnabledKey(source: GameSource) =
+        booleanPreferencesKey("store_enabled_${source.name.lowercase(java.util.Locale.ROOT)}")
+
+    fun isStoreEnabled(source: GameSource): Boolean =
+        getPref(storeEnabledKey(source), source in StoreToggles.DEFAULT_ENABLED)
+
+    fun setStoreEnabled(source: GameSource, enabled: Boolean) {
+        setPref(storeEnabledKey(source), enabled)
+    }
 
     // App Source filters
     private val SHOW_STEAM_IN_LIBRARY = booleanPreferencesKey("show_steam_in_library")

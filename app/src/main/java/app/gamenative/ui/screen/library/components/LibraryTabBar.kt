@@ -70,7 +70,8 @@ import app.gamenative.ui.util.rememberWindowWidthClass
 
 /**
  * Tab bar for library navigation with sliding pill indicator.
- * Adapts to screen width
+ * Adapts to screen width. [onAddGameClick] is null while Custom Games is off in Settings → Stores,
+ * which hides the add button.
  */
 @Composable
 fun LibraryTabBar(
@@ -80,7 +81,7 @@ fun LibraryTabBar(
     onTabSelected: (LibraryTab) -> Unit,
     onOptionsClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onAddGameClick: () -> Unit,
+    onAddGameClick: (() -> Unit)?,
     onMenuClick: () -> Unit,
     onNavigateDownToGrid: () -> Unit,
     onPreviousTab: () -> Unit = {},
@@ -144,7 +145,7 @@ private fun CompactLibraryTabBar(
     onTabSelected: (LibraryTab) -> Unit,
     onOptionsClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onAddGameClick: () -> Unit,
+    onAddGameClick: (() -> Unit)?,
     onMenuClick: () -> Unit,
     onNavigateDownToGrid: () -> Unit,
     onPreviousTab: () -> Unit,
@@ -300,11 +301,13 @@ private fun CompactLibraryTabBar(
                 contentDescription = stringResource(R.string.search),
                 onClick = onSearchClick,
             )
-            CompactIconButton(
-                icon = Icons.Default.Add,
-                contentDescription = stringResource(R.string.action_add_game),
-                onClick = onAddGameClick,
-            )
+            if (onAddGameClick != null) {
+                CompactIconButton(
+                    icon = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.action_add_game),
+                    onClick = onAddGameClick,
+                )
+            }
             Box {
                 CompactIconButton(
                     icon = Icons.Default.Menu,
@@ -385,7 +388,7 @@ private fun ExpandedLibraryTabBar(
     onTabSelected: (LibraryTab) -> Unit,
     onOptionsClick: () -> Unit,
     onSearchClick: () -> Unit,
-    onAddGameClick: () -> Unit,
+    onAddGameClick: (() -> Unit)?,
     onMenuClick: () -> Unit,
     onNavigateDownToGrid: () -> Unit,
     onPreviousTab: () -> Unit,
@@ -534,11 +537,13 @@ private fun ExpandedLibraryTabBar(
                 onClick = onSearchClick,
             )
 
-            IconActionButton(
-                icon = Icons.Default.Add,
-                contentDescription = stringResource(R.string.action_add_game),
-                onClick = onAddGameClick,
-            )
+            if (onAddGameClick != null) {
+                IconActionButton(
+                    icon = Icons.Default.Add,
+                    contentDescription = stringResource(R.string.action_add_game),
+                    onClick = onAddGameClick,
+                )
+            }
 
             Box {
                 IconActionButton(
@@ -764,7 +769,7 @@ private fun Preview_LibraryTabBar() {
         ) {
             LibraryTabBar(
                 currentTab = LibraryTab.ALL,
-                tabs = LibraryTab.visibleEntries,
+                tabs = LibraryTab.entries.toList(),
                 tabCounts = mapOf(
                     LibraryTab.ALL to 42,
                     LibraryTab.STEAM to 30,
@@ -794,7 +799,7 @@ private fun Preview_LibraryTabBar_Steam() {
         ) {
             LibraryTabBar(
                 currentTab = LibraryTab.STEAM,
-                tabs = LibraryTab.visibleEntries,
+                tabs = LibraryTab.entries.toList(),
                 tabCounts = mapOf(
                     LibraryTab.ALL to 42,
                     LibraryTab.STEAM to 30,

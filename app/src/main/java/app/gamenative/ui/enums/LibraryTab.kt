@@ -5,7 +5,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.ui.graphics.vector.ImageVector
+import app.gamenative.PrefManager
 import app.gamenative.R
+import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 
 enum class LibraryTab(
     @get:StringRes val labelResId: Int,
@@ -16,6 +19,8 @@ enum class LibraryTab(
     val showAmazon: Boolean,
     val installedOnly: Boolean,
     val icon: ImageVector? = null,
+    /** The store the tab belongs to; hidden while that store is off in Settings → Stores. */
+    val store: GameSource? = null,
 ) {
     RECOMMENDED(
         labelResId = R.string.tab_recommended,
@@ -26,6 +31,8 @@ enum class LibraryTab(
         showAmazon = false,
         installedOnly = false,
         icon = Icons.Outlined.Explore,
+        // GOG store recommendations seeded from the library
+        store = GameSource.GOG,
     ),
     ALL(
         labelResId = R.string.tab_all,
@@ -54,6 +61,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.STEAM,
     ),
     GOG(
         labelResId = R.string.tab_gog,
@@ -63,6 +71,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.GOG,
     ),
     EPIC(
         labelResId = R.string.tab_epic,
@@ -72,6 +81,7 @@ enum class LibraryTab(
         showEpic = true,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.EPIC,
     ),
     AMAZON(
         labelResId = R.string.tab_amazon,
@@ -81,6 +91,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = true,
         installedOnly = false,
+        store = GameSource.AMAZON,
     ),
     LOCAL(
         labelResId = R.string.tab_local,
@@ -90,6 +101,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.CUSTOM_GAME,
     ),
     ;
 
@@ -97,32 +109,49 @@ enum class LibraryTab(
         val configurableEntries = listOf(RECOMMENDED, STEAM, GOG, EPIC, AMAZON)
 
         /**
-         * Tabs shown in the UI. Custom (LOCAL) games work on all flavors: legacy maps folders
-         * in place via all-files access, modern imports them into app-owned storage.
+         * The one rule for which tabs the UI may show: a tab whose store is off in Settings → Stores is
+         * hidden (tabs without a store always stay), and [RECOMMENDED] is additionally hidden while
+         * recommendations are off in settings. Custom (LOCAL) games work on all flavors: legacy maps
+         * folders in place via all-files access, modern imports them into app-owned storage.
          */
-        val visibleEntries: List<LibraryTab>
-            get() = entries.toList()
+        fun visibleFor(enabledStores: Set<GameSource>, recommendationsEnabled: Boolean): List<LibraryTab> =
+            entries.filter { tab ->
+                (tab.store == null || tab.store in enabledStores) &&
+                    (tab != RECOMMENDED || recommendationsEnabled)
+            }
 
-        /** Tabs the UI may show: [RECOMMENDED] only while recommendations are enabled in settings. */
-        fun availableEntries(recommendationsEnabled: Boolean): List<LibraryTab> =
-            visibleEntries.filter { it != RECOMMENDED || recommendationsEnabled }
+        /** Tabs shown in the UI right now, from the current store switches and recommendations setting. */
+        val visibleEntries: List<LibraryTab>
+            get() = availableEntries(PrefManager.showRecommendations)
+
+        /** Tabs the UI may show; see [visibleFor]. */
+        fun availableEntries(
+            recommendationsEnabled: Boolean,
+            enabledStores: Set<GameSource> = StoreToggles.enabled.value,
+        ): List<LibraryTab> = visibleFor(enabledStores, recommendationsEnabled)
 
         /**
-         * The tabs to render from the persisted selection. A selected [RECOMMENDED] stays in the
-         * saved preference (it comes back when recommendations are re-enabled) but is dropped here
-         * while they are off.
+         * The tabs to render from the persisted selection. A selected tab that is hidden (its store is
+         * off, or [RECOMMENDED] while recommendations are off) stays in the saved preference and comes
+         * back when it is re-enabled, but is dropped here.
          */
         fun effectiveVisibleTabs(
             selected: List<LibraryTab>,
             recommendationsEnabled: Boolean,
+            enabledStores: Set<GameSource> = StoreToggles.enabled.value,
         ): List<LibraryTab> {
-            val available = availableEntries(recommendationsEnabled)
+            val available = availableEntries(recommendationsEnabled, enabledStores)
             return selected.filter { it in available }
         }
 
-        /** Store-tab choices offered in settings; [RECOMMENDED] only while recommendations are enabled. */
-        fun configurableEntriesFor(recommendationsEnabled: Boolean): List<LibraryTab> =
-            configurableEntries.filter { it != RECOMMENDED || recommendationsEnabled }
+        /** Tab choices offered in settings: the [configurableEntries] that [visibleFor] lets through. */
+        fun configurableEntriesFor(
+            recommendationsEnabled: Boolean,
+            enabledStores: Set<GameSource> = StoreToggles.enabled.value,
+        ): List<LibraryTab> {
+            val available = availableEntries(recommendationsEnabled, enabledStores)
+            return configurableEntries.filter { it in available }
+        }
 
         fun normalizeVisibleTabs(
             serialized: String,

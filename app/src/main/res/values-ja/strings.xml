@@ -201,6 +201,7 @@
     <string name="intent_launch_service_pending">サービスの準備ができたらゲームが起動します</string>
     <string name="intent_launch_steam_login_failed">Steam ログインに失敗しました — ゲームの起動がキャンセルされました</string>
     <string name="intent_launch_service_timeout">ゲームサービスの開始に失敗しました — ゲームの起動がキャンセルされました</string>
+    <string name="intent_launch_store_disabled">ゲームを起動できません: %1$s は 設定 → ストア でオフになっています</string>
     <string name="back_press_exit_warning">戻るボタンをもう一度押すと終了します</string>
     <string name="game_executable_not_found_title">起動できない</string>
     <string name="game_executable_not_found">実行ファイルを自動選択できませんでした。コンテナ設定で実行ファイルのパスを指定してください。</string>
@@ -955,6 +956,8 @@
     <!-- Settings: Emulation Group -->
     <string name="settings_emulation_title">エミュレーション</string>
     <string name="settings_accounts_title">ゲームランチャーのアカウント</string>
+    <string name="settings_stores_title">ストア</string>
+    <string name="settings_stores_description">オフにしたストアはアプリから消えます。ゲーム、ライブラリのタブ、サインインが非表示になり、バックグラウンドサービスも動作しません。インストール済みのゲームとサインイン情報は保持され、再びオンにすると元に戻ります。</string>
     <string name="settings_accounts_signed_out">サインインしていません</string>
     <string name="settings_accounts_ea_title">EA アカウント</string>
     <string name="settings_accounts_rockstar_title">Rockstar アカウント</string>

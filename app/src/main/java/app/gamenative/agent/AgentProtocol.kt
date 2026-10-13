@@ -25,6 +25,7 @@ enum class AgentErrorCode {
     SESSION_ACTIVE,
     NO_BACKUP,
     STORAGE_ACCESS_DENIED,
+    STORE_DISABLED,
     NOT_READY,
     DISABLED,
     RESPONSE_TOO_LARGE,

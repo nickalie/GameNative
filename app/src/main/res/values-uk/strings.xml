@@ -240,6 +240,7 @@
     <string name="intent_launch_service_pending">Гра запуститься після запуску сервісу</string>
     <string name="intent_launch_steam_login_failed">Помилка входу в Steam — запуск гри скасовано</string>
     <string name="intent_launch_service_timeout">Не вдалося запустити ігровий сервіс — запуск гри скасовано</string>
+    <string name="intent_launch_store_disabled">Не вдалося запустити гру: %1$s вимкнено в Налаштування → Магазини</string>
     <string name="back_press_exit_warning">Натисніть назад ще раз для виходу</string>
     <string name="game_executable_not_found_title">Неможливо запустити</string>
     <string name="game_executable_not_found">Виконуваний файл не вдалося вибрати автоматично. Вкажіть шлях до виконуваного файлу в налаштуваннях контейнера.</string>
@@ -980,6 +981,8 @@
     <!-- Settings: Emulation Group -->
     <string name="settings_emulation_title">Емуляція</string>
     <string name="settings_accounts_title">Облікові записи ігрових лаунчерів</string>
+    <string name="settings_stores_title">Магазини</string>
+    <string name="settings_stores_description">Вимкнений магазин зникає із застосунку: його ігри, вкладка в бібліотеці та вхід приховані, фонова служба не працює. Встановлені ігри та вхід в акаунт зберігаються й повернуться, коли ви знову його ввімкнете.</string>
     <string name="settings_accounts_signed_out">Вхід не виконано</string>
     <string name="settings_accounts_ea_title">Обліковий запис EA</string>
     <string name="settings_accounts_rockstar_title">Обліковий запис Rockstar</string>

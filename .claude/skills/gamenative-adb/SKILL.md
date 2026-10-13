@@ -16,6 +16,9 @@ description: Drive GameNative on an Android device over ADB with the gnctl CLI �
    (no command can do it). `NOT_READY` → the app is starting, retry.
 3. `adb shell input keyevent WAKEUP` before launching; with a secure lock screen the user may have to unlock
    (how `am start` behaves behind the keyguard is not verified).
+4. Stores: only those on in Settings → Stores show up (default: Steam and Custom Games). A game missing from
+   `games list` may sit in a store that is off: `gnctl stores list`, then `gnctl stores set GOG on` (it does not
+   sign in; a store never signed in on the device stays empty). Turn it back off when done if you turned it on.
 
 ## The loop
 
@@ -72,7 +75,7 @@ gnctl containers get STEAM_123                          # confirm it matches the
 ## Custom games
 
 - `games add PATH` adds a folder on the device to the library; it is idempotent (`added=false` when the folder
-  was already there). `STORAGE_ACCESS_DENIED` → run the adb command from its message (it depends on the
+  was already there). `STORE_DISABLED` → Custom Games is off: `gnctl stores set CUSTOM_GAME on`, then retry. `STORAGE_ACCESS_DENIED` → run the adb command from its message (it depends on the
   Android version), wait for `capabilities` to answer again (the grant restarts the app), then retry.
 - `executable` in the answer is the exe the first launch picks. `null` (several exes, or the exe sits deeper
   than one subfolder) → launch once anyway to create the container: the session ends at once with
@@ -98,7 +101,8 @@ gnctl containers get STEAM_123                          # confirm it matches the
     after it started.
 - `sessions stop` during `starting` needs **no retry**: the app queues it until the Wine environment exists and
   then closes the game; repeating it does not queue another stop. Exit reason: `agent_stop`.
-- `TIMEOUT` "no new session … appeared" → the launch never started: game not installed, or the launch was
+- `TIMEOUT` "no new session … appeared" → the launch never started: game not installed, its store is off in
+  Settings → Stores (`gnctl stores list`; turn it on with `gnctl stores set <SOURCE> on`), or the launch was
   deferred (Steam not logged in / store service not ready on a cold start — the user may need to log in). A
   Steam launch without login may also sit in `launching` while the app waits for login.
 - A `launching` session can pause at a sync-conflict or "session active elsewhere" dialog: take a screenshot
