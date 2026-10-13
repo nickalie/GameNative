@@ -35,6 +35,7 @@ import androidx.compose.material.icons.filled.ManageAccounts
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -139,6 +140,15 @@ private fun SettingsScreenContent(
                     iconTint = PluviaTheme.colors.accentPurple,
                 ) {
                     SettingsGroupGameNativeAccount()
+                }
+
+                // Stores section: which game stores the app shows and runs
+                SettingsSection(
+                    title = stringResource(R.string.settings_stores_title),
+                    icon = Icons.Default.Storefront,
+                    iconTint = PluviaTheme.colors.accentSuccess,
+                ) {
+                    SettingsGroupStores()
                 }
 
                 // Game launcher accounts section

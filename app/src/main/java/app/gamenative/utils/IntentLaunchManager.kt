@@ -6,6 +6,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.AgentLaunchOptions
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import com.winlator.container.Container
 import com.winlator.container.ContainerData
 import com.winlator.core.DXVKHelper
@@ -110,6 +111,14 @@ object IntentLaunchManager {
 
         return LaunchRequest(appId, containerConfig, agentOptions)
     }
+
+    /**
+     * The store of [appId] when it is turned off in Settings → Stores, else null. Launch intents for such a
+     * game are refused (a snackbar, no launch and no agent session) instead of waiting for a store service
+     * that never starts.
+     */
+    fun disabledStoreOf(appId: String, isEnabled: (GameSource) -> Boolean = StoreToggles::isEnabled): GameSource? =
+        ContainerUtils.extractGameSourceFromContainerId(appId).takeUnless(isEnabled)
 
     fun applyTemporaryConfigOverride(context: Context, appId: String, configOverride: ContainerData) {
         try {

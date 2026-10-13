@@ -62,6 +62,7 @@ import app.gamenative.R
 import app.gamenative.agent.AgentHooks
 import app.gamenative.agent.AgentPreLaunch
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.enums.AppTheme
 import app.gamenative.enums.LoginResult
 import app.gamenative.enums.PathType
@@ -900,8 +901,10 @@ fun PluviaMain(
 
     LaunchedEffect(Unit) {
         lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            // Only attempt reconnection if not already connected/connecting and not in offline mode
-            val shouldAttemptReconnect = !state.isSteamConnected &&
+            // Only attempt reconnection if Steam is on in Settings → Stores, not already
+            // connected/connecting and not in offline mode
+            val shouldAttemptReconnect = StoreToggles.isEnabled(GameSource.STEAM) &&
+                !state.isSteamConnected &&
                 !isConnecting &&
                 !SteamService.keepAlive
 
@@ -912,7 +915,7 @@ fun PluviaMain(
                 context.startForegroundService(Intent(context, SteamService::class.java))
             }
 
-            // Start GOGService if user has GOG
+            // Start GOGService if user has GOG (each store service's start() skips a store that is off)
             if (app.gamenative.service.gog.GOGService.hasStoredCredentials(context) &&
                 !app.gamenative.service.gog.GOGService.isRunning
             ) {
@@ -1966,8 +1969,14 @@ fun PluviaMain(
             }
 
             // Connection status banner (overlay) - dismissible so users can access navigation
-            if (state.currentScreen != PluviaScreen.LoginUser && !connectionBannerDismissed && initialConnectDone && !state.isSteamConnected &&
-                SteamUtils.hasStoredCredentials()) {
+            if (
+                state.currentScreen != PluviaScreen.LoginUser &&
+                !connectionBannerDismissed &&
+                initialConnectDone &&
+                !state.isSteamConnected &&
+                SteamUtils.hasStoredCredentials() &&
+                StoreToggles.isEnabled(GameSource.STEAM)
+            ) {
                 Box(modifier = Modifier.zIndex(5f)) {
                     ConnectionStatusBanner(
                         connectionState = state.connectionState,
@@ -1990,6 +1999,8 @@ fun PluviaMain(
             val startDestination = rememberSaveable {
                 when {
                     SteamService.isLoggedIn -> PluviaScreen.Home.route + "?offline=false"
+                    // Steam is off in Settings → Stores: its login screen has nothing to offer
+                    !StoreToggles.isEnabled(GameSource.STEAM) -> PluviaScreen.Home.route + "?offline=true"
                     // skip login screen if any service has stored credentials
                     SteamUtils.hasStoredCredentials() ||
                         GOGService.hasStoredCredentials(context) ||

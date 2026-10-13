@@ -6,6 +6,8 @@ import androidx.compose.material.icons.outlined.Explore
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.ui.graphics.vector.ImageVector
 import app.gamenative.R
+import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 
 enum class LibraryTab(
     @get:StringRes val labelResId: Int,
@@ -16,6 +18,8 @@ enum class LibraryTab(
     val showAmazon: Boolean,
     val installedOnly: Boolean,
     val icon: ImageVector? = null,
+    /** The store the tab belongs to; hidden while that store is off in Settings → Stores. */
+    val store: GameSource? = null,
 ) {
     RECOMMENDED(
         labelResId = R.string.tab_recommended,
@@ -26,6 +30,8 @@ enum class LibraryTab(
         showAmazon = false,
         installedOnly = false,
         icon = Icons.Outlined.Explore,
+        // GOG store recommendations seeded from the library
+        store = GameSource.GOG,
     ),
     ALL(
         labelResId = R.string.tab_all,
@@ -54,6 +60,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.STEAM,
     ),
     GOG(
         labelResId = R.string.tab_gog,
@@ -63,6 +70,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.GOG,
     ),
     EPIC(
         labelResId = R.string.tab_epic,
@@ -72,6 +80,7 @@ enum class LibraryTab(
         showEpic = true,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.EPIC,
     ),
     AMAZON(
         labelResId = R.string.tab_amazon,
@@ -81,6 +90,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = true,
         installedOnly = false,
+        store = GameSource.AMAZON,
     ),
     LOCAL(
         labelResId = R.string.tab_local,
@@ -90,6 +100,7 @@ enum class LibraryTab(
         showEpic = false,
         showAmazon = false,
         installedOnly = false,
+        store = GameSource.CUSTOM_GAME,
     ),
     ;
 
@@ -97,11 +108,16 @@ enum class LibraryTab(
         val configurableEntries = listOf(RECOMMENDED, STEAM, GOG, EPIC, AMAZON)
 
         /**
-         * Tabs shown in the UI. Custom (LOCAL) games work on all flavors: legacy maps folders
-         * in place via all-files access, modern imports them into app-owned storage.
+         * Tabs shown in the UI: every tab whose store is on in Settings → Stores. Custom (LOCAL) games
+         * work on all flavors: legacy maps folders in place via all-files access, modern imports them
+         * into app-owned storage.
          */
         val visibleEntries: List<LibraryTab>
-            get() = entries.toList()
+            get() = visibleFor(StoreToggles.enabled.value)
+
+        /** The tabs left when only [enabledStores] are on; tabs without a store always stay. */
+        fun visibleFor(enabledStores: Set<GameSource>): List<LibraryTab> =
+            entries.filter { tab -> tab.store == null || tab.store in enabledStores }
 
         fun normalizeVisibleTabs(
             serialized: String,

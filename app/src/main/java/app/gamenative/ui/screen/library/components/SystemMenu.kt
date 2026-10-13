@@ -58,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -80,7 +81,9 @@ import androidx.compose.ui.unit.dp
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
+import app.gamenative.data.GameSource
 import app.gamenative.data.SteamFriend
+import app.gamenative.data.StoreToggles
 import app.gamenative.events.SteamEvent
 import app.gamenative.service.SteamService
 import app.gamenative.ui.component.dialog.SupportersDialog
@@ -274,6 +277,10 @@ fun SystemMenu(
     val firstItemFocusRequester = remember { FocusRequester() }
     val profileFocusRequester = remember { FocusRequester() }
 
+    // Store entries below only show for stores that are on in Settings → Stores
+    val enabledStores by StoreToggles.enabled.collectAsState()
+    val steamEnabled = GameSource.STEAM in enabledStores
+
     var persona by remember { mutableStateOf<SteamFriend?>(null) }
     var selectedStatus by remember(persona) { mutableStateOf(persona?.state ?: EPersonaState.Online) }
     var showSupporters by remember { mutableStateOf(false) }
@@ -406,170 +413,185 @@ fun SystemMenu(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Profile section
-                    val profileInteractionSource = remember { MutableInteractionSource() }
-                    val isProfileFocused by profileInteractionSource.collectIsFocusedAsState()
-                    val profileScale by animateFloatAsState(
-                        targetValue = if (isProfileFocused) 1.02f else 1f,
-                        animationSpec = spring(
-                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                            stiffness = Spring.StiffnessMedium,
-                        ),
-                        label = "profileScale",
-                    )
+                    // Steam profile: only while Steam is on in Settings → Stores
+                    if (steamEnabled) {
+                        // Profile section
+                        val profileInteractionSource = remember { MutableInteractionSource() }
+                        val isProfileFocused by profileInteractionSource.collectIsFocusedAsState()
+                        val profileScale by animateFloatAsState(
+                            targetValue = if (isProfileFocused) 1.02f else 1f,
+                            animationSpec = spring(
+                                dampingRatio = Spring.DampingRatioMediumBouncy,
+                                stiffness = Spring.StiffnessMedium,
+                            ),
+                            label = "profileScale",
+                        )
 
-                    Box {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .scale(profileScale)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (isProfileFocused) {
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceContainerHigh
-                                    },
-                                )
-                                .then(
-                                    if (isProfileFocused) {
-                                        Modifier.border(
-                                            2.dp,
-                                            MaterialTheme.colorScheme.primary,
-                                            RoundedCornerShape(16.dp),
+                        Box {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .scale(profileScale)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (isProfileFocused) {
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceContainerHigh
+                                        },
+                                    )
+                                    .then(
+                                        if (isProfileFocused) {
+                                            Modifier.border(
+                                                2.dp,
+                                                MaterialTheme.colorScheme.primary,
+                                                RoundedCornerShape(16.dp),
+                                            )
+                                        } else {
+                                            Modifier
+                                        },
+                                    )
+                                    .focusRequester(profileFocusRequester)
+                                    .selectable(
+                                        selected = isProfileFocused,
+                                        interactionSource = profileInteractionSource,
+                                        indication = null,
+                                        onClick = { if (!isOffline && SteamService.isLoggedIn) showStatusPicker = !showStatusPicker },
+                                    )
+                                    .padding(12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                // Avatar
+                                Box(
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    if (persona?.avatarHash?.isNotEmpty() == true) {
+                                        SteamIconImage(
+                                            size = 48.dp,
+                                            image = { persona?.avatarHash?.getAvatarURL() },
                                         )
                                     } else {
-                                        Modifier
-                                    },
-                                )
-                                .focusRequester(profileFocusRequester)
-                                .selectable(
-                                    selected = isProfileFocused,
-                                    interactionSource = profileInteractionSource,
-                                    indication = null,
-                                    onClick = { if (!isOffline && SteamService.isLoggedIn) showStatusPicker = !showStatusPicker },
-                                )
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            // Avatar
-                            Box(
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                if (persona?.avatarHash?.isNotEmpty() == true) {
-                                    SteamIconImage(
-                                        size = 48.dp,
-                                        image = { persona?.avatarHash?.getAvatarURL() },
+                                        Icon(
+                                            imageVector = Icons.Default.Person,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(24.dp),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+
+                                // Name and status
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = persona?.name ?: stringResource(R.string.default_user_name),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        maxLines = 1,
                                     )
-                                } else {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(8.dp)
+                                                .background(getStatusColor(selectedStatus), CircleShape),
+                                        )
+                                        Text(
+                                            text = when (selectedStatus) {
+                                                EPersonaState.Online -> stringResource(R.string.status_online)
+                                                EPersonaState.Away -> stringResource(R.string.status_away)
+                                                EPersonaState.Invisible -> stringResource(R.string.status_invisible)
+                                                else -> selectedStatus.name
+                                            },
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+
+                                // Dropdown indicator (only when online)
+                                if (!isOffline && SteamService.isLoggedIn) {
                                     Icon(
-                                        imageVector = Icons.Default.Person,
+                                        imageVector = if (showStatusPicker) {
+                                            Icons.Default.KeyboardArrowUp
+                                        } else {
+                                            Icons.Default.KeyboardArrowDown
+                                        },
                                         contentDescription = null,
-                                        modifier = Modifier.size(24.dp),
+                                        modifier = Modifier.size(20.dp),
                                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                             }
 
-                            // Name and status
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = persona?.name ?: stringResource(R.string.default_user_name),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    maxLines = 1,
-                                )
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(8.dp)
-                                            .background(getStatusColor(selectedStatus), CircleShape),
-                                    )
-                                    Text(
-                                        text = when (selectedStatus) {
-                                            EPersonaState.Online -> stringResource(R.string.status_online)
-                                            EPersonaState.Away -> stringResource(R.string.status_away)
-                                            EPersonaState.Invisible -> stringResource(R.string.status_invisible)
-                                            else -> selectedStatus.name
-                                        },
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                }
-                            }
-
-                            // Dropdown indicator (only when online)
-                            if (!isOffline && SteamService.isLoggedIn) {
-                                Icon(
-                                    imageVector = if (showStatusPicker) {
-                                        Icons.Default.KeyboardArrowUp
-                                    } else {
-                                        Icons.Default.KeyboardArrowDown
-                                    },
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                            }
-                        }
-
-                        // Status picker dropdown
-                        androidx.compose.material3.DropdownMenu(
-                            expanded = showStatusPicker,
-                            onDismissRequest = { showStatusPicker = false },
-                            modifier = Modifier
-                                .width(280.dp)
-                                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
-                        ) {
-                            Column(
+                            // Status picker dropdown
+                            androidx.compose.material3.DropdownMenu(
+                                expanded = showStatusPicker,
+                                onDismissRequest = { showStatusPicker = false },
                                 modifier = Modifier
-                                    .padding(8.dp)
-                                    .focusGroup(),
+                                    .width(280.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                             ) {
-                                Text(
-                                    text = stringResource(R.string.status),
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                                )
-                                listOf(
-                                    Triple(EPersonaState.Online, stringResource(R.string.status_online), PluviaTheme.colors.statusInstalled),
-                                    Triple(EPersonaState.Away, stringResource(R.string.status_away), PluviaTheme.colors.statusAway),
-                                    Triple(EPersonaState.Invisible, stringResource(R.string.status_invisible), PluviaTheme.colors.statusOffline),
-                                ).forEach { (state, label, color) ->
-                                    StatusOption(
-                                        text = label,
-                                        statusColor = color,
-                                        isSelected = selectedStatus == state,
-                                        onClick = {
-                                            selectedStatus = state
-                                            showStatusPicker = false
-                                            scope.launch {
-                                                SteamService.setPersonaState(state)
-                                            }
-                                        },
+                                Column(
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .focusGroup(),
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.status),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                                     )
+                                    listOf(
+                                        Triple(
+                                            EPersonaState.Online,
+                                            stringResource(R.string.status_online),
+                                            PluviaTheme.colors.statusInstalled,
+                                        ),
+                                        Triple(
+                                            EPersonaState.Away,
+                                            stringResource(R.string.status_away),
+                                            PluviaTheme.colors.statusAway,
+                                        ),
+                                        Triple(
+                                            EPersonaState.Invisible,
+                                            stringResource(R.string.status_invisible),
+                                            PluviaTheme.colors.statusOffline,
+                                        ),
+                                    ).forEach { (state, label, color) ->
+                                        StatusOption(
+                                            text = label,
+                                            statusColor = color,
+                                            isSelected = selectedStatus == state,
+                                            onClick = {
+                                                selectedStatus = state
+                                                showStatusPicker = false
+                                                scope.launch {
+                                                    SteamService.setPersonaState(state)
+                                                }
+                                            },
+                                        )
+                                    }
                                 }
                             }
                         }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        HorizontalDivider(
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    HorizontalDivider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
 
                     // Menu items
                     Column(
@@ -631,102 +653,107 @@ fun SystemMenu(
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        if (isOffline || !SteamService.isLoggedIn) {
-                            val goOnlineLabelRes = if (!SteamService.isLoggedIn) {
-                                R.string.steam_sign_in
+                        if (steamEnabled) {
+                            if (isOffline || !SteamService.isLoggedIn) {
+                                val goOnlineLabelRes = if (!SteamService.isLoggedIn) {
+                                    R.string.steam_sign_in
+                                } else {
+                                    R.string.steam_go_online
+                                }
+                                SystemMenuItem(
+                                    text = stringResource(goOnlineLabelRes),
+                                    icon = Icons.AutoMirrored.Filled.Login,
+                                    onClick = {
+                                        onGoOnline()
+                                        onDismiss()
+                                    },
+                                )
                             } else {
-                                R.string.steam_go_online
+                                SystemMenuItem(
+                                    text = stringResource(R.string.steam_go_offline),
+                                    icon = Icons.AutoMirrored.Filled.AirplaneTicket,
+                                    onClick = {
+                                        onNavigateRoute(PluviaScreen.Home.route + "?offline=true") // TODO: test this
+                                        onDismiss()
+                                    },
+                                )
+
+                                SystemMenuItem(
+                                    text = stringResource(R.string.steam_sign_out),
+                                    icon = Icons.AutoMirrored.Filled.Logout,
+                                    onClick = {
+                                        onLogout()
+                                        onDismiss()
+                                    },
+                                    isDestructive = true,
+                                )
                             }
-                            SystemMenuItem(
-                                text = stringResource(goOnlineLabelRes),
-                                icon = Icons.AutoMirrored.Filled.Login,
-                                onClick = {
-                                    onGoOnline()
-                                    onDismiss()
-                                },
-                            )
-                        } else {
-                            SystemMenuItem(
-                                text = stringResource(R.string.steam_go_offline),
-                                icon = Icons.AutoMirrored.Filled.AirplaneTicket,
-                                onClick = {
-                                    onNavigateRoute(PluviaScreen.Home.route + "?offline=true") // TODO: test this
-                                    onDismiss()
-                                },
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                             )
 
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // GOG
+                        if (GameSource.GOG in enabledStores) {
                             SystemMenuItem(
-                                text = stringResource(R.string.steam_sign_out),
-                                icon = Icons.AutoMirrored.Filled.Logout,
+                                text = stringResource(
+                                    if (gogLoggedIn) R.string.gog_settings_logout_title else R.string.gog_settings_login_title,
+                                ),
+                                icon = if (gogLoggedIn) {
+                                    Icons.AutoMirrored.Filled.Logout
+                                } else {
+                                    Icons.AutoMirrored.Filled.Login
+                                },
                                 onClick = {
-                                    onLogout()
+                                    if (gogLoggedIn) onGogLogoutClick() else onGogLoginClick()
                                     onDismiss()
                                 },
-                                isDestructive = true,
+                                isDestructive = gogLoggedIn,
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        HorizontalDivider(
-                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        // GOG
-                        SystemMenuItem(
-                            text = stringResource(
-                                if (gogLoggedIn) R.string.gog_settings_logout_title
-                                else R.string.gog_settings_login_title,
-                            ),
-                            icon = if (gogLoggedIn) {
-                                Icons.AutoMirrored.Filled.Logout
-                            } else {
-                                Icons.AutoMirrored.Filled.Login
-                            },
-                            onClick = {
-                                if (gogLoggedIn) onGogLogoutClick() else onGogLoginClick()
-                                onDismiss()
-                            },
-                            isDestructive = gogLoggedIn,
-                        )
-
                         // Epic
-                        SystemMenuItem(
-                            text = stringResource(
-                                if (epicLoggedIn) R.string.epic_settings_logout_title
-                                else R.string.epic_settings_login_title,
-                            ),
-                            icon = if (epicLoggedIn) {
-                                Icons.AutoMirrored.Filled.Logout
-                            } else {
-                                Icons.AutoMirrored.Filled.Login
-                            },
-                            onClick = {
-                                if (epicLoggedIn) onEpicLogoutClick() else onEpicLoginClick()
-                                onDismiss()
-                            },
-                            isDestructive = epicLoggedIn,
-                        )
+                        if (GameSource.EPIC in enabledStores) {
+                            SystemMenuItem(
+                                text = stringResource(
+                                    if (epicLoggedIn) R.string.epic_settings_logout_title else R.string.epic_settings_login_title,
+                                ),
+                                icon = if (epicLoggedIn) {
+                                    Icons.AutoMirrored.Filled.Logout
+                                } else {
+                                    Icons.AutoMirrored.Filled.Login
+                                },
+                                onClick = {
+                                    if (epicLoggedIn) onEpicLogoutClick() else onEpicLoginClick()
+                                    onDismiss()
+                                },
+                                isDestructive = epicLoggedIn,
+                            )
+                        }
 
                         // Amazon
-                        SystemMenuItem(
-                            text = stringResource(
-                                if (amazonLoggedIn) R.string.amazon_settings_logout_title
-                                else R.string.amazon_settings_login_title,
-                            ),
-                            icon = if (amazonLoggedIn) {
-                                Icons.AutoMirrored.Filled.Logout
-                            } else {
-                                Icons.AutoMirrored.Filled.Login
-                            },
-                            onClick = {
-                                if (amazonLoggedIn) onAmazonLogoutClick() else onAmazonLoginClick()
-                                onDismiss()
-                            },
-                            isDestructive = amazonLoggedIn,
-                        )
+                        if (GameSource.AMAZON in enabledStores) {
+                            SystemMenuItem(
+                                text = stringResource(
+                                    if (amazonLoggedIn) R.string.amazon_settings_logout_title else R.string.amazon_settings_login_title,
+                                ),
+                                icon = if (amazonLoggedIn) {
+                                    Icons.AutoMirrored.Filled.Logout
+                                } else {
+                                    Icons.AutoMirrored.Filled.Login
+                                },
+                                onClick = {
+                                    if (amazonLoggedIn) onAmazonLogoutClick() else onAmazonLoginClick()
+                                    onDismiss()
+                                },
+                                isDestructive = amazonLoggedIn,
+                            )
+                        }
                     }
 
                     // Gamepad hint at bottom (only on expanded screens)

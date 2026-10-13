@@ -238,6 +238,7 @@
     <string name="intent_launch_service_pending">Spiel wird gestartet, sobald der Dienst bereit ist</string>
     <string name="intent_launch_steam_login_failed">Steam-Anmeldung fehlgeschlagen — Spielstart abgebrochen</string>
     <string name="intent_launch_service_timeout">Spieldienst konnte nicht gestartet werden — Spielstart abgebrochen</string>
+    <string name="intent_launch_store_disabled">Spiel konnte nicht gestartet werden: %1$s ist unter Einstellungen → Shops ausgeschaltet</string>
     <string name="back_press_exit_warning">Erneut zurück drücken zum Beenden</string>
     <string name="game_executable_not_found_title">Start nicht möglich</string>
     <string name="game_executable_not_found">Die ausführbare Datei konnte nicht automatisch ausgewählt werden. Bitte lege den Pfad in den Containereinstellungen fest.</string>
@@ -955,6 +956,8 @@
     <!-- Settings: Emulation Group -->
     <string name="settings_emulation_title">Emulation</string>
     <string name="settings_accounts_title">Spiel-Launcher-Konten</string>
+    <string name="settings_stores_title">Shops</string>
+    <string name="settings_stores_description">Ein ausgeschalteter Shop verschwindet aus der App: Seine Spiele, sein Bibliothekstab und seine Anmeldung werden ausgeblendet, und sein Hintergrunddienst läuft nicht. Installierte Spiele und Anmeldungen bleiben erhalten und kehren zurück, wenn du ihn wieder einschaltest.</string>
     <string name="settings_accounts_signed_out">Nicht angemeldet</string>
     <string name="settings_accounts_ea_title">EA-Konto</string>
     <string name="settings_accounts_rockstar_title">Rockstar-Konto</string>

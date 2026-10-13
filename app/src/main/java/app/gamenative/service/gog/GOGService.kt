@@ -15,6 +15,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.service.download.GameDownloadService
 import app.gamenative.ui.util.SnackbarManager
 import app.gamenative.service.NotificationHelper
@@ -70,6 +71,10 @@ class GOGService : Service() {
             get() = instance != null
 
         fun start(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.GOG)) {
+                Timber.d("[GOGService] GOG is turned off in Settings, skipping start")
+                return
+            }
             // If already running, do nothing
             if (isRunning) {
                 Timber.d("[GOGService] Service already running, skipping start")
@@ -102,6 +107,7 @@ class GOGService : Service() {
         }
 
         fun triggerLibrarySync(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.GOG)) return
             Timber.i("[GOGService] Triggering manual library sync (bypasses throttle)")
             val intent = Intent(context, GOGService::class.java)
             intent.action = ACTION_MANUAL_SYNC

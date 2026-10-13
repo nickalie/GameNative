@@ -96,6 +96,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import app.gamenative.Constants
+import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.ui.screen.auth.AmazonOAuthActivity
 import app.gamenative.ui.screen.auth.EpicOAuthActivity
 import app.gamenative.ui.screen.auth.GOGOAuthActivity
@@ -546,29 +548,37 @@ private fun UserLoginScreenContent(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    // Only stores that are on in Settings → Stores
+                    val enabledStores by StoreToggles.enabled.collectAsState()
                     FlowRow(
                         horizontalArrangement = Arrangement.Center,
                     ) {
-                        TextButton(onClick = onLaunchEpic) {
-                            Text(
-                                text = "Epic",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                        if (GameSource.EPIC in enabledStores) {
+                            TextButton(onClick = onLaunchEpic) {
+                                Text(
+                                    text = "Epic",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
-                        TextButton(onClick = onLaunchGog) {
-                            Text(
-                                text = "GOG",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                        if (GameSource.GOG in enabledStores) {
+                            TextButton(onClick = onLaunchGog) {
+                                Text(
+                                    text = "GOG",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
-                        TextButton(onClick = onLaunchAmazon) {
-                            Text(
-                                text = "Amazon",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
+                        if (GameSource.AMAZON in enabledStores) {
+                            TextButton(onClick = onLaunchAmazon) {
+                                Text(
+                                    text = "Amazon",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                )
+                            }
                         }
                         TextButton(onClick = onContinueOffline) {
                             Text(

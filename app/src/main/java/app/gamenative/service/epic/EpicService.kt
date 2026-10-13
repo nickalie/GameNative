@@ -18,6 +18,7 @@ import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.service.download.GameDownloadService
 import app.gamenative.service.download.NativeTreeDelete
 import app.gamenative.utils.ContainerUtils
@@ -63,7 +64,10 @@ class EpicService : Service() {
             get() = instance != null
 
         fun start(context: Context) {
-
+            if (!StoreToggles.isEnabled(GameSource.EPIC)) {
+                Timber.tag("EPIC").d("Epic is turned off in Settings, skipping start")
+                return
+            }
             Timber.tag("EPIC").d("Starting service...")
             // If already running, do nothing
             if (isRunning) {
@@ -97,6 +101,7 @@ class EpicService : Service() {
         }
 
         fun triggerLibrarySync(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.EPIC)) return
             Timber.tag("EPIC").i("Triggering manual library sync (bypasses throttle)")
             val intent = Intent(context, EpicService::class.java)
             intent.action = ACTION_MANUAL_SYNC

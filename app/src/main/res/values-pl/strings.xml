@@ -253,6 +253,7 @@
     <string name="intent_launch_service_pending">Gra zostanie uruchomiona po uruchomieniu usługi</string>
     <string name="intent_launch_steam_login_failed">Logowanie do Steam nie powiodło się — uruchomienie gry anulowane</string>
     <string name="intent_launch_service_timeout">Nie udało się uruchomić usługi gry — uruchomienie gry anulowane</string>
+    <string name="intent_launch_store_disabled">Nie można uruchomić gry: %1$s jest wyłączony w Ustawienia → Sklepy</string>
     <string name="back_press_exit_warning">Naciśnij wstecz ponownie, aby wyjść</string>
     <string name="game_executable_not_found_title">Nie można uruchomić</string>
     <string name="game_executable_not_found">Nie udało się automatycznie wybrać pliku wykonywalnego. Ustaw ścieżkę do pliku wykonywalnego w ustawieniach kontenera.</string>
@@ -997,6 +998,8 @@
     <!-- Settings: Emulation Group -->
     <string name="settings_emulation_title">Emulacja</string>
     <string name="settings_accounts_title">Konta launcherów gier</string>
+    <string name="settings_stores_title">Sklepy</string>
+    <string name="settings_stores_description">Wyłączony sklep znika z aplikacji: jego gry, karta biblioteki i logowanie są ukryte, a jego usługa w tle nie działa. Zainstalowane gry i zalogowania są zachowywane i wracają po ponownym włączeniu.</string>
     <string name="settings_accounts_signed_out">Niezalogowano</string>
     <string name="settings_accounts_ea_title">Konto EA</string>
     <string name="settings_accounts_rockstar_title">Konto Rockstar</string>

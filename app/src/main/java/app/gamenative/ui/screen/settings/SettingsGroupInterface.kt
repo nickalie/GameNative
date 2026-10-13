@@ -100,6 +100,7 @@ import app.gamenative.service.amazon.AmazonAuthManager
 import app.gamenative.utils.PlatformOAuthHandlers
 import app.gamenative.utils.StorageUtils
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.sync.FrontendSyncManager
 import app.gamenative.ui.util.PlatformAuthUiHelpers
 import app.gamenative.ui.util.SnackbarManager
@@ -487,7 +488,9 @@ fun SettingsGroupInterface(
             },
         )
 
-        val configurableLibraryTabs = LibraryTab.configurableEntries
+        // Tabs of stores that are off in Settings → Stores are not offered; their selection is kept.
+        val enabledStores by StoreToggles.enabled.collectAsState()
+        val configurableLibraryTabs = LibraryTab.configurableEntries.filter { it in LibraryTab.visibleFor(enabledStores) }
         val selectedLibraryTabIndices = configurableLibraryTabs.mapIndexedNotNull { index, tab ->
             index.takeIf { tab in libraryTabs }
         }

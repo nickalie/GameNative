@@ -27,6 +27,7 @@ import app.gamenative.data.LibraryPlayHistory
 import app.gamenative.data.SteamApp
 import app.gamenative.data.SteamCollection
 import app.gamenative.data.SteamCollectionRepository
+import app.gamenative.data.StoreToggles
 import app.gamenative.events.AndroidEvent
 import app.gamenative.data.GOGGame
 import app.gamenative.data.EpicGame
@@ -149,6 +150,20 @@ class LibraryViewModel @Inject constructor(
     private val onLibraryTabsChanged: (AndroidEvent.LibraryTabsChanged) -> Unit = { event ->
         updateVisibleLibraryTabs(event.visibleTabs)
     }
+
+    /**
+     * Sources whose games this pass lists: on in Settings → Stores and, for GOG, Epic and Amazon,
+     * signed in. A store that is off contributes no games, counts or favorites.
+     */
+    private fun librarySources(): Set<GameSource> =
+        StoreToggles.librarySources(StoreToggles.enabled.value) { source ->
+            when (source) {
+                GameSource.GOG -> GOGService.hasStoredCredentials(context)
+                GameSource.EPIC -> EpicService.hasStoredCredentials(context)
+                GameSource.AMAZON -> AmazonService.hasStoredCredentials(context)
+                GameSource.STEAM, GameSource.CUSTOM_GAME -> true
+            }
+        }
 
     // How many items loaded on one page of results
     @Volatile private var paginationCurrentPage: Int = 0
@@ -369,7 +384,17 @@ class LibraryViewModel @Inject constructor(
         }
         viewModelScope.launch(Dispatchers.IO) {
             CuratedListRepository.loadFromCache()
-            CuratedListRepository.refreshFourThreeIfNeeded()
+            // Curated lists filter Steam games only; no fetch while Steam is off in Settings → Stores
+            if (StoreToggles.isEnabled(GameSource.STEAM)) CuratedListRepository.refreshFourThreeIfNeeded()
+        }
+
+        // Settings → Stores switched: drop or restore the store's tab, games and recommendations.
+        viewModelScope.launch(Dispatchers.IO) {
+            StoreToggles.enabled.drop(1).collect {
+                updateVisibleLibraryTabs(PrefManager.libraryTabs)
+                onFilterApps(paginationCurrentPage)
+                refreshRecommendationHero()
+            }
         }
 
         PluviaApp.events.on<AndroidEvent.LibraryInstallStatusChanged, Unit>(onInstallStatusChanged)
@@ -398,7 +423,9 @@ class LibraryViewModel @Inject constructor(
             val hero = RecommendationRepository.getHero(context)
             val daySeed = System.currentTimeMillis() / (24L * 60 * 60 * 1000)
             cachedFeatured = hero.featured
-            val personalized = PrefManager.showRecommendations && PrefManager.recDisclosureShown
+            // Personalized picks are GOG store recommendations, so they need GOG on in Settings → Stores.
+            val gogEnabled = StoreToggles.isEnabled(GameSource.GOG)
+            val personalized = PrefManager.showRecommendations && PrefManager.recDisclosureShown && gogEnabled
             val recommendation = when {
                 personalized -> runCatching {
                     val owned = GogSeedCollector.collect(
@@ -426,6 +453,7 @@ class LibraryViewModel @Inject constructor(
             // all day, dismissed or not.
             val dismissedDay = PrefManager.recTeaserDismissedDay
             cachedRecTeaser = hero.featured == null &&
+                gogEnabled &&
                 PrefManager.showRecommendations &&
                 !PrefManager.recDisclosureShown &&
                 (dismissedDay == 0L || dismissedDay == daySeed || daySeed % 3 == 0L)
@@ -523,7 +551,9 @@ class LibraryViewModel @Inject constructor(
         onFilterApps(0)
     }
 
-    private fun updateVisibleLibraryTabs(visibleTabs: List<LibraryTab>) {
+    /** [selectedTabs] is the user's tab selection; tabs of stores that are off are dropped here. */
+    private fun updateVisibleLibraryTabs(selectedTabs: List<LibraryTab>) {
+        val visibleTabs = selectedTabs.filter { it in LibraryTab.visibleEntries }
         var tabChanged = false
         _state.update { currentState ->
             val currentTab = if (currentState.currentTab in visibleTabs) {
@@ -633,12 +663,13 @@ class LibraryViewModel @Inject constructor(
             GpuGameStatsCache.clear()
 
             try {
-                val newApps = SteamService.refreshOwnedGamesFromServer()
+                val newApps = if (StoreToggles.isEnabled(GameSource.STEAM)) SteamService.refreshOwnedGamesFromServer() else 0
                 if (newApps > 0) {
                     Timber.tag("LibraryViewModel").i("Queued $newApps newly owned games for PICS sync")
                 } else {
                     Timber.tag("LibraryViewModel").d("No newly owned games discovered during refresh")
                 }
+                // triggerLibrarySync is a no-op for a store that is off in Settings → Stores
                 if (app.gamenative.service.gog.GOGService.hasStoredCredentials(context)) {
                     Timber.tag("LibraryViewModel").i("Triggering GOG library refresh")
                     app.gamenative.service.gog.GOGService.triggerLibrarySync(context)
@@ -778,6 +809,7 @@ class LibraryViewModel @Inject constructor(
 
             val currentState = _state.value
             val currentFilter = AppFilter.getAppType(currentState.appInfoSortType)
+            val sources = librarySources()
 
             // Fetch download directory apps once on IO thread and cache as a HashSet for O(1) lookups
             val downloadDirectoryApps = DownloadService.getDownloadDirectoryApps() + SteamService.getImportedAppDirs()
@@ -792,7 +824,7 @@ class LibraryViewModel @Inject constructor(
                 return status == GameCompatibilityStatus.COMPATIBLE || status == GameCompatibilityStatus.GPU_COMPATIBLE
             }
 
-            val steamOwnerTypeFiltered: List<SteamApp> = appList
+            val steamOwnerTypeFiltered: List<SteamApp> = (if (GameSource.STEAM in sources) appList else emptyList())
                 .asSequence()
                 .filter { item ->
                     SteamService.familyMembers.ifEmpty {
@@ -954,7 +986,7 @@ class LibraryViewModel @Inject constructor(
 
             // Scan Custom Games roots and create UI items (filtered by search query inside scanner)
             // Only include custom games if GAME filter is selected
-            val customGameItems = if (currentState.appInfoSortType.contains(AppFilter.GAME)) {
+            val customGameItems = if (GameSource.CUSTOM_GAME in sources && currentState.appInfoSortType.contains(AppFilter.GAME)) {
                 CustomGameScanner.scanAsLibraryItems(
                     query = currentState.searchQuery,
                 )
@@ -963,11 +995,12 @@ class LibraryViewModel @Inject constructor(
             }
             val customEntries = customGameItems
                 .filter { !steamEntriesAppIds.contains(it.appId) } // Filter out imported steam appId
+                .filter { it.gameSource in sources } // folders imported as Steam games need Steam on
                 .filter { passesStatsFilters(currentState, it.gameSource, it.name) }
                 .map { LibraryEntry(it, true, lastPlayed = lastPlayedFor(it.appId)) }
 
             // Filter GOG games
-            val filteredGOGGames = gogGameList
+            val filteredGOGGames = (if (GameSource.GOG in sources) gogGameList else emptyList())
                 .asSequence()
                 .filter { game ->
                     if (currentState.searchQuery.isNotEmpty()) {
@@ -1019,7 +1052,7 @@ class LibraryViewModel @Inject constructor(
                 }
 
             // Filter Epic games
-            val filteredEpicGames = epicGameList
+            val filteredEpicGames = (if (GameSource.EPIC in sources) epicGameList else emptyList())
                 .asSequence()
                 .filter { game ->
                     if (currentState.searchQuery.isNotEmpty()) {
@@ -1062,7 +1095,7 @@ class LibraryViewModel @Inject constructor(
                 }
 
             // Amazon games
-            val filteredAmazonGames = amazonGameList
+            val filteredAmazonGames = (if (GameSource.AMAZON in sources) amazonGameList else emptyList())
                 .asSequence()
                 .filter { game ->
                     if (currentState.searchQuery.isNotEmpty()) {
@@ -1143,23 +1176,14 @@ class LibraryViewModel @Inject constructor(
                 currentTab.showCustom
             }
 
-            val includeGOG = (if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) {
-                currentState.showGOGInLibrary
-            } else {
-                currentTab.showGoG
-            }) && GOGService.hasStoredCredentials(context)
+            val includeGOG = GameSource.GOG in sources &&
+                if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) currentState.showGOGInLibrary else currentTab.showGoG
 
-            val includeEpic = (if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) {
-                currentState.showEpicInLibrary
-            } else {
-                currentTab.showEpic
-            }) && EpicService.hasStoredCredentials(context)
+            val includeEpic = GameSource.EPIC in sources &&
+                if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) currentState.showEpicInLibrary else currentTab.showEpic
 
-            val includeAmazon = (if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) {
-                currentState.showAmazonInLibrary
-            } else {
-                currentTab.showAmazon
-            }) && AmazonService.hasStoredCredentials(context)
+            val includeAmazon = GameSource.AMAZON in sources &&
+                if (currentTab == app.gamenative.ui.enums.LibraryTab.ALL) currentState.showAmazonInLibrary else currentTab.showAmazon
 
             // Combine both lists and apply sort option
             val sortComparator: Comparator<LibraryEntry> = when (currentState.currentSortOption) {
@@ -1217,7 +1241,9 @@ class LibraryViewModel @Inject constructor(
             // A Steam collection can only contain Steam apps, so when one is selected the non-Steam
             // sources can't match it — keep them out of the combined list (and their tab counts).
             // Curated lists have the same source restriction.
-            val steamListFilterSelected = allowedSteamAppIds != null || allowedCuratedAppIds != null
+            // With Steam off its collections are hidden, so a stale selection must not hide the other stores.
+            val steamListFilterSelected = GameSource.STEAM in sources &&
+                (allowedSteamAppIds != null || allowedCuratedAppIds != null)
 
             val favoriteIds = FavoritesManager.favorites.value
 
@@ -1318,9 +1344,9 @@ class LibraryViewModel @Inject constructor(
             val favoriteEligible = buildList {
                 addAll(steamEntries)
                 addAll(customEntries)
-                if (GOGService.hasStoredCredentials(context)) addAll(gogEntries)
-                if (EpicService.hasStoredCredentials(context)) addAll(epicEntries)
-                if (AmazonService.hasStoredCredentials(context)) addAll(amazonEntries)
+                if (GameSource.GOG in sources) addAll(gogEntries)
+                if (GameSource.EPIC in sources) addAll(epicEntries)
+                if (GameSource.AMAZON in sources) addAll(amazonEntries)
             }.mapTo(mutableSetOf()) { it.item.appId }
             if (generation != filterGeneration.get()) return@launch
             favoriteEligibleAppIds = favoriteEligible
@@ -1333,16 +1359,16 @@ class LibraryViewModel @Inject constructor(
                     totalAppsInFilter = totalFound,
                     isLoading = false, // Loading complete
                     // Per-source counts for tab badges
-                    // Use user prefs + auth state only (not current tab) so badges stay stable across tab switches
+                    // Use user prefs + store switches + auth state only (not current tab) so badges stay stable across tab switches
                     allCount = (if (currentState.showSteamInLibrary) steamEntries.size else 0) +
                         (if (currentState.showCustomGamesInLibrary) customEntries.size else 0) +
-                        (if (currentState.showGOGInLibrary && GOGService.hasStoredCredentials(context)) gogEntries.size else 0) +
-                        (if (currentState.showEpicInLibrary && EpicService.hasStoredCredentials(context)) epicEntries.size else 0) +
-                        (if (currentState.showAmazonInLibrary && AmazonService.hasStoredCredentials(context)) amazonEntries.size else 0),
+                        (if (currentState.showGOGInLibrary && GameSource.GOG in sources) gogEntries.size else 0) +
+                        (if (currentState.showEpicInLibrary && GameSource.EPIC in sources) epicEntries.size else 0) +
+                        (if (currentState.showAmazonInLibrary && GameSource.AMAZON in sources) amazonEntries.size else 0),
                     steamCount = if (currentState.showSteamInLibrary) steamEntries.size else 0,
-                    gogCount = if (currentState.showGOGInLibrary && GOGService.hasStoredCredentials(context)) gogEntries.size else 0,
-                    epicCount = if (currentState.showEpicInLibrary && EpicService.hasStoredCredentials(context)) epicEntries.size else 0,
-                    amazonCount = if (currentState.showAmazonInLibrary && AmazonService.hasStoredCredentials(context)) amazonEntries.size else 0,
+                    gogCount = if (currentState.showGOGInLibrary && GameSource.GOG in sources) gogEntries.size else 0,
+                    epicCount = if (currentState.showEpicInLibrary && GameSource.EPIC in sources) epicEntries.size else 0,
+                    amazonCount = if (currentState.showAmazonInLibrary && GameSource.AMAZON in sources) amazonEntries.size else 0,
                     localCount = if (currentState.showCustomGamesInLibrary) customEntries.size else 0,
                     steamCollectionCounts = steamCollectionCounts,
                     curatedListCounts = curatedListCounts,

@@ -12,6 +12,7 @@ import app.gamenative.data.AmazonCredentials
 import app.gamenative.data.AmazonGame
 import app.gamenative.data.DownloadInfo
 import app.gamenative.data.GameSource
+import app.gamenative.data.StoreToggles
 import app.gamenative.db.dao.AmazonGameDao
 import app.gamenative.enums.Marker
 import app.gamenative.events.AndroidEvent
@@ -104,6 +105,10 @@ class AmazonService : Service() {
             get() = instance != null
 
         fun start(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.AMAZON)) {
+                Timber.d("[Amazon] Amazon is turned off in Settings, skipping start")
+                return
+            }
             if (isRunning) {
                 Timber.d("[Amazon] Service already running")
                 return
@@ -186,6 +191,7 @@ class AmazonService : Service() {
 
         /** Trigger a manual library sync, bypassing throttle. */
         fun triggerLibrarySync(context: Context) {
+            if (!StoreToggles.isEnabled(GameSource.AMAZON)) return
             Timber.i("[Amazon] Manual sync requested — bypassing throttle")
             val intent = Intent(context, AmazonService::class.java)
             intent.action = ACTION_MANUAL_SYNC

@@ -243,6 +243,7 @@
     <string name="intent_launch_service_pending">Jocul va fi lansat când serviciul este pregătit</string>
     <string name="intent_launch_steam_login_failed">Autentificarea Steam a eșuat — lansarea jocului a fost anulată</string>
     <string name="intent_launch_service_timeout">Serviciul de joc nu a pornit — lansarea jocului a fost anulată</string>
+    <string name="intent_launch_store_disabled">Jocul nu a putut fi pornit: %1$s este dezactivat în Setări → Magazine</string>
     <string name="back_press_exit_warning">Apasă înapoi din nou pentru a ieși</string>
     <string name="game_executable_not_found_title">Nu se poate porni</string>
     <string name="game_executable_not_found">Executabilul nu a putut fi selectat automat. Setează calea executabilului în setările containerului.</string>
@@ -989,6 +990,8 @@
 	<!-- Settings: Emulation Group -->
 	<string name="settings_emulation_title">Emulare</string>
     <string name="settings_accounts_title">Conturi pentru lansatoarele de jocuri</string>
+    <string name="settings_stores_title">Magazine</string>
+    <string name="settings_stores_description">Un magazin dezactivat dispare din aplicație: jocurile, fila din bibliotecă și autentificarea sunt ascunse, iar serviciul din fundal nu rulează. Jocurile instalate și autentificările se păstrează și revin când îl activezi din nou.</string>
     <string name="settings_accounts_signed_out">Neautentificat</string>
     <string name="settings_accounts_ea_title">Cont EA</string>
     <string name="settings_accounts_rockstar_title">Cont Rockstar</string>

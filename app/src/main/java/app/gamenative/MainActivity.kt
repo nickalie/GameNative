@@ -60,6 +60,7 @@ import app.gamenative.utils.IconDecoder
 import app.gamenative.utils.IntentLaunchManager
 import app.gamenative.utils.LocaleHelper
 import app.gamenative.ui.util.SnackbarManager
+import app.gamenative.ui.util.storeNameRes
 import com.posthog.PostHog
 import com.skydoves.landscapist.coil.LocalCoilImageLoader
 import com.winlator.core.AppUtils
@@ -360,7 +361,13 @@ class MainActivity : ComponentActivity() {
         Timber.d("[IntentLaunch]: handleLaunchIntent called with action=${intent.action}, isNewIntent=$isNewIntent")
         try {
             val launchRequest = IntentLaunchManager.parseLaunchIntent(intent)
-            if (launchRequest != null) {
+            val disabledStore = launchRequest?.let { IntentLaunchManager.disabledStoreOf(it.appId) }
+            if (disabledStore != null) {
+                // The store is off in Settings → Stores: its service never starts, so a deferred launch would hang
+                wasLaunchedViaExternalIntent = false
+                Timber.w("[IntentLaunch]: Refusing launch of ${launchRequest.appId}: $disabledStore is turned off")
+                SnackbarManager.show(getString(R.string.intent_launch_store_disabled, getString(disabledStore.storeNameRes)))
+            } else if (launchRequest != null) {
                 Timber.d("[IntentLaunch]: Received external launch intent for app ${launchRequest.appId}")
                 AgentHooks.onLaunchIntent(launchRequest.appId, launchRequest.agentOptions)
 

@@ -2338,14 +2338,14 @@ class SteamService : Service(), IChallengeUrlChanged {
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
             if (variant == Container.BIONIC) {
-                val dest = File(instance!!.filesDir, "imagefs_bionic.txz")
+                val dest = File(context.filesDir, "imagefs_bionic.txz")
                 Timber.d("Downloading imagefs_bionic to " + dest.toString())
                 fetchFileWithFallback("imagefs_bionic.txz", dest, context, onDownloadProgress)
             } else {
-                Timber.d("Downloading imagefs_gamenative to " + File(instance!!.filesDir, "imagefs_gamenative.txz"));
+                Timber.d("Downloading imagefs_gamenative to " + File(context.filesDir, "imagefs_gamenative.txz"))
                 fetchFileWithFallback(
                     "imagefs_gamenative.txz",
-                    File(instance!!.filesDir, "imagefs_gamenative.txz"),
+                    File(context.filesDir, "imagefs_gamenative.txz"),
                     context,
                     onDownloadProgress,
                 )
@@ -2358,7 +2358,7 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "imagefs_patches_gamenative.tzst")
+            val dest = File(context.filesDir, "imagefs_patches_gamenative.tzst")
             Timber.d("Downloading imagefs_patches_gamenative.tzst to " + dest.toString())
             fetchFileWithFallback("imagefs_patches_gamenative.tzst", dest, context, onDownloadProgress)
         }
@@ -2382,7 +2382,7 @@ class SteamService : Service(), IChallengeUrlChanged {
             context: Context,
         ) = parentScope.asyncIsolated {
             Timber.i("imagefs will be downloaded")
-            val dest = File(instance!!.filesDir, "steam.tzst")
+            val dest = File(context.filesDir, "steam.tzst")
             Timber.d("Downloading steam.tzst to " + dest.toString())
             fetchFileWithFallback("steam.tzst", dest, context, onDownloadProgress)
         }

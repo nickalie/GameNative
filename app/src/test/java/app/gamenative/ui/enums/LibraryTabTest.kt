@@ -1,5 +1,6 @@
 package app.gamenative.ui.enums
 
+import app.gamenative.data.GameSource
 import app.gamenative.ui.enums.LibraryTab.Companion.next
 import app.gamenative.ui.enums.LibraryTab.Companion.previous
 import org.junit.Assert.assertEquals
@@ -105,6 +106,29 @@ class LibraryTabTest {
             listOf(LibraryTab.RECOMMENDED, LibraryTab.STEAM, LibraryTab.GOG, LibraryTab.EPIC, LibraryTab.AMAZON),
             LibraryTab.configurableEntries,
         )
+    }
+
+    @Test
+    fun visibleFor_defaultStoresHideTheTabsOfStoresThatAreOff() {
+        val visible = LibraryTab.visibleFor(setOf(GameSource.STEAM, GameSource.CUSTOM_GAME))
+
+        // RECOMMENDED shows GOG store recommendations, so it goes with GOG.
+        assertEquals(listOf(LibraryTab.ALL, LibraryTab.FAVORITES, LibraryTab.STEAM, LibraryTab.LOCAL), visible)
+    }
+
+    @Test
+    fun visibleFor_everyStoreOnShowsEveryTab() {
+        assertEquals(LibraryTab.entries.toList(), LibraryTab.visibleFor(GameSource.entries.toSet()))
+    }
+
+    @Test
+    fun visibleFor_everyStoreOffKeepsTheStorelessTabs() {
+        assertEquals(listOf(LibraryTab.ALL, LibraryTab.FAVORITES), LibraryTab.visibleFor(emptySet()))
+    }
+
+    @Test
+    fun everyStoreHasATab() {
+        assertEquals(GameSource.entries.toSet(), LibraryTab.entries.mapNotNull { it.store }.toSet())
     }
 
     @Test
