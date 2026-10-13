@@ -38,7 +38,6 @@ data class LibraryItem(
     val isRecommended: Boolean = false,
     val recommendedGameId: String = "",
     val recRating: Int? = null,
-    val recDiscount: String? = null,
     val recPrice: String? = null,
     val recBasePrice: String? = null,
     val recSeedCount: Int = 0,

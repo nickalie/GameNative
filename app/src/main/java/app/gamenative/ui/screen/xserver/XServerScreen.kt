@@ -272,7 +272,7 @@ import com.winlator.PrefManager as WinlatorPrefManager
 // where games randomly stop working. Set to false once corruption issues are resolved.
 private const val ALWAYS_REEXTRACT = true
 
-// Guard to prevent duplicate game_exited events when multiple exit triggers fire simultaneously
+// Guard so exit() runs once when multiple exit triggers fire simultaneously
 private val isExiting = AtomicBoolean(false)
 private val windowActivity = WindowActivity()
 

@@ -1,5 +1,5 @@
 # Privacy Policy for GameNative
-<sub>Last Updated: July 12, 2026</sub>
+<sub>Last Updated: October 13, 2026</sub>
 
 GameNative is an unofficial client application that lets you access your libraries from supported PC game stores and play your owned games on your device.
 
@@ -11,19 +11,18 @@ Sensitive data — including your login credentials and session information for 
 **Game Store Integrations**
 When you sign into a supported store (Steam, Epic Games, GOG, or Amazon), your device communicates directly with that store's servers to authenticate your account and access your game library. Any data those stores collect, store, or process is governed by their own privacy policies and terms of service.
 
-**Anonymous Usage Metadata**
-GameNative collects limited, non-personal technical metadata to improve compatibility and performance. This may include:
+**Data Sent to GameNative Servers**
+GameNative has no analytics SDK. It does not send usage events, game launch or exit stats, or play sessions in the background. The app contacts GameNative's servers only for these features:
 
-- Game launch and close events
-- Selected configuration settings
-- Hardware category information such as GPU family or driver type
-- Performance indicators such as FPS ranges or crash flags
+- **Compatibility and recommended settings.** To show compatibility info for your games and look up working settings, the app sends game names and stores, together with device details: GPU name and driver version, chipset, device manufacturer and model, Android version, total RAM, and app version.
+- **Update check.** The app sends its version number.
+- **Game feedback you submit.** When you rate a game, the app sends your rating, tags and notes, the game name, its container settings, average FPS, session length, and device details.
+- **Debug reports and support.** When you send a debug report or contact support in the app, it uploads the logs, files, and messages you choose to send. A debug report also includes the game name, its container settings, performance stats, and device details.
+- **GameNative account.** If you sign in, some of these requests include your account token.
 
-This data:
+To confirm that requests come from a genuine copy of the app, some requests also include the app's signing certificate fingerprint and an Android key attestation or Google Play Integrity token.
 
-- Does not include your name, email, store credentials, IP address, or any direct identifiers
-- Cannot be used to identify you personally
-- Is used only to improve game compatibility, recommend working settings, and prioritize development fixes
+None of these requests include your store credentials. The data is used to run these features, improve game compatibility, and recommend working settings.
 
 GameNative does not build user profiles, track browsing activity, or sell data to third parties.
 

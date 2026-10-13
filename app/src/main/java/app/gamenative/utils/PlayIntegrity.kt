@@ -2,7 +2,6 @@ package app.gamenative.utils
 
 import android.app.Application
 import app.gamenative.BuildConfig
-import app.gamenative.PrefManager
 import com.google.android.play.core.integrity.IntegrityManagerFactory
 import com.google.android.play.core.integrity.StandardIntegrityException
 import com.google.android.play.core.integrity.StandardIntegrityManager
@@ -75,7 +74,6 @@ object PlayIntegrity {
         if (projectNumber == null || projectNumber == 0L) {
             Timber.tag(TAG).e("Invalid CLOUD_PROJECT_NUMBER: '${BuildConfig.CLOUD_PROJECT_NUMBER}'")
             unavailableForProcess = true
-            PrefManager.playIntegrityAvailable = false
             return
         }
         cloudProjectNumber = projectNumber
@@ -140,7 +138,6 @@ object PlayIntegrity {
             try {
                 val provider = prepare()
                 tokenProvider = provider
-                PrefManager.playIntegrityAvailable = true
                 Timber.tag(TAG).d("Token provider ready (attempt ${attempt + 1})")
                 return provider
             } catch (e: StandardIntegrityException) {
@@ -148,7 +145,6 @@ object PlayIntegrity {
                 if (e.errorCode !in TRANSIENT_ERRORS) {
                     Timber.tag(TAG).e(e, "Prepare failed with non-retryable error ${e.errorCode}")
                     unavailableForProcess = true
-                    PrefManager.playIntegrityAvailable = false
                     return null
                 }
                 Timber.tag(TAG).w("Prepare failed with ${e.errorCode} (attempt ${attempt + 1})")
@@ -161,7 +157,6 @@ object PlayIntegrity {
 
         val backoff = if (lastCode == StandardIntegrityErrorCode.TOO_MANY_REQUESTS) BACKOFF_AFTER_QUOTA_MS else BACKOFF_AFTER_TRANSIENT_MS
         nextPrepareAllowedAt = System.currentTimeMillis() + backoff
-        PrefManager.playIntegrityAvailable = false
         Timber.tag(TAG).e("Giving up on prepare (last error $lastCode), next attempt in ${backoff / 1000}s")
         return null
     }
