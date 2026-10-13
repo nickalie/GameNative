@@ -4,7 +4,6 @@ import android.content.Context
 import android.app.Activity
 import android.content.Intent
 import androidx.activity.compose.BackHandler
-import androidx.core.content.FileProvider
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -89,9 +88,6 @@ import app.gamenative.ui.component.ConnectionStatusBanner
 import app.gamenative.ui.component.GameInviteOverlay
 import app.gamenative.service.epic.EpicService
 import app.gamenative.service.gog.GOGService
-import app.gamenative.api.AccountApi
-import app.gamenative.api.SupportApi
-import app.gamenative.ui.component.dialog.AccountSignInDialog
 import app.gamenative.ui.component.dialog.ContainerConfigDialog
 import app.gamenative.ui.component.dialog.DebugPreRunDialog
 import app.gamenative.ui.component.dialog.DebugReportDialog
@@ -113,14 +109,6 @@ import app.gamenative.ui.screen.HomeScreen
 import app.gamenative.ui.screen.PluviaScreen
 import app.gamenative.ui.screen.login.UserLoginScreen
 import app.gamenative.ui.screen.settings.SettingsScreen
-import app.gamenative.ui.screen.support.SnackbarActionContent
-import app.gamenative.ui.screen.support.SupportAppliedRun
-import app.gamenative.ui.screen.support.SupportReplyEffects
-import app.gamenative.ui.screen.support.SupportReportSubmitter
-import app.gamenative.ui.screen.support.SupportScreen
-import app.gamenative.ui.screen.support.SupportRunFollowUp
-import app.gamenative.ui.screen.support.SupportSession
-import app.gamenative.ui.screen.support.refusalReasonText
 import app.gamenative.ui.screen.xserver.XServerScreen
 import app.gamenative.ui.theme.PluviaTheme
 import app.gamenative.ui.util.LocalSnackbarHostController
@@ -128,7 +116,6 @@ import app.gamenative.ui.util.SnackbarManager
 import app.gamenative.utils.BestConfigService
 import app.gamenative.utils.ContainerUtils
 import app.gamenative.utils.DebugReportUtils
-import app.gamenative.utils.DebugRunParamsHolder
 import app.gamenative.utils.HardwareUtils
 import app.gamenative.utils.CustomGameScanner
 import app.gamenative.utils.ManifestInstaller
@@ -347,13 +334,6 @@ private fun consumePendingSteamLoginError(context: Context) {
     SnackbarManager.show(context.getString(R.string.intent_launch_steam_login_failed))
 }
 
-private const val SUPPORT_PROMPT_SIGN_IN = "sign_in"
-
-private fun CoroutineScope.markAppliedReported(context: Context, state: DebugReportDialogState) {
-    if (state.phase != DebugReportDialogState.PHASE_COMPOSE && state.phase != DebugReportDialogState.PHASE_ERROR) return
-    launch(Dispatchers.IO) { SupportAppliedRun.markReported(context, state.appId) }
-}
-
 private fun startDebugRun(
     context: Context,
     viewModel: MainViewModel,
@@ -406,8 +386,6 @@ fun PluviaMain(
     var debugReportState by rememberSaveable(stateSaver = DebugReportDialogState.Saver) {
         mutableStateOf(DebugReportDialogState(false))
     }
-    var debugAccountPrompt by rememberSaveable { mutableStateOf<String?>(null) }
-    var aiDebugOfferAppId by rememberSaveable { mutableStateOf("") }
     var debugPreRunVisible by rememberSaveable { mutableStateOf(false) }
     var debugPreRunAppId by rememberSaveable { mutableStateOf("") }
     var debugPreRunOffline by rememberSaveable { mutableStateOf(false) }
@@ -652,11 +630,8 @@ fun PluviaMain(
 
                 MainViewModel.MainUiEvent.OnBackPressed -> {
                     if (debugReportState.visible) {
-                        if (debugReportState.phase != DebugReportDialogState.PHASE_SENDING) {
-                            debugReportState = debugReportState.copy(visible = false)
-                            SteamService.keepAlive = false
-                            scope.markAppliedReported(context, debugReportState)
-                        }
+                        debugReportState = debugReportState.copy(visible = false)
+                        SteamService.keepAlive = false
                     } else if (SteamService.keepAlive){
                         gameBackAction?.invoke() ?: run { navController.popBackStack() }
                     } else if (hasBack) {
@@ -744,38 +719,12 @@ fun PluviaMain(
                 }
 
                 is MainViewModel.MainUiEvent.ShowDebugReportDialog -> {
-                    val runConversationId = SupportSession.conversationForRun(event.appId)
-                    if (runConversationId != null) {
-                        SupportRunFollowUp.start(context, event.appId, runConversationId, viewModel.pendingDebugReport(event.appId))
-                        SupportSession.pendingConversationId.value = runConversationId
-                    } else {
-                        debugReportState = DebugReportDialogState(
-                            visible = true,
-                            appId = event.appId,
-                            gameName = withContext(Dispatchers.IO) { ContainerUtils.resolveGameName(event.appId) },
-                            deviceName = HardwareUtils.getMachineName(),
-                            issueText = withContext(Dispatchers.IO) { SupportAppliedRun.pending(context, event.appId)?.issueText }.orEmpty(),
-                            preparing = true,
-                        )
-                        scope.launch {
-                            AccountApi.loadSignedInState()
-                            SupportApi.checkAvailability()
-                        }
-                    }
-                }
-
-                is MainViewModel.MainUiEvent.ShowAiDebugOffer -> {
-                    aiDebugOfferAppId = event.appId
-                    msgDialogState = MessageDialogState(
+                    debugReportState = DebugReportDialogState(
                         visible = true,
-                        type = DialogType.AI_DEBUG_OFFER,
-                        title = context.getString(R.string.debug_offer_title),
-                        message = context.getString(
-                            R.string.debug_offer_message,
-                            ContainerUtils.resolveGameName(event.appId),
-                        ),
-                        confirmBtnText = context.getString(R.string.debug_offer_confirm),
-                        dismissBtnText = context.getString(R.string.close),
+                        appId = event.appId,
+                        gameName = withContext(Dispatchers.IO) { ContainerUtils.resolveGameName(event.appId) },
+                        deviceName = HardwareUtils.getMachineName(),
+                        preparing = true,
                     )
                 }
             }
@@ -1332,24 +1281,6 @@ fun PluviaMain(
             }
         }
 
-        DialogType.AI_DEBUG_OFFER -> {
-            onConfirmClick = {
-                setMessageDialogState(MessageDialogState(false))
-                if (aiDebugOfferAppId.isNotEmpty()) {
-                    SupportSession.clearRun(aiDebugOfferAppId)
-                    debugPreRunAppId = aiDebugOfferAppId
-                    debugPreRunOffline = viewModel.isOffline.value
-                    debugPreRunVisible = true
-                }
-            }
-            onDismissClick = {
-                setMessageDialogState(MessageDialogState(false))
-            }
-            onDismissRequest = {
-                setMessageDialogState(MessageDialogState(false))
-            }
-        }
-
         DialogType.WORKSHOP_UPDATE_PROMPT -> {
             onConfirmClick = {
                 workshopUpdateDeferred?.complete(true)
@@ -1397,18 +1328,6 @@ fun PluviaMain(
             exitSnackbarVisible = false
         }
     }
-
-    SupportReplyEffects(
-        gameRunning = state.currentScreen == PluviaScreen.XServer,
-        canOpenSupport = state.currentScreen == PluviaScreen.Home ||
-            state.currentScreen == PluviaScreen.Settings ||
-            state.currentScreen == PluviaScreen.Chat,
-        hostState = snackbarController.hostState,
-        onOpenConversation = { conversationId ->
-            SupportSession.pendingConversationId.value = conversationId
-            navController.navigate(PluviaScreen.Support.route) { launchSingleTop = true }
-        },
-    )
 
     BackHandler(enabled = state.loadingDialogVisible && !SteamService.keepAlive) {
         // TODO: Make prelaunch/loading operations cancellable so Back can exit safely.
@@ -1529,110 +1448,20 @@ fun PluviaMain(
                         // Close the dialog regardless of success
                         Timber.d("GameFeedback: Closing dialog")
                         gameFeedbackState = GameFeedbackDialogState(visible = false)
-                        viewModel.onGameFeedbackResolved(context, feedbackState.rating, feedbackState.selectedTags)
                     }
                 },
                 onDismiss = {
                     gameFeedbackState = GameFeedbackDialogState(visible = false)
-                    viewModel.onGameFeedbackResolved(context, null)
                 },
             )
 
-            val shareDebugLog: () -> Unit = {
-                val reportDir = File(debugReportState.reportDir)
-                val files = listOf(
-                    DebugReportUtils.logFile(reportDir),
-                    DebugReportUtils.perfFile(reportDir),
-                    DebugReportUtils.logcatFile(reportDir),
-                    DebugReportUtils.cpuProfileFile(reportDir),
-                )
-                    .filter { it.exists() }
-                if (files.isNotEmpty()) {
-                    val uris = files.map { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", it) }
-                    val intent = if (uris.size == 1) {
-                        Intent(Intent.ACTION_SEND).apply {
-                            type = if (files.single().name.endsWith(".gz")) "application/gzip" else "application/json"
-                            putExtra(Intent.EXTRA_STREAM, uris.single())
-                        }
-                    } else {
-                        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-                            type = "*/*"
-                            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
-                        }
-                    }
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    context.startActivity(
-                        Intent.createChooser(intent, context.getString(R.string.debug_report_share_log_title)),
-                    )
-                }
-            }
-
-            val submitDebugReport: () -> Unit = submit@{
-                val current = debugReportState
-                if (current.reportDir.isEmpty()) return@submit
-                if (SupportApi.available.value == false) {
-                    SnackbarManager.show(context.getString(R.string.support_problem_unavailable))
-                    return@submit
-                }
-                if (!PrefManager.gameNativeSignedIn.value) {
-                    debugAccountPrompt = SUPPORT_PROMPT_SIGN_IN
-                    return@submit
-                }
-                debugReportState = current.copy(visible = true, phase = DebugReportDialogState.PHASE_SENDING)
-                scope.launch {
-                    val outcome = SupportReportSubmitter.submit(context, current)
-                    val composeAgain = { debugReportState = debugReportState.copy(visible = true, phase = DebugReportDialogState.PHASE_COMPOSE) }
-                    when (outcome) {
-                        is SupportReportSubmitter.Outcome.Sent -> {
-                            withContext(Dispatchers.IO) {
-                                val dir = File(current.reportDir)
-                                val header = DebugReportUtils.readHeader(dir)
-                                DebugReportUtils.deleteReport(dir)
-                                SupportAppliedRun.recordReportedRun(context, current.appId, header)
-                            }
-                            debugReportState = debugReportState.copy(visible = false)
-                            SteamService.keepAlive = false
-                            SupportSession.pendingConversationId.value = outcome.conversationId
-                            navController.navigate(PluviaScreen.Support.route) { launchSingleTop = true }
-                        }
-                        SupportReportSubmitter.Outcome.Unavailable -> {
-                            composeAgain()
-                            SnackbarManager.show(context.getString(R.string.support_problem_unavailable))
-                        }
-                        SupportReportSubmitter.Outcome.SignedOut -> {
-                            composeAgain()
-                            debugAccountPrompt = SUPPORT_PROMPT_SIGN_IN
-                        }
-                        is SupportReportSubmitter.Outcome.Forbidden -> {
-                            composeAgain()
-                            SnackbarManager.show(refusalReasonText(context, outcome.reason))
-                        }
-                        SupportReportSubmitter.Outcome.LimitReached -> {
-                            composeAgain()
-                            SnackbarManager.show(SupportReportSubmitter.limitReachedText(context))
-                        }
-                        SupportReportSubmitter.Outcome.RateLimited -> {
-                            debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
-                            SnackbarManager.show(context.getString(R.string.support_problem_rate_limited))
-                        }
-                        is SupportReportSubmitter.Outcome.Failed -> {
-                            debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
-                        }
-                    }
-                }
-            }
-
             DebugPreRunDialog(
                 visible = debugPreRunVisible,
-                runParams = DebugRunParamsHolder.get(debugPreRunAppId),
                 onStart = {
                     debugPreRunVisible = false
                     startDebugRun(context, viewModel, debugPreRunAppId, debugPreRunOffline, setMessageDialogState)
                 },
-                onDismiss = {
-                    debugPreRunVisible = false
-                    DebugRunParamsHolder.clear(debugPreRunAppId)
-                },
+                onDismiss = { debugPreRunVisible = false },
             )
 
             LaunchedEffect(debugReportState.preparing, debugReportState.appId) {
@@ -1647,7 +1476,7 @@ fun PluviaMain(
                 val header = dir?.let { withContext(Dispatchers.IO) { DebugReportUtils.readHeader(it) } }
                 if (debugReportState.appId != appId) return@LaunchedEffect
                 debugReportState = if (dir == null) {
-                    debugReportState.copy(preparing = false, phase = DebugReportDialogState.PHASE_NO_LOG)
+                    debugReportState.copy(preparing = false, noLog = true)
                 } else {
                     debugReportState.copy(
                         preparing = false,
@@ -1666,25 +1495,10 @@ fun PluviaMain(
 
             DebugReportDialog(
                 state = debugReportState,
-                appChatEnabled = SupportApi.available.value != false,
-                sendProgress = SupportReportSubmitter.progress.value,
-                onStateChange = { debugReportState = it },
-                onSend = submitDebugReport,
-                onShare = shareDebugLog,
                 onDismiss = {
                     debugReportState = debugReportState.copy(visible = false)
-                    scope.markAppliedReported(context, debugReportState)
                     SteamService.keepAlive = false
                 },
-            )
-
-            AccountSignInDialog(
-                visible = debugAccountPrompt == SUPPORT_PROMPT_SIGN_IN,
-                onSignedIn = {
-                    debugAccountPrompt = null
-                    submitDebugReport()
-                },
-                onDismiss = { debugAccountPrompt = null },
             )
 
             Box(modifier = Modifier.zIndex(10f)) {
@@ -1856,8 +1670,7 @@ fun PluviaMain(
                                 bootToContainer = false,
                             )
                         },
-                        onAiDebugRun = { appId ->
-                            SupportSession.clearRun(appId)
+                        onDebugRun = { appId ->
                             debugPreRunAppId = appId
                             debugPreRunOffline = isOffline
                             debugPreRunVisible = true
@@ -1979,15 +1792,6 @@ fun PluviaMain(
                         onBack = { navController.navigateUp() },
                     )
                 }
-
-                composable(route = PluviaScreen.Support.route) {
-                    SupportScreen(
-                        onBack = { navController.navigateUp() },
-                        onStartDebugRun = { appId ->
-                            startDebugRun(context, viewModel, appId, viewModel.isOffline.value, setMessageDialogState)
-                        },
-                    )
-                }
             }
 
             if (snackbarController.rootOwnsHost) {
@@ -2007,21 +1811,12 @@ fun PluviaMain(
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                             shadowElevation = 4.dp,
                         ) {
-                            val actionLabel = data.visuals.actionLabel
-                            if (actionLabel == null) {
-                                Text(
-                                    text = data.visuals.message,
-                                    modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                )
-                            } else {
-                                SnackbarActionContent(
-                                    message = data.visuals.message,
-                                    actionLabel = actionLabel,
-                                    onAction = { data.performAction() },
-                                )
-                            }
+                            Text(
+                                text = data.visuals.message,
+                                modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
                         }
                     }
                 }

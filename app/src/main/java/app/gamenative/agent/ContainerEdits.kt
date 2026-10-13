@@ -19,10 +19,9 @@ import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
 /**
- * `containers.set` request codec. Every requested change goes through the AI-suggestion boundary
+ * `containers.set` request codec. Every requested change goes through the editable-key boundary
  * (`SupportSuggestion.isValid`), is folded into full values by `SupportSuggestionApplier.updatesFor`
- * and applied with `ContainerUtils.applyBestConfigMapToContainerData`, so the agent can change exactly
- * what an AI suggestion can.
+ * and applied with `ContainerUtils.applyBestConfigMapToContainerData`.
  */
 object ContainerEdits {
 
@@ -61,7 +60,7 @@ object ContainerEdits {
                 // The whole env string is not editable; single variables go through `env`.
                 key == SupportSuggestion.ENV_KEY -> rejected += Rejection(key, null, REASON_NOT_EDITABLE)
                 to == null -> rejected += Rejection(key, null, REASON_INVALID_VALUE)
-                else -> changes += SupportSuggestion.Change(key = key, name = null, op = null, from = null, to = to, why = null)
+                else -> changes += SupportSuggestion.Change(key = key, name = null, op = null, to = to)
             }
         }
 
@@ -100,7 +99,7 @@ object ContainerEdits {
         return changes
     }
 
-    /** [live] with every change applied, the same way an AI suggestion is applied. */
+    /** [live] with every change applied. */
     fun apply(live: ContainerData, changes: List<SupportSuggestion.Change>): ContainerData {
         val updates = SupportSuggestionApplier.updatesFor(live, changes.map { SupportSuggestionApplier.editFor(it) })
         return ContainerUtils.applyBestConfigMapToContainerData(live, updates)
@@ -161,7 +160,7 @@ object ContainerEdits {
     }
 
     private fun envChange(name: String, op: String, to: String?) =
-        SupportSuggestion.Change(key = SupportSuggestion.ENV_KEY, name = name, op = op, from = null, to = to, why = null)
+        SupportSuggestion.Change(key = SupportSuggestion.ENV_KEY, name = name, op = op, to = to)
 
     private fun unsetNames(env: JsonObject): List<String> {
         val raw = env[ENV_UNSET]

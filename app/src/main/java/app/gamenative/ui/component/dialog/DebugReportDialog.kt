@@ -1,315 +1,224 @@
 package app.gamenative.ui.component.dialog
 
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
-import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
+import androidx.core.content.FileProvider
 import app.gamenative.R
-import app.gamenative.ui.component.NoExtractOutlinedTextField
 import app.gamenative.ui.component.dialog.state.DebugReportDialogState
 import app.gamenative.ui.theme.PluviaTheme
+import app.gamenative.ui.util.SnackbarManager
+import app.gamenative.utils.DebugReportUtils
+import java.io.File
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import timber.log.Timber
 
-@OptIn(ExperimentalLayoutApi::class)
+/** Shown after a debug run: lets the user share the captured logs or save them as a zip. */
 @Composable
 fun DebugReportDialog(
     state: DebugReportDialogState,
-    appChatEnabled: Boolean,
-    sendProgress: Float?,
-    onStateChange: (DebugReportDialogState) -> Unit,
-    onSend: () -> Unit,
-    onShare: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    if (state.visible) {
-        Dialog(
-            onDismissRequest = onDismiss,
-            properties = DialogProperties(
-                dismissOnBackPress = state.phase != DebugReportDialogState.PHASE_SENDING,
-                dismissOnClickOutside = state.phase != DebugReportDialogState.PHASE_SENDING,
-            ),
+    if (!state.visible) return
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
+    val saveLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip"),
+    ) { uri ->
+        if (uri == null) {
+            saving = false
+        } else {
+            scope.launch {
+                try {
+                    saveReport(context, File(state.reportDir), uri)
+                } finally {
+                    saving = false
+                }
+            }
+        }
+    }
+
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(20.dp),
+            color = PluviaTheme.colors.surfaceElevated,
+            contentColor = MaterialTheme.colorScheme.onSurface,
         ) {
-            Surface(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .wrapContentHeight(),
-                shape = RoundedCornerShape(20.dp),
-                color = PluviaTheme.colors.surfaceElevated,
-                contentColor = MaterialTheme.colorScheme.onSurface,
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Column(
+                Text(
+                    text = stringResource(R.string.debug_report_share_log_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(bottom = 16.dp),
+                )
+
+                if (state.noLog) {
+                    Text(
+                        text = stringResource(R.string.debug_report_no_log),
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text(stringResource(R.string.close))
+                        }
+                    }
+                    return@Column
+                }
+
+                Text(
+                    text = stringResource(R.string.debug_report_summary, state.gameName, state.deviceName),
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
+                        .align(Alignment.Start)
+                        .padding(bottom = 16.dp),
+                )
+
+                if (state.preparing) {
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.Start)
+                            .padding(bottom = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            strokeWidth = 2.dp,
+                        )
+                        Text(
+                            text = stringResource(R.string.debug_report_preparing),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = PluviaTheme.colors.textMuted,
+                            modifier = Modifier.padding(start = 8.dp),
+                        )
+                    }
+                }
+
+                val shareFocusRequester = remember { FocusRequester() }
+                LaunchedEffect(state.preparing) {
+                    if (!state.preparing) runCatching { shareFocusRequester.requestFocus() }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    when (state.phase) {
-                        DebugReportDialogState.PHASE_SENDING -> {
-                            Text(
-                                text = stringResource(R.string.debug_report_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            )
-                            if (sendProgress != null && sendProgress > 0f) {
-                                LinearProgressIndicator(
-                                    progress = { sendProgress },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp),
-                                )
-                            } else {
-                                CircularProgressIndicator(modifier = Modifier.padding(bottom = 16.dp))
-                            }
-                            Text(
-                                text = stringResource(R.string.debug_report_sending),
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                            )
-                        }
-
-                        DebugReportDialogState.PHASE_NO_LOG -> {
-                            Text(
-                                text = stringResource(R.string.debug_report_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            )
-                            Text(
-                                text = stringResource(R.string.debug_report_no_log),
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(onClick = onDismiss) {
-                                    Text(stringResource(R.string.close))
-                                }
-                            }
-                        }
-
-                        DebugReportDialogState.PHASE_ERROR -> {
-                            Text(
-                                text = stringResource(R.string.debug_report_failed_title),
-                                style = MaterialTheme.typography.headlineSmall,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            )
-                            Text(
-                                text = stringResource(R.string.debug_report_failed_message),
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            )
-                            TextButton(
-                                onClick = onShare,
-                                modifier = Modifier.padding(bottom = 16.dp),
-                            ) {
-                                Text(stringResource(R.string.debug_report_share_instead))
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                            ) {
-                                TextButton(onClick = onDismiss) {
-                                    Text(stringResource(R.string.close))
-                                }
-                                Button(
-                                    onClick = onSend,
-                                    modifier = Modifier.padding(start = 8.dp),
-                                ) {
-                                    Text(stringResource(R.string.debug_report_retry))
-                                }
-                            }
-                        }
-
-                        else -> {
-                            val canSend = state.issueText.isNotBlank() && !state.preparing
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .weight(1f, fill = false)
-                                    .verticalScroll(rememberScrollState()),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.debug_report_title),
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(bottom = 16.dp),
-                                )
-
-                                Text(
-                                    text = stringResource(
-                                        R.string.debug_report_summary,
-                                        state.gameName,
-                                        state.deviceName,
-                                    ),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier
-                                        .align(Alignment.Start)
-                                        .padding(bottom = if (state.preparing) 8.dp else 16.dp),
-                                )
-
-                                if (state.preparing) {
-                                    Row(
-                                        modifier = Modifier
-                                            .align(Alignment.Start)
-                                            .padding(bottom = 16.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                    ) {
-                                        CircularProgressIndicator(
-                                            modifier = Modifier.size(16.dp),
-                                            strokeWidth = 2.dp,
-                                        )
-                                        Text(
-                                            text = stringResource(R.string.debug_report_preparing),
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = PluviaTheme.colors.textMuted,
-                                            modifier = Modifier.padding(start = 8.dp),
-                                        )
-                                    }
-                                }
-
-                                val issueFocusRequester = remember { FocusRequester() }
-                                val focusManager = LocalFocusManager.current
-                                val imeVisible = WindowInsets.isImeVisible
-                                LaunchedEffect(Unit) { runCatching { issueFocusRequester.requestFocus() } }
-
-                                NoExtractOutlinedTextField(
-                                    value = state.issueText,
-                                    onValueChange = { onStateChange(state.copy(issueText = it)) },
-                                    label = { Text(stringResource(R.string.debug_report_what_went_wrong)) },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 100.dp)
-                                        .padding(bottom = 16.dp)
-                                        .focusRequester(issueFocusRequester)
-                                        .onPreviewKeyEvent { event ->
-                                            if (event.type != KeyEventType.KeyDown || imeVisible) {
-                                                return@onPreviewKeyEvent false
-                                            }
-                                            when (event.key) {
-                                                Key.DirectionUp -> {
-                                                    focusManager.moveFocus(FocusDirection.Up)
-                                                    true
-                                                }
-                                                Key.DirectionDown -> {
-                                                    focusManager.moveFocus(FocusDirection.Down)
-                                                    true
-                                                }
-                                                else -> false
-                                            }
-                                        },
-                                    maxLines = 5,
-                                )
-                            }
-
-                            if (!appChatEnabled) {
-                                // In-app chat is off (relay 404): sending can't work, so explain why
-                                // and make Share the primary action instead of a dead Send button.
-                                Text(
-                                    text = stringResource(R.string.support_problem_unavailable),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = PluviaTheme.colors.textMuted,
-                                    modifier = Modifier
-                                        .align(Alignment.Start)
-                                        .padding(bottom = 16.dp),
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    TextButton(onClick = onDismiss) {
-                                        Text(stringResource(R.string.cancel))
-                                    }
-                                    Button(
-                                        onClick = onShare,
-                                        modifier = Modifier.padding(start = 8.dp),
-                                        enabled = !state.preparing,
-                                    ) {
-                                        Text(stringResource(R.string.debug_report_share_instead))
-                                    }
-                                }
-                            } else {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    TextButton(onClick = onDismiss) {
-                                        Text(stringResource(R.string.cancel))
-                                    }
-                                    Button(
-                                        onClick = onSend,
-                                        modifier = Modifier.padding(start = 8.dp),
-                                        enabled = canSend,
-                                    ) {
-                                        Text(stringResource(R.string.debug_report_send))
-                                    }
-                                }
-                                Row(
-                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                                    horizontalArrangement = Arrangement.End,
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    TextButton(
-                                        onClick = onShare,
-                                        enabled = !state.preparing,
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
-                                    ) {
-                                        Text(
-                                            stringResource(R.string.debug_report_share_instead),
-                                            style = MaterialTheme.typography.labelMedium,
-                                            maxLines = 1,
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                    TextButton(onClick = onDismiss) {
+                        Text(stringResource(R.string.close))
+                    }
+                    TextButton(
+                        onClick = {
+                            saving = true
+                            saveLauncher.launch("debug_${state.appId}.zip")
+                        },
+                        enabled = !state.preparing && !saving,
+                        modifier = Modifier.padding(start = 8.dp),
+                    ) {
+                        Text(stringResource(R.string.save))
+                    }
+                    Button(
+                        onClick = { shareReport(context, File(state.reportDir)) },
+                        enabled = !state.preparing,
+                        modifier = Modifier
+                            .padding(start = 8.dp)
+                            .focusRequester(shareFocusRequester),
+                    ) {
+                        Text(stringResource(R.string.main_share))
                     }
                 }
             }
         }
     }
+}
+
+private fun shareReport(context: Context, reportDir: File) {
+    val files = DebugReportUtils.exportFiles(reportDir)
+    if (files.isEmpty()) return
+    val uris = files.map { FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", it) }
+    val intent = if (uris.size == 1) {
+        Intent(Intent.ACTION_SEND).apply {
+            type = if (files.single().name.endsWith(".gz")) "application/gzip" else "application/json"
+            putExtra(Intent.EXTRA_STREAM, uris.single())
+        }
+    } else {
+        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "*/*"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(uris))
+        }
+    }
+    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.debug_report_share_log_title)))
+}
+
+private suspend fun saveReport(context: Context, reportDir: File, uri: Uri) {
+    val message = try {
+        withContext(Dispatchers.IO) {
+            try {
+                val output = context.contentResolver.openOutputStream(uri) ?: error("Cannot open $uri")
+                DebugReportUtils.writeZip(reportDir, output)
+            } catch (e: Throwable) {
+                // Do not leave an empty or truncated zip behind; best-effort, the provider may refuse.
+                runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
+                    .onFailure { Timber.w(it, "DebugReportDialog: Failed to delete partial $uri") }
+                throw e
+            }
+        }
+        context.getString(R.string.base_app_exported)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (e: Exception) {
+        Timber.e(e, "DebugReportDialog: Failed to save debug report")
+        context.getString(R.string.base_app_export_failed, e.message ?: "")
+    }
+    SnackbarManager.show(message)
 }

@@ -194,31 +194,18 @@ object PerfSampler {
     private const val PROCESS_WINDOW_MS = 5000L
     private const val MAX_PROCESS_WINDOWS = 720
     private const val TOP_WINDOW_PROCS = 8
-    private const val CPU_PROFILE_INTERVAL_MS = 2000L
-    private const val MAX_CPU_PROFILE_WINDOWS = 600
-    private const val TOP_PROFILE_THREADS = 8
-    private const val MAX_PROFILE_TASKS = 256
     private const val MAX_PROBE_FAILURES = 3
 
-    class Result(val perf: JSONObject, val verdict: JSONObject, val cpuProfile: JSONObject? = null)
+    class Result(val perf: JSONObject, val verdict: JSONObject)
 
     private val lock = Any()
     private var session: Session? = null
 
-    @Volatile
-    private var cpuProfileArmed = false
-
-    fun armCpuProfile(enabled: Boolean) {
-        cpuProfileArmed = enabled
-    }
-
     fun start(context: Context, fpsProvider: () -> Float, drives: String?) {
         synchronized(lock) {
             session?.halt()
-            val cpuProfile = cpuProfileArmed
-            cpuProfileArmed = false
             session = try {
-                Session(context.applicationContext, fpsProvider, drives, cpuProfile).also { it.begin() }
+                Session(context.applicationContext, fpsProvider, drives).also { it.begin() }
             } catch (e: Exception) {
                 Timber.w(e, "PerfSampler: failed to start")
                 null
@@ -239,13 +226,7 @@ object PerfSampler {
         return try {
             current.halt()
             val run = current.toRun()
-            val cpuProfile = try {
-                current.cpuProfileJson()
-            } catch (e: Exception) {
-                Timber.w(e, "PerfSampler: failed to build cpu profile")
-                null
-            }
-            Result(perfJson(run), PerfVerdicts.compute(run), cpuProfile)
+            Result(perfJson(run), PerfVerdicts.compute(run))
         } catch (e: Exception) {
             Timber.w(e, "PerfSampler: failed to build result")
             null
@@ -431,7 +412,6 @@ object PerfSampler {
         private val context: Context,
         private val fpsProvider: () -> Float,
         drives: String?,
-        private val cpuProfile: Boolean,
     ) {
         private val selfPid = android.os.Process.myPid()
         private val uid = android.os.Process.myUid()
@@ -468,12 +448,6 @@ object PerfSampler {
         private var processWindowMs = PROCESS_WINDOW_MS
         private var windowStartTicks: HashMap<Int, Long>? = null
         private var windowStartMs = 0L
-
-        private val cpuProfileWindows = ArrayList<JSONObject>()
-        private val cpuProfileProbe = FailSafe("cpu profile")
-        private var profileLastMs = 0L
-        private var profilePrevTicks = HashMap<Int, Long>()
-        private var profilePrevCtxt = HashMap<Int, LongArray>()
 
         private val frameScratch = LongArray(FrameTimeRing.capacity())
         private val deltaScratch = LongArray(FrameTimeRing.capacity())
@@ -538,18 +512,6 @@ object PerfSampler {
             )
         }
 
-        fun cpuProfileJson(): JSONObject? {
-            if (!cpuProfile) return null
-            val windows = synchronized(samples) { cpuProfileWindows.toList() }
-            return JSONObject().apply {
-                put("schema", 1)
-                put("intervalMs", CPU_PROFILE_INTERVAL_MS)
-                put("maxWindows", MAX_CPU_PROFILE_WINDOWS)
-                if (cpuProfileProbe.disabled) put("disabled", true)
-                put("windows", JSONArray().apply { windows.forEach { put(it) } })
-            }
-        }
-
         private fun loop() {
             var nextMs = SystemClock.elapsedRealtime()
             while (running) {
@@ -608,8 +570,6 @@ object PerfSampler {
                 .sortedByDescending { it.cpu }
                 .take(TOP_PROCS)
                 .map { it.name to it.cpu }
-
-            if (cpuProfile) cpuProfileProbe.run { sampleCpuProfile(nowMs, t, gameProcess, wineserver) }
 
             val gpu = safe { gpuSampler.sample()?.percent }
             val gpuMhz = safe { readGpuMhz() }
@@ -690,87 +650,6 @@ object PerfSampler {
                     processWindows.addAll(kept)
                     processWindowMs *= 2
                 }
-            }
-        }
-
-        private fun sampleCpuProfile(nowMs: Long, t: Int, game: ProcessCpu?, wineserver: ProcessCpu?) {
-            if (cpuProfileWindows.size >= MAX_CPU_PROFILE_WINDOWS) return
-            if (profileLastMs != 0L && nowMs - profileLastMs < CPU_PROFILE_INTERVAL_MS - INTERVAL_MS / 2) return
-            val dtMs = if (profileLastMs == 0L) 0L else nowMs - profileLastMs
-            profileLastMs = nowMs
-            val ticksNow = HashMap<Int, Long>()
-            val ctxtNow = HashMap<Int, LongArray>()
-            val gameJson = game?.let { profileProcess(it, dtMs, ticksNow, ctxtNow) }
-            val wineserverJson = wineserver?.let { profileProcess(it, dtMs, ticksNow, ctxtNow) }
-            profilePrevTicks = ticksNow
-            profilePrevCtxt = ctxtNow
-            if (dtMs <= 0L || (gameJson == null && wineserverJson == null)) return
-            val window = JSONObject()
-                .put("t", t)
-                .put("dt_ms", dtMs)
-                .putOpt("game", gameJson)
-                .putOpt("wineserver", wineserverJson)
-            synchronized(samples) { cpuProfileWindows += window }
-        }
-
-        private fun profileProcess(
-            proc: ProcessCpu,
-            dtMs: Long,
-            ticksNow: HashMap<Int, Long>,
-            ctxtNow: HashMap<Int, LongArray>,
-        ): JSONObject? {
-            val taskDirs = File("/proc/${proc.pid}/task").listFiles() ?: return null
-            val dtSec = dtMs / 1000.0
-            val threads = ArrayList<Triple<Int, ProcStatFields, Int>>()
-            var totalCpu = 0
-            for (dir in taskDirs.take(MAX_PROFILE_TASKS)) {
-                val tid = dir.name.toIntOrNull() ?: continue
-                val fields = try {
-                    ProcStatParser.parse(File(dir, "stat").readText())
-                } catch (_: Exception) {
-                    null
-                } ?: continue
-                val ticks = fields.utime + fields.stime
-                ticksNow[tid] = ticks
-                val prev = profilePrevTicks[tid] ?: continue
-                if (dtSec <= 0.0) continue
-                val cpu = ProcStatParser.cpuPercent(ticks - prev, dtSec, clkTck)
-                totalCpu += cpu
-                threads += Triple(tid, fields, cpu)
-            }
-            val top = threads.sortedByDescending { it.third }.take(TOP_PROFILE_THREADS)
-            return JSONObject().apply {
-                put("pid", proc.pid)
-                put("name", proc.name)
-                put("cpu_pct", totalCpu)
-                put("thread_count", taskDirs.size)
-                put(
-                    "threads",
-                    JSONArray().apply {
-                        top.forEach { (tid, fields, cpu) ->
-                            val ctxt = try {
-                                readCtxtSwitches(proc.pid, tid)
-                            } catch (_: Exception) {
-                                null
-                            }
-                            val prev = profilePrevCtxt[tid]
-                            if (ctxt != null) ctxtNow[tid] = ctxt
-                            put(
-                                JSONObject().apply {
-                                    put("tid", tid)
-                                    put("name", fields.comm)
-                                    put("cpu_pct", cpu)
-                                    put("state", fields.state.toString())
-                                    putOpt("cpu", fields.processor)
-                                    if (ctxt != null && prev != null) {
-                                        put("voluntary_ctxt", (ctxt[0] - prev[0]).coerceAtLeast(0L))
-                                        put("nonvoluntary_ctxt", (ctxt[1] - prev[1]).coerceAtLeast(0L))
-                                    }
-                                },
-                            )
-                        }
-                    },
-                )
             }
         }
 

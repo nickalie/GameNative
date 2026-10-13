@@ -12,6 +12,7 @@ import app.gamenative.api.SuggestionConfigKeys.ConfigValueType
 import app.gamenative.ui.screen.support.SupportSuggestionApplier
 import app.gamenative.utils.BestConfigService
 import app.gamenative.utils.ContainerUtils
+import app.gamenative.utils.SecretEnv
 import app.gamenative.utils.SessionReport
 import com.winlator.container.Container
 import com.winlator.container.ContainerData
@@ -72,7 +73,7 @@ class ContainerWriteDeps(
         )
 
         /**
-         * Persists [data] the way the config dialog and AI suggestions do, but fails instead of
+         * Persists [data] the way the config dialog does, but fails instead of
          * reporting success when the `.container` file could not be written.
          */
         fun write(context: Context, container: Container, data: ContainerData, source: String) {
@@ -121,7 +122,7 @@ class ContainerWriteDeps(
 }
 
 /**
- * `containers.*` commands. The readable and editable keys are the AI-suggestion boundary
+ * `containers.*` commands. The readable and editable keys are the editable config boundary
  * (`SuggestionConfigKeys.APPLICABLE_CONFIG_KEYS`); `containerVariant` is reported but read-only.
  * Writes are persistent and always preceded by a backup that `containers.restore` can roll back to.
  */
@@ -317,21 +318,16 @@ class ContainerCommands(
         const val SOURCE_RESTORE = "agent_api_restored"
 
         const val ENV_KEY = "envVars"
-        const val MASK = "***"
+        const val MASK = SecretEnv.MASK
         val READ_ONLY_KEYS = listOf("containerVariant")
 
         // One writer at a time: backups and the container file must not interleave between binder threads.
         private val WRITE_LOCK = Any()
 
-        // Whole name segments only, so DXVK_..._BYPASS or ..._PASSTHROUGH stay readable.
-        private val SECRET_ENV = Regex("(^|_)(TOKEN|KEY|SECRET|PASSWORD|PASS|AUTH)(_|$)")
-
-        fun isSecretEnv(name: String): Boolean = SECRET_ENV.containsMatchIn(name.uppercase(Locale.ROOT))
-
         fun maskedEnv(envVars: String): JsonObject {
             val env = EnvVars(envVars)
             return buildJsonObject {
-                env.forEach { name -> put(name, if (isSecretEnv(name)) MASK else env.get(name)) }
+                env.forEach { name -> put(name, if (SecretEnv.isSecret(name)) MASK else env.get(name)) }
             }
         }
 

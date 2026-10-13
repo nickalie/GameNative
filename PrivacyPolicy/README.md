@@ -17,12 +17,12 @@ GameNative has no analytics SDK. It does not send usage events, game launch or e
 - **Compatibility and recommended settings.** To show compatibility info for your games and look up working settings, the app sends game names and stores, together with device details: GPU name and driver version, chipset, device manufacturer and model, Android version, total RAM, and app version.
 - **Update check.** The app sends its version number.
 - **Game feedback you submit.** When you rate a game, the app sends your rating, tags and notes, the game name, its container settings, average FPS, session length, and device details.
-- **Debug reports and support.** When you send a debug report or contact support in the app, it uploads the logs, files, and messages you choose to send. A debug report also includes the game name, its container settings, performance stats, and device details.
-- **GameNative account.** If you sign in, some of these requests include your account token.
 
 To confirm that requests come from a genuine copy of the app, some requests also include the app's signing certificate fingerprint and an Android key attestation or Google Play Integrity token.
 
-None of these requests include your store credentials. The data is used to run these features, improve game compatibility, and recommend working settings.
+There is no GameNative account: the app has no sign-in of its own, and none of these requests carry an account token or your store credentials. The data is used to run these features, improve game compatibility, and recommend working settings.
+
+Logs from a debug run stay on your device; they leave it only when you share or save them yourself. Besides the logs, a shared or saved debug report includes your device model and the game's container settings, with secret-looking environment variables and launch arguments masked.
 
 GameNative does not build user profiles, track browsing activity, or sell data to third parties.
 

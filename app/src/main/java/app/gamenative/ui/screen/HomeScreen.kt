@@ -24,7 +24,7 @@ fun HomeScreen(
     onClickPlay: (String, Boolean) -> Unit,
     onTestGraphics: (String) -> Unit,
     onPlayWithDiagnostics: (String) -> Unit,
-    onAiDebugRun: (String) -> Unit,
+    onDebugRun: (String) -> Unit,
     onLogout: () -> Unit,
     onNavigateRoute: (String) -> Unit,
     onGoOnline: () -> Unit,
@@ -47,7 +47,7 @@ fun HomeScreen(
             onClickPlay = onClickPlay,
             onTestGraphics = onTestGraphics,
             onPlayWithDiagnostics = onPlayWithDiagnostics,
-            onAiDebugRun = onAiDebugRun,
+            onDebugRun = onDebugRun,
             onNavigateRoute = onNavigateRoute,
             onLogout = onLogout,
             onGoOnline = onGoOnline,
@@ -60,7 +60,7 @@ fun HomeScreen(
             onClickPlay = onClickPlay,
             onTestGraphics = onTestGraphics,
             onPlayWithDiagnostics = onPlayWithDiagnostics,
-            onAiDebugRun = onAiDebugRun,
+            onDebugRun = onDebugRun,
         )
     }
 }
@@ -81,7 +81,7 @@ private fun Preview_HomeScreenContent() {
             onClickPlay = { _, _ -> },
             onTestGraphics = { },
             onPlayWithDiagnostics = { },
-            onAiDebugRun = { },
+            onDebugRun = { },
             onLogout = {},
             onNavigateRoute = {},
             onClickExit = {},

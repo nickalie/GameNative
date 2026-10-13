@@ -47,7 +47,7 @@ The provider authority is derived from the package name: `app.gamenative.agent` 
 - **Not redacted.** The `agent_debug` log file (`wine_logs/agent_<appId>.log`, fetched with `adb pull`) is the
   raw process output. The shell can read it anyway. Config backups under the container directory store the
   full `envVars` string, unmasked.
-- **What an enabled API allows.** Persistent config changes within the AI-suggestion boundary (below),
+- **What an enabled API allows.** Persistent config changes within the editable config boundary (below),
   adding folders as custom games, installing component versions listed in the app's component manifest,
   turning stores on and off as **Settings → Stores** does (never logging in or out), launching and stopping
   games. It cannot install anything outside that manifest, change drives, controls or
@@ -216,7 +216,7 @@ Downloads and installs a version from the component manifest, the way the config
 
 `{app_id, values, env, read_only}`:
 
-- `values` — every key of the AI-suggestion config set (`SuggestionConfigKeys.APPLICABLE_CONFIG_KEYS`) except
+- `values` — every key of the editable config set (`SuggestionConfigKeys.APPLICABLE_CONFIG_KEYS`) except
   `envVars`, typed as boolean, integer or string. Key/value configs (`dxwrapperConfig`, `graphicsDriverConfig`,
   `wincomponents`) are the raw `key=value,…` strings.
 - `env` — the container env parsed into `{NAME: value}`, secret-looking values masked as `***`.
@@ -232,11 +232,11 @@ No container → `NO_CONTAINER`.
  "env":{"set":{"DXVK_HUD":"fps"},"unset":["MESA_NO_ERROR"]}}
 ```
 
-Persistently changes the config, exactly within the boundary of an AI config suggestion (see
+Persistently changes the config, exactly within the editable config boundary (see
 [Editable keys](#editable-keys)). Steps, in order:
 
 1. Any session of this game that has not exited (`launching` … `exiting`) → `SESSION_ACTIVE`.
-2. Each entry becomes a suggestion change checked by `SupportSuggestion.isValid`. Rejected entries →
+2. Each entry becomes a config change checked by `SupportSuggestion.isValid`. Rejected entries →
    `BAD_ARGS` with `details.rejected = [{key, name?, reason}]`, `reason` ∈ `read_only`, `not_editable`,
    `unknown_key`, `blocked_env`, `invalid_name`, `invalid_value`, `duplicate`. At most 64 changes per request;
    an empty request is `BAD_ARGS`.
@@ -268,7 +268,7 @@ dialog after the next game exit.
 ### `containers.restore {app_id, backup_id? | baseline: true}`
 
 Exactly one of `backup_id` and `baseline: true`. Writes only the keys whose backed-up value differs from the
-current one; full values (`envVars`, `dxwrapperConfig`, …) are written as they were saved, without suggestion
+current one; full values (`envVars`, `dxwrapperConfig`, …) are written as they were saved, without change
 validation (they came from the app). `containerVariant` is never touched. The rollback first takes a backup of
 the current config itself, so it can be undone. No component check.
 
@@ -326,7 +326,7 @@ included for any reason. A negative or non-integer `tail` → `BAD_ARGS`; a larg
 
 ## Editable keys
 
-`containers.set` can change exactly what an AI config suggestion can (`SupportSuggestion.isValid`). Values may
+`containers.set` can change exactly the keys and values `SupportSuggestion.isValid` accepts. Values may
 be JSON strings, numbers or booleans; they are validated as text.
 
 | Kind | Keys | Rule |
@@ -428,9 +428,8 @@ With `agent_debug=true` the session gets:
   `/storage/emulated/<user>/Android/data/<package>/files/wine_logs/agent_STEAM_123.log`, reported as
   `log_file`. It is recreated at the next `agent_debug` launch of the same game and is kept after exit; fetch it
   with `adb pull` (or `gnctl logs pull`). It is not truncated, not moved and not redacted.
-- No debug-report dialog: the app's built-in debug run is not used. If an app-triggered debug run (the
-  verification run after an AI suggestion) coincides with the launch, the debug run keeps its own log file and
-  env and the agent's are skipped.
+- No debug-report dialog: the app's built-in debug run is not used. If a debug run started from the game's
+  menu coincides with the launch, the debug run keeps its own log file and env and the agent's are skipped.
 
 Channel rules (the app's `DebugRunParams` rules; gnctl applies the same rules and refuses the launch instead):
 
@@ -447,9 +446,7 @@ ignored.
 
 - The game-feedback dialog appears once after the first run of a game and
   after every run that followed a config change (every `containers.set`/`restore` write); custom games are
-  exempt. For runs that end without a game window or within 90 s the
-  app may instead offer an AI debug run (at most every 3 days per game). Dismiss them with
-  `adb shell input keyevent BACK`.
+  exempt. Dismiss it with `adb shell input keyevent BACK`.
 - After a launch through the intent, the activity calls `finish()` when the game exits, returning to whatever
   launched it.
 
