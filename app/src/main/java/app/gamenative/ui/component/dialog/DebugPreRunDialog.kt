@@ -78,7 +78,7 @@ fun DebugPreRunDialog(
                         text = if (appChat == true) {
                             stringResource(R.string.debug_prerun_message_2_app)
                         } else {
-                            stringResource(R.string.debug_prerun_message_2) + " " + stringResource(R.string.debug_trial_note)
+                            stringResource(R.string.debug_prerun_message_2)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,

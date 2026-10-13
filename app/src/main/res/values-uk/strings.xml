@@ -669,7 +669,6 @@
 
     <!-- Profile & Menu -->
     <string name="help_and_support">Довідка та підтримка</string>
-    <string name="hall_of_fame">Зал слави</string>
     <string name="go_online">Увійти в мережу</string>
     <string name="go_offline">Вийти з мережі</string>
     <string name="log_out">Вийти з акаунта</string>
@@ -991,18 +990,6 @@
     <string name="gamenative_account_sign_in_subtitle">Увійдіть, щоб побачити свій тариф і керувати підпискою.</string>
     <string name="gamenative_account_loading">Завантаження даних облікового запису.</string>
     <string name="gamenative_account_load_failed">Не вдалося завантажити дані облікового запису. Виберіть, щоб спробувати ще раз.</string>
-    <string name="gamenative_account_plan">Тариф: %1$s</string>
-    <string name="gamenative_account_plan_none">Немає тарифу</string>
-    <string name="gamenative_account_plan_basic">Basic</string>
-    <string name="gamenative_account_plan_pro">Pro</string>
-    <string name="gamenative_account_plan_patron">Patron</string>
-    <string name="gamenative_account_manage_subscription">Керувати підпискою</string>
-    <string name="gamenative_account_manage_subscription_subtitle">Відкриває сторінку оплати в браузері.</string>
-    <string name="gamenative_account_manage_subscription_opening">Відкривається сторінка оплати.</string>
-    <string name="gamenative_account_manage_subscription_none">У цьому обліковому записі немає підписки для керування.</string>
-    <string name="gamenative_account_managed_discord">Ваш тариф надано через Discord. Керуйте ним у Discord.</string>
-    <string name="gamenative_account_managed_kofi">Ваш тариф надано через Ko-fi. Керуйте ним на Ko-fi.</string>
-    <string name="gamenative_account_manage_subscription_failed">Не вдалося відкрити сторінку оплати. Спробуйте пізніше.</string>
     <string name="gamenative_account_sign_out">Вийти</string>
     <string name="gamenative_account_sign_out_subtitle">Вийти з облікового запису GameNative на цьому пристрої.</string>
     <string name="gamenative_account_discord">Discord</string>
@@ -1051,7 +1038,6 @@
     <string name="support_problem_too_long">Повідомлення задовге. Скоротіть його та спробуйте ще раз.</string>
     <string name="support_problem_too_large">Ці журнали завеликі для надсилання.</string>
     <string name="support_problem_no_logs">На цьому пристрої немає нових журналів цієї гри. Запустіть новий налагоджувальний запуск, щоб записати їх.</string>
-    <string name="support_problem_locked">Щоб надсилати більше повідомлень у цій розмові, потрібен план.</string>
     <string name="support_problem_already_answered">Ви вже повідомили нам результат.</string>
     <string name="support_label_you">Ви</string>
     <string name="support_label_report">Ваш звіт</string>
@@ -1066,8 +1052,6 @@
     <string name="support_outcome_recorded_worked">Ви повідомили, що рішення спрацювало. Дякуємо, що дали знати.</string>
     <string name="support_outcome_recorded_broken">Ви повідомили, що проблему ще не вирішено. Напишіть нижче, що відбувається зараз, або надішліть нові журнали.</string>
     <string name="support_notice_moved">Ця розмова тепер триває в підтримці Pro.</string>
-    <string name="support_upgrade_title">Щоб продовжити, потрібен план</string>
-    <string name="support_upgrade_reason_trial_used">Перший аналіз був безкоштовним. Щоб відповісти й продовжити розмову з AI про цю проблему, виберіть план.</string>
     <string name="support_upgrade_reason_reply_cap">Ви досягли сьогоднішнього ліміту чесного використання. Він скинеться за кілька годин.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Ви досягли сьогоднішнього ліміту чесного використання. Він скинеться через %1$d годину.</item>
@@ -1075,21 +1059,9 @@
         <item quantity="many">Ви досягли сьогоднішнього ліміту чесного використання. Він скинеться через %1$d годин.</item>
         <item quantity="other">Ви досягли сьогоднішнього ліміту чесного використання. Він скинеться через %1$d години.</item>
     </plurals>
-    <string name="support_upgrade_reply_cap_pro_hint">Звіти Pro проходять без черги.</string>
     <string name="support_limit_title">Денний ліміт чесного використання вичерпано</string>
-    <string name="support_upgrade_reason_required">Для відповідей AI потрібна підписка GameNative. Якщо ви вже маєте підписку в Discord або на Ko-fi, підключіть Discord у налаштуваннях.</string>
-    <string name="support_see_plans">Переглянути плани</string>
-    <string name="support_plan_basic_title">$5/місяць · Basic</string>
-    <string name="support_plan_basic_body">Запустіть свої ігри або змусьте їх працювати краще.</string>
-    <string name="support_checkout_scan">Відскануйте цей код телефоном, щоб завершити оплату. Також її можна завершити на цьому пристрої.</string>
-    <string name="support_checkout_waiting">Коли закінчите, поверніться сюди. План оновиться автоматично.</string>
-    <string name="support_checkout_open">Відкрити на цьому пристрої</string>
-    <string name="support_checkout_no_browser">Не знайдено браузер для відкриття сторінки оплати. Відскануйте код іншим пристроєм.</string>
-    <string name="support_checkout_failed">Не вдалося відкрити сторінку оплати. Перевірте з\'єднання та спробуйте ще раз.</string>
-    <string name="support_checkout_done">Готово</string>
-    <string name="support_already_subscribed">Цей обліковий запис уже має підписку. Змінити план можна на сторінці оплати.</string>
-    <string name="support_plan_active">Ваш план активний.</string>
-    <string name="support_plan_pending">Ваш план ще налаштовується. Спробуйте ще раз за хвилину.</string>
+    <string name="support_unavailable_title">Допомога ШІ недоступна</string>
+    <string name="support_unavailable_reason">Допомога ШІ недоступна для цього облікового запису.</string>
     <string name="support_composer_hint">Напишіть відповідь</string>
     <string name="support_composer_analysing">Зачекайте. AI ще читає ваші журнали. Відповісти можна після того, як надійде його відповідь.</string>
     <string name="support_send_logs">Надіслати журнали</string>
@@ -1102,7 +1074,6 @@
     <string name="support_fix_request_run">Запросити виправлення</string>
     <string name="support_fix_request_failed">Не вдалося почати індивідуальне виправлення. Спробуйте ще раз.</string>
     <string name="support_fix_request_in_progress">Індивідуальне виправлення для цієї гри вже готується.</string>
-    <string name="support_fix_upgrade_reason">Індивідуальні виправлення входять до кожного тарифу.</string>
     <string name="support_fix_quota">Ви поки що використали всі індивідуальні виправлення.</string>
     <string name="support_fix_quota_resets">Ви використали всі індивідуальні виправлення. Вони оновляться %1$s.</string>
     <string name="support_run_check_title">Як пройшов запуск?</string>
@@ -1155,10 +1126,6 @@
 
     <!-- Settings: Info Group -->
     <string name="settings_info_title">Інформація</string>
-    <string name="settings_info_send_tip_title">Стати учасником</string>
-    <string name="settings_info_send_tip_subtitle">Допомога ШІ із запуском ігор, ранній доступ до версій та інше</string>
-    <string name="settings_info_ask_tip_title">Пропозиції членства</string>
-    <string name="settings_info_ask_tip_subtitle">Час від часу показувати пропозиції стати учасником GameNative</string>
     <string name="settings_info_source_title">Вихідний код</string>
     <string name="settings_info_source_subtitle">Переглянути вихідний код застосунку</string>
     <string name="settings_info_libraries_title">Використані бібліотеки</string>
@@ -1274,11 +1241,6 @@
     <!-- PluviaMain: Crash & Support -->
     <string name="main_recent_crash_title">Нещодавній збій</string>
     <string name="main_recent_crash_message">Перепрошуємо!\nБуло б добре дізнатися про проблему, з якою Ви нещодавно зіткнулися.\nВи можете переглянути та експортувати останній журнал збою в налаштуваннях застосунку і додати його як проблему (issue) на GitHub у репозиторії проєкту.\nПосилання на репозиторій GitHub також знаходиться в налаштуваннях!</string>
-    <string name="main_thank_you_title">Подобається GameNative?</string>
-    <string name="main_thank_you_message">Станьте учасником сьогодні. Учасники отримують:\n\n• Допомогу ШІ із запуском ігор\n• Ранній доступ до нових версій\n• Преміум-ролі та ексклюзивні канали в Discord\n• …та інше\n\nВід $5/міс.</string>
-    <string name="main_join_kofi">Стати учасником</string>
-    <string name="pitch_session_title">Подобається %1$s?</string>
-    <string name="pitch_five_star_title">Раді, що %1$s чудово працює!</string>
     <string name="main_share">Поділитися</string>
     <string name="main_share_text">Спробуй GameNative — грай у свої Steam-ігри з ПК на Android з повною підтримкою хмарних збережень!\nhttps://gamenative.app\nПриєднуйся до спільноти: https://discord.gg/2hKv4VfZfE</string>
     <string name="main_discord_support_title">Чи працювала гра?</string>
@@ -1354,16 +1316,10 @@
     <string name="libraries_title">Використані бібліотеки</string>
     <string name="libraries_message">Pluvia - github.com/oxters168/Pluvia\nJavaSteam - github.com/Longi94/JavaSteam\nWinlator та Vortek - github.com/brunodev85/winlator\nWinlator Cmod - github.com/coffincolors/winlator\nWrapper - https://github.com/leegao/bionic-vulkan-wrapper та https://github.com/pipetto-crypto/\nUbuntu RootFs - releases.ubuntu.com/focal</string>
 
-    <!-- Supporters Dialog -->
-    <string name="supporters_art_credits">Автори ілюстрацій</string>
-    <string name="supporters_app_icon">Іконка застосунку: Hachi</string>
-    <string name="supporters_alt_icon">Альтернативна іконка застосунку: rhapsody_mdr</string>
-    <string name="supporters_loading">Завантаження прихильників…</string>
-    <string name="supporters_error">Не вдалося завантажити прихильників</string>
-    <string name="supporters_members">Учасники</string>
-    <string name="supporters_supporters">Прихильники</string>
-    <string name="supporters_none">Прихильників поки немає.</string>
-    <string name="supporters_anonymous">Анонімно</string>
+    <!-- Art Credits Dialog -->
+    <string name="art_credits">Автори ілюстрацій</string>
+    <string name="art_credits_app_icon">Іконка застосунку: Hachi</string>
+    <string name="art_credits_alt_icon">Альтернативна іконка застосунку: rhapsody_mdr</string>
 
     <!-- Chat Screen -->
     <string name="chat_preview_warning">Чат знаходиться у ранньому доступі\nБудь ласка, повідомляйте про проблеми у репозиторії проєкту.</string>
@@ -2075,21 +2031,7 @@
     <string name="debug_prerun_message_1_app">Запускає гру з журналом налагодження. Після виходу журнал надсилається нашому AI, а відповідь прийде в наш Discord або в застосунок, якщо ви ввійдете в обліковий запис GameNative. Грайте, доки не виникне проблема.</string>
     <string name="debug_prerun_message_2_app">Перший аналіз безкоштовний. Для подальших відповідей потрібен план.</string>
     <string name="debug_prerun_message_1_neutral">Гра запускається з журналом налагодження. Після виходу журнал надсилається нашому AI. Грайте, доки не виникне проблема.</string>
-    <string name="debug_trial_note">Доступний безкоштовний пробний період.</string>
     <string name="debug_prerun_message_3">Будь-хто може поділитися звітом, щоб отримати допомогу людей.</string>
-    <string name="debug_paywall_title">Отримайте AI-підтримку з налагодження</string>
-    <string name="debug_paywall_pitch">Індивідуальні AI-патчі та збірки, які виправляють ваші ігри.</string>
-    <string name="debug_paywall_tier5_title">$5/місяць · Basic</string>
-    <string name="debug_paywall_tier5_body">1 індивідуальне виправлення на місяць, до 5 спроб на кожне.</string>
-    <string name="debug_paywall_tier10_title">$10/місяць · Pro</string>
-    <string name="debug_paywall_tier10_body">3 індивідуальні виправлення на місяць, швидші відповіді, перше місце в черзі.</string>
-    <string name="debug_paywall_cancel_anytime">Скасувати можна будь-коли. Діють ліміти чесного використання.</string>
-    <string name="debug_paywall_costs_note">Підписки покривають витрати на сервіс AI, завдяки якому працює ця функція.</string>
-    <string name="debug_paywall_subscribe">Підпишіться в Discord</string>
-    <string name="debug_paywall_kofi_alt">Підпишіться в Ko-fi</string>
-    <string name="debug_paywall_already">Уже прихильник?</string>
-    <string name="debug_paywall_send_now">Я оформив підписку, надіслати зараз</string>
-    <string name="debug_paywall_not_now">Не зараз</string>
     <string name="diagnostics_share_title">Поділитися журналом діагностики</string>
     <string name="diagnostics_share_none">Журналу діагностики ще немає. Спершу скористайтеся \"Діагностичний запуск\".</string>
 

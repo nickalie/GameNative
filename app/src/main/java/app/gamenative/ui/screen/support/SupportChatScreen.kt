@@ -38,12 +38,12 @@ import androidx.compose.material.icons.filled.AttachFile
 import androidx.compose.material.icons.filled.BugReport
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.SmartToy
 import androidx.compose.material.icons.filled.SupportAgent
 import androidx.compose.material.icons.filled.ThumbDown
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Upload
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,7 +60,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -162,7 +161,6 @@ internal fun ColumnScope.SupportChat(
     val chat = viewModel.chat
     val conversation = chat.conversation
     val conversationId = chat.conversationId
-    var upgradeReason by rememberSaveable { mutableStateOf<String?>(null) }
     val listState = rememberLazyListState()
     var focusedKey by remember { mutableStateOf<String?>(null) }
     val lastFocus = remember { FocusRequester() }
@@ -174,7 +172,6 @@ internal fun ColumnScope.SupportChat(
     val runBusy = run?.busy == true
     val runFocus = remember { FocusRequester() }
     val items = chatItems(chat, runCheck = run != null, hideOutcome = run?.asking == true)
-    val upgradeOpen by rememberUpdatedState(upgradeReason != null)
     val clock = rememberSupportClock(conversation?.progress?.active == true)
     var fixRequestOpen by rememberSaveable(conversationId) { mutableStateOf(false) }
     var fixRequestBusy by remember(conversationId) { mutableStateOf(false) }
@@ -200,7 +197,7 @@ internal fun ColumnScope.SupportChat(
             if (event == Lifecycle.Event.ON_PAUSE) paused = true
             if (event == Lifecycle.Event.ON_RESUME && paused) {
                 paused = false
-                if (!upgradeOpen) viewModel.refreshAfterResume()
+                viewModel.refreshAfterResume()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -250,13 +247,6 @@ internal fun ColumnScope.SupportChat(
         if (lastVisible >= info.totalItemsCount - 2) listState.animateScrollToItem(items.size + 1)
     }
 
-    SupportUpgradeDialog(
-        visible = upgradeReason != null,
-        reason = upgradeReason,
-        onCheckoutReturn = { viewModel.refreshConversation() },
-        onDismiss = { upgradeReason = null },
-    )
-
     val fixQuotaFallback = stringResource(R.string.support_fix_quota)
     val fixFailedText = stringResource(R.string.support_fix_request_failed)
     if (fixRequestOpen) {
@@ -288,10 +278,8 @@ internal fun ColumnScope.SupportChat(
                                 ?: result.resetsAt?.let { context.getString(R.string.support_fix_quota_resets, fixResetDate(it)) }
                                 ?: fixQuotaFallback
                             SupportApi.FixRequestResult.InProgress -> fixRequestError = context.getString(R.string.support_fix_request_in_progress)
-                            SupportApi.FixRequestResult.UpgradeRequired -> {
-                                fixRequestOpen = false
-                                upgradeReason = SupportApi.REASON_FIX_UPGRADE
-                            }
+                            SupportApi.FixRequestResult.UpgradeRequired ->
+                                fixRequestError = context.getString(R.string.support_unavailable_reason)
                             is SupportApi.FixRequestResult.Failed -> fixRequestError = fixFailedText
                         }
                         fixRequestBusy = false
@@ -419,7 +407,6 @@ internal fun ColumnScope.SupportChat(
                                     onAttachment = { attachment ->
                                         viewModel.downloadAttachment(context, attachment) { file -> shareFile(context, file) }
                                     },
-                                    onUpgrade = { upgradeReason = it },
                                 )
                                 item.message.suggestion?.let { suggestion ->
                                     SuggestionCard(
@@ -494,7 +481,6 @@ internal fun ColumnScope.SupportChat(
                                         SupportSession.startedRunFrom(targetAppId, conversationId)
                                         onStartDebugRun(targetAppId)
                                     },
-                                    onUpgrade = { upgradeReason = it },
                                 )
                             }
                         }
@@ -539,7 +525,6 @@ internal fun ColumnScope.SupportChat(
         LockedComposer(
             reason = conversation.composer.reason,
             resetsAt = conversation.composer.resetsAt,
-            onUpgrade = { upgradeReason = conversation.composer.reason ?: SupportApi.REASON_UPGRADE_REQUIRED },
         )
     } else if (conversation != null) {
         val answering = run?.takesReply == true
@@ -651,12 +636,11 @@ private fun MessageItem(
     message: SupportApi.Message,
     downloadingUrl: String?,
     onAttachment: (SupportApi.Attachment) -> Unit,
-    onUpgrade: (String) -> Unit,
 ) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     when (message.kind) {
-        SupportApi.KIND_NOTICE -> NoticeCard(notice = message.notice, fallbackText = noticeText(message), onUpgrade = onUpgrade)
+        SupportApi.KIND_NOTICE -> NoticeCard(notice = message.notice, fallbackText = noticeText(message))
         else -> {
             val mine = message.kind == SupportApi.KIND_USER
             val staff = message.kind == SupportApi.KIND_STAFF
@@ -764,7 +748,7 @@ private fun ChipButton(
     )
 }
 
-private val knownUpgradeReasons = setOf(
+private val knownRefusalReasons = setOf(
     SupportApi.REASON_UPGRADE_REQUIRED,
     SupportApi.REASON_NO_SUBSCRIPTION,
     SupportApi.REASON_TRIAL_USED,
@@ -786,7 +770,6 @@ private fun noticeText(message: SupportApi.Message): String? =
 private fun NoticeCard(
     notice: SupportApi.Notice?,
     fallbackText: String?,
-    onUpgrade: (String) -> Unit,
 ) {
     when (notice) {
         is SupportApi.Notice.Upgrade -> FocusableCard(
@@ -797,7 +780,7 @@ private fun NoticeCard(
             Column {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        imageVector = Icons.Filled.WorkspacePremium,
+                        imageVector = Icons.Filled.Info,
                         contentDescription = null,
                         tint = PluviaTheme.colors.accentPurple,
                         modifier = Modifier.size(20.dp),
@@ -805,27 +788,21 @@ private fun NoticeCard(
                     Spacer(modifier = Modifier.size(8.dp))
                     Text(
                         text = stringResource(
-                            if (upgradeOffered(notice.reason)) R.string.support_upgrade_title else R.string.support_limit_title,
+                            if (SupportApi.isFairUse(notice.reason)) R.string.support_limit_title else R.string.support_unavailable_title,
                         ),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.SemiBold,
                     )
                 }
                 Text(
-                    text = if (notice.reason in knownUpgradeReasons) {
-                        upgradeReasonText(notice.reason, notice.resetsAt, notice.message)
+                    text = if (notice.reason in knownRefusalReasons) {
+                        refusalReasonText(notice.reason, notice.resetsAt, notice.message)
                     } else {
-                        notice.message ?: fallbackText ?: upgradeReasonText(notice.reason)
+                        notice.message ?: fallbackText ?: refusalReasonText(notice.reason)
                     },
                     style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(top = 6.dp, bottom = 10.dp),
+                    modifier = Modifier.padding(top = 6.dp),
                 )
-                if (upgradeOffered(notice.reason)) {
-                    FocusableButton(
-                        text = stringResource(R.string.support_see_plans),
-                        onClick = { onUpgrade(notice.reason) },
-                    )
-                }
             }
         }
         is SupportApi.Notice.Limit -> FocusableCard(modifier = Modifier.fillMaxWidth()) {
@@ -971,8 +948,7 @@ private fun OutcomePromptCard(
 @Composable
 private fun runFailureText(failure: SupportReportSubmitter.Outcome?): String =
     when (failure) {
-        is SupportReportSubmitter.Outcome.Forbidden -> upgradeReasonText(failure.reason)
-        SupportReportSubmitter.Outcome.PlanPending -> stringResource(R.string.support_plan_pending)
+        is SupportReportSubmitter.Outcome.Forbidden -> refusalReasonText(failure.reason)
         SupportReportSubmitter.Outcome.RateLimited -> stringResource(R.string.support_problem_rate_limited)
         SupportReportSubmitter.Outcome.LimitReached -> fairUseReasonText(SupportApi.lastFairUse?.hoursLeft())
         SupportReportSubmitter.Outcome.SignedOut -> stringResource(R.string.support_problem_unauthorized)
@@ -990,7 +966,6 @@ private fun RunCheckCard(
     onSendOffered: () -> Unit,
     onDismissOffer: () -> Unit,
     onNewRun: () -> Unit,
-    onUpgrade: (String) -> Unit,
 ) {
     when (state.phase) {
         SupportRunFollowUp.Phase.NO_LOG -> FocusableCard(modifier = Modifier.fillMaxWidth(), isFocusable = false) {
@@ -1077,12 +1052,6 @@ private fun RunCheckCard(
                                 text = stringResource(R.string.support_progress_retry),
                                 onClick = onRetry,
                             )
-                            if (failure is SupportReportSubmitter.Outcome.Forbidden) {
-                                FocusableButton(
-                                    text = stringResource(R.string.support_see_plans),
-                                    onClick = { onUpgrade(failure.reason) },
-                                )
-                            }
                         }
                     }
                 }
@@ -1134,7 +1103,7 @@ private fun RunCheckCard(
 }
 
 @Composable
-private fun LockedComposer(reason: String?, resetsAt: Long?, onUpgrade: () -> Unit) {
+private fun LockedComposer(reason: String?, resetsAt: Long?) {
     if (reason == SupportApi.REASON_ANALYSING) {
         Text(
             text = stringResource(R.string.support_composer_analysing),
@@ -1146,25 +1115,14 @@ private fun LockedComposer(reason: String?, resetsAt: Long?, onUpgrade: () -> Un
         )
         return
     }
-    Column(
+    Text(
+        text = refusalReasonText(reason, resetsAt),
+        style = MaterialTheme.typography.bodyMedium,
+        color = PluviaTheme.colors.textMuted,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 12.dp),
-    ) {
-        Text(
-            text = upgradeReasonText(reason, resetsAt),
-            style = MaterialTheme.typography.bodyMedium,
-            color = PluviaTheme.colors.textMuted,
-            modifier = Modifier.padding(bottom = 8.dp),
-        )
-        if (upgradeOffered(reason)) {
-            FocusableButton(
-                text = stringResource(R.string.support_see_plans),
-                onClick = onUpgrade,
-                leading = { Icon(Icons.Filled.WorkspacePremium, contentDescription = null, modifier = Modifier.size(18.dp)) },
-            )
-        }
-    }
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)

@@ -22,11 +22,8 @@ object AccountApi {
     data class Account(
         val id: String,
         val email: String,
-        val tier: String,
-        val tierSource: String?,
         val discordLinked: Boolean,
         val discordName: String? = null,
-        val trialAvailable: Boolean,
     )
 
     data class DeviceStart(
@@ -94,11 +91,8 @@ object AccountApi {
         Account(
             id = json.optString("id"),
             email = json.optString("email"),
-            tier = json.optString("tier", "none").ifBlank { "none" },
-            tierSource = if (json.isNull("tier_source")) null else json.optString("tier_source").ifBlank { null },
             discordLinked = json.optBoolean("discord_linked", false),
             discordName = json.optString("discord_username").takeIf { !json.isNull("discord_username") && it.isNotBlank() },
-            trialAvailable = json.optBoolean("trial_available", false),
         )
 
     private fun logFailure(name: String, e: Exception) {
@@ -362,20 +356,6 @@ object AccountApi {
         }
         return result
     }
-
-    suspend fun createCheckout(tier: String): ApiResult<String> =
-        authorizedCall(
-            name = "billing/checkout",
-            build = { it.url(url("/api/billing/checkout")).post(jsonBody(JSONObject().put("tier", tier))) },
-            parse = { JSONObject(it).getString("url") },
-        )
-
-    suspend fun createPortal(): ApiResult<String> =
-        authorizedCall(
-            name = "billing/portal",
-            build = { it.url(url("/api/billing/portal")).post(jsonBody(JSONObject())) },
-            parse = { JSONObject(it).getString("url") },
-        )
 
     suspend fun signOut(): Unit = withContext(Dispatchers.IO) {
         val refreshToken = clearTokens()?.refreshToken

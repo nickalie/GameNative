@@ -3,7 +3,6 @@ package app.gamenative.ui.screen.support
 import android.content.Context
 import app.gamenative.R
 import androidx.compose.runtime.mutableStateOf
-import app.gamenative.api.AccountApi
 import app.gamenative.api.ApiResult
 import app.gamenative.api.SupportApi
 import app.gamenative.service.SupportReplyWatchService
@@ -21,16 +20,12 @@ object SupportReportSubmitter {
         data object Unavailable : Outcome()
         data object SignedOut : Outcome()
         data class Forbidden(val reason: String) : Outcome()
-        data object PlanPending : Outcome()
         data object RateLimited : Outcome()
         data object LimitReached : Outcome()
         data class Failed(val reason: String) : Outcome()
     }
 
     val progress = mutableStateOf<Float?>(null)
-
-    private fun hasPaidTier(): Boolean =
-        AccountApi.account.value?.tier.let { it == "basic" || it == "pro" || it == "patron" }
 
     fun fairUseText(context: Context, hours: Int?): String =
         if (hours != null) {
@@ -39,14 +34,7 @@ object SupportReportSubmitter {
             context.getString(R.string.support_upgrade_reason_reply_cap)
         }
 
-    fun limitReachedText(context: Context): String {
-        val text = fairUseText(context, SupportApi.lastFairUse?.hoursLeft())
-        return if (AccountApi.account.value?.tier == "basic") {
-            text + " " + context.getString(R.string.support_upgrade_reply_cap_pro_hint)
-        } else {
-            text
-        }
-    }
+    fun limitReachedText(context: Context): String = fairUseText(context, SupportApi.lastFairUse?.hoursLeft())
 
     private fun isLimit(result: ApiResult<*>): Boolean =
         result is ApiResult.HttpError && (
@@ -60,11 +48,7 @@ object SupportReportSubmitter {
             is ApiResult.NetworkError -> Outcome.Failed("network")
             is ApiResult.HttpError -> when (result.code) {
                 401 -> Outcome.SignedOut
-                403 -> if (hasPaidTier()) {
-                    Outcome.PlanPending
-                } else {
-                    Outcome.Forbidden(result.message.ifBlank { SupportApi.REASON_NO_SUBSCRIPTION })
-                }
+                403 -> Outcome.Forbidden(result.message.ifBlank { SupportApi.REASON_NO_SUBSCRIPTION })
                 404 -> Outcome.Unavailable
                 429 -> Outcome.RateLimited
                 else -> Outcome.Failed(result.message.ifBlank { "http_${result.code}" })

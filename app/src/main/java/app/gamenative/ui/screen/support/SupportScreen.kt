@@ -257,7 +257,7 @@ internal fun problemText(problem: SupportViewModel.Problem): String =
             SupportViewModel.Problem.TOO_LONG -> R.string.support_problem_too_long
             SupportViewModel.Problem.TOO_LARGE -> R.string.support_problem_too_large
             SupportViewModel.Problem.NO_LOGS -> R.string.support_problem_no_logs
-            SupportViewModel.Problem.LOCKED -> R.string.support_problem_locked
+            SupportViewModel.Problem.LOCKED -> R.string.support_unavailable_reason
             SupportViewModel.Problem.ALREADY_ANSWERED -> R.string.support_problem_already_answered
         },
     )

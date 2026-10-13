@@ -674,7 +674,6 @@
 
     <!-- Profile & Menu -->
     <string name="help_and_support">Aiuto &amp; Supporto</string>
-    <string name="hall_of_fame">Hall of Fame</string>
     <string name="go_online">Vai Online</string>
     <string name="go_offline">Vai Offline</string>
     <string name="log_out">Disconnetti</string>
@@ -988,18 +987,6 @@
     <string name="gamenative_account_sign_in_subtitle">Accedi per vedere il tuo piano e gestire l\'abbonamento.</string>
     <string name="gamenative_account_loading">Caricamento dei dati del tuo account.</string>
     <string name="gamenative_account_load_failed">Non è stato possibile caricare i dati del tuo account. Seleziona per riprovare.</string>
-    <string name="gamenative_account_plan">Piano: %1$s</string>
-    <string name="gamenative_account_plan_none">Nessun piano</string>
-    <string name="gamenative_account_plan_basic">Basic</string>
-    <string name="gamenative_account_plan_pro">Pro</string>
-    <string name="gamenative_account_plan_patron">Patron</string>
-    <string name="gamenative_account_manage_subscription">Gestisci abbonamento</string>
-    <string name="gamenative_account_manage_subscription_subtitle">Apre la pagina di fatturazione nel browser.</string>
-    <string name="gamenative_account_manage_subscription_opening">Apertura della pagina di fatturazione.</string>
-    <string name="gamenative_account_manage_subscription_none">Su questo account non c\'è nessun abbonamento da gestire.</string>
-    <string name="gamenative_account_managed_discord">Il tuo piano proviene da Discord. Gestiscilo su Discord.</string>
-    <string name="gamenative_account_managed_kofi">Il tuo piano proviene da Ko-fi. Gestiscilo su Ko-fi.</string>
-    <string name="gamenative_account_manage_subscription_failed">Non è stato possibile aprire la pagina di fatturazione. Riprova più tardi.</string>
     <string name="gamenative_account_sign_out">Esci</string>
     <string name="gamenative_account_sign_out_subtitle">Esci dal tuo account GameNative su questo dispositivo.</string>
     <string name="gamenative_account_discord">Discord</string>
@@ -1048,7 +1035,6 @@
     <string name="support_problem_too_long">Il messaggio è troppo lungo. Accorcialo e riprova.</string>
     <string name="support_problem_too_large">Questi log sono troppo grandi per essere inviati.</string>
     <string name="support_problem_no_logs">Non ci sono nuovi log per questo gioco su questo dispositivo. Avvia una nuova sessione di debug per registrarli.</string>
-    <string name="support_problem_locked">Serve un piano per inviare altri messaggi in questa conversazione.</string>
     <string name="support_problem_already_answered">Ci hai già detto com\'è andata.</string>
     <string name="support_label_you">Tu</string>
     <string name="support_label_report">Il tuo report</string>
@@ -1063,28 +1049,14 @@
     <string name="support_outcome_recorded_worked">Hai detto che la soluzione ha funzionato. Grazie per avercelo fatto sapere.</string>
     <string name="support_outcome_recorded_broken">Hai detto che il problema non è ancora risolto. Rispondi qui sotto con cosa succede ora, oppure invia nuovi log.</string>
     <string name="support_notice_moved">Questa conversazione ora continua con l\'assistenza Pro.</string>
-    <string name="support_upgrade_title">Serve un piano per continuare</string>
-    <string name="support_upgrade_reason_trial_used">La tua prima analisi era gratuita. Per rispondere e continuare a parlare con l\'AI di questo problema, scegli un piano.</string>
     <string name="support_upgrade_reason_reply_cap">Hai raggiunto il limite di uso corretto di oggi. Si azzera tra qualche ora.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Hai raggiunto il limite di uso corretto di oggi. Si azzera tra %1$d ora.</item>
         <item quantity="other">Hai raggiunto il limite di uso corretto di oggi. Si azzera tra %1$d ore.</item>
     </plurals>
-    <string name="support_upgrade_reply_cap_pro_hint">I report Pro saltano la coda.</string>
     <string name="support_limit_title">Limite giornaliero di uso corretto raggiunto</string>
-    <string name="support_upgrade_reason_required">Le risposte dell\'AI richiedono un abbonamento GameNative. Se sei già abbonato su Discord o Ko-fi, collega Discord nelle Impostazioni.</string>
-    <string name="support_see_plans">Vedi i piani</string>
-    <string name="support_plan_basic_title">$5/mese · Basic</string>
-    <string name="support_plan_basic_body">Fai partire i tuoi giochi, o falli girare meglio.</string>
-    <string name="support_checkout_scan">Scansiona questo codice con il telefono per completare il pagamento. Puoi anche completarlo su questo dispositivo.</string>
-    <string name="support_checkout_waiting">Quando hai finito, torna qui. Il tuo piano si aggiorna da solo.</string>
-    <string name="support_checkout_open">Apri su questo dispositivo</string>
-    <string name="support_checkout_no_browser">Non è stato trovato alcun browser per aprire la pagina di pagamento. Scansiona il codice con un altro dispositivo.</string>
-    <string name="support_checkout_failed">Non è stato possibile aprire la pagina di pagamento. Controlla la connessione e riprova.</string>
-    <string name="support_checkout_done">Fatto</string>
-    <string name="support_already_subscribed">Questo account ha già un abbonamento. Puoi cambiare piano nella pagina di fatturazione.</string>
-    <string name="support_plan_active">Il tuo piano è attivo.</string>
-    <string name="support_plan_pending">Il tuo piano è ancora in fase di attivazione. Riprova tra un minuto.</string>
+    <string name="support_unavailable_title">Assistenza IA non disponibile</string>
+    <string name="support_unavailable_reason">L’assistenza IA non è disponibile per questo account.</string>
     <string name="support_composer_hint">Scrivi una risposta</string>
     <string name="support_composer_analysing">Attendi. L\'AI sta ancora leggendo i tuoi log. Potrai rispondere dopo la sua risposta.</string>
     <string name="support_send_logs">Invia log</string>
@@ -1097,7 +1069,6 @@
     <string name="support_fix_request_run">Chiedi la correzione</string>
     <string name="support_fix_request_failed">Impossibile avviare una correzione personalizzata. Riprova.</string>
     <string name="support_fix_request_in_progress">Una correzione personalizzata per questo gioco è già in preparazione.</string>
-    <string name="support_fix_upgrade_reason">Le correzioni personalizzate sono incluse in ogni piano.</string>
     <string name="support_fix_quota">Hai usato tutte le tue correzioni personalizzate per ora.</string>
     <string name="support_fix_quota_resets">Hai usato tutte le tue correzioni personalizzate. Si azzerano il %1$s.</string>
     <string name="support_run_check_title">Com\'è andata?</string>
@@ -1150,10 +1121,6 @@
 
     <!-- Settings: Info Group -->
     <string name="settings_info_title">Info</string>
-    <string name="settings_info_send_tip_title">Diventa membro</string>
-    <string name="settings_info_send_tip_subtitle">Aiuto con IA per i tuoi giochi, accesso anticipato alle versioni e altro</string>
-    <string name="settings_info_ask_tip_title">Offerte per i membri</string>
-    <string name="settings_info_ask_tip_subtitle">Mostra occasionalmente offerte per diventare membro di GameNative</string>
     <string name="settings_info_source_title">Codice sorgente</string>
     <string name="settings_info_source_subtitle">Visualizza il codice sorgente di questo progetto</string>
     <string name="settings_info_libraries_title">Librerie Usate</string>
@@ -1269,11 +1236,6 @@
     <!-- PluviaMain: Crash & Support -->
     <string name="main_recent_crash_title">Crash Recente</string>
     <string name="main_recent_crash_message">Ci dispiace!\nSarebbe utile conoscere il problema recente che hai avuto.\nPuoi visualizzare ed esportare il log del crash più recente nelle impostazioni dell\'app e allegarlo come issue GitHub nel repository del progetto.\nIl link al repository Github è anche nelle impostazioni!</string>
-    <string name="main_thank_you_title">Ti piace GameNative?</string>
-    <string name="main_thank_you_message">Diventa membro oggi. I membri ottengono:\n\n• Aiuto con IA per far funzionare i tuoi giochi\n• Accesso anticipato alle nuove versioni\n• Ruoli premium e canali esclusivi su Discord\n• …e altro ancora\n\nDa $5/mese</string>
-    <string name="main_join_kofi">Diventa membro</string>
-    <string name="pitch_session_title">Ti stai divertendo con %1$s?</string>
-    <string name="pitch_five_star_title">Bello che %1$s abbia funzionato alla grande!</string>
     <string name="main_share">Condividi</string>
     <string name="main_share_text">Scopri GameNative - gioca ai tuoi giochi Steam PC su Android, con supporto completo per i salvataggi cloud!\nhttps://gamenative.app\nUnisciti alla community: https://discord.gg/2hKv4VfZfE</string>
     <string name="main_discord_support_title">Il gioco ha funzionato?</string>
@@ -1349,16 +1311,10 @@
     <string name="libraries_title">Librerie Usate</string>
     <string name="libraries_message">Pluvia - github.com/oxters168/Pluvia\nJavaSteam - github.com/Longi94/JavaSteam\nWinlator &amp; Vortek - github.com/brunodev85/winlator\nWinlator Cmod - github.com/coffincolors/winlator\nWrapper - https://github.com/leegao/bionic-vulkan-wrapper &amp; https://github.com/pipetto-crypto/\nUbuntu RootFs - releases.ubuntu.com/focal</string>
 
-    <!-- Supporters Dialog -->
-    <string name="supporters_art_credits">Crediti Artistici</string>
-    <string name="supporters_app_icon">Icona App: Hachi</string>
-    <string name="supporters_alt_icon">Icona App Alternativa: rhapsody_mdr</string>
-    <string name="supporters_loading">Caricamento sostenitori…</string>
-    <string name="supporters_error">Impossibile caricare i sostenitori</string>
-    <string name="supporters_members">Membri</string>
-    <string name="supporters_supporters">Sostenitori</string>
-    <string name="supporters_none">Nessun sostenitore ancora.</string>
-    <string name="supporters_anonymous">Anonimo</string>
+    <!-- Art Credits Dialog -->
+    <string name="art_credits">Crediti Artistici</string>
+    <string name="art_credits_app_icon">Icona App: Hachi</string>
+    <string name="art_credits_alt_icon">Icona App Alternativa: rhapsody_mdr</string>
 
     <!-- Chat Screen -->
     <string name="chat_preview_warning">La chat è ancora una funzione sperimentale.\nSegnala eventuali problemi nel repo del progetto.</string>
@@ -2068,21 +2024,7 @@
     <string name="debug_prerun_message_1_app">Avvia il gioco con i log di debug. Quando esci, il log va alla nostra AI e la risposta arriva nel nostro Discord, oppure nell\'app se accedi con un account GameNative. Gioca finché il problema non si presenta.</string>
     <string name="debug_prerun_message_2_app">La prima analisi è gratuita. Le risposte successive richiedono un piano.</string>
     <string name="debug_prerun_message_1_neutral">Il gioco si avvia con i log di debug. Quando esci, il log va alla nostra AI. Gioca finché il problema non si presenta.</string>
-    <string name="debug_trial_note">Prova gratuita disponibile.</string>
     <string name="debug_prerun_message_3">Chiunque può condividere il report per ricevere aiuto umano.</string>
-    <string name="debug_paywall_title">Ottieni supporto di debug AI</string>
-    <string name="debug_paywall_pitch">Patch e build AI personalizzati che sistemano i tuoi giochi.</string>
-    <string name="debug_paywall_tier5_title">$5/mese · Basic</string>
-    <string name="debug_paywall_tier5_body">1 correzione personalizzata al mese, fino a 5 tentativi ciascuna.</string>
-    <string name="debug_paywall_tier10_title">$10/mese · Pro</string>
-    <string name="debug_paywall_tier10_body">3 correzioni personalizzate al mese, risposte più rapide, in cima alla coda.</string>
-    <string name="debug_paywall_cancel_anytime">Annulla quando vuoi. Si applicano limiti di uso corretto.</string>
-    <string name="debug_paywall_costs_note">Gli abbonamenti coprono i costi del servizio AI che rende possibile questa funzione.</string>
-    <string name="debug_paywall_subscribe">Abbonati su Discord</string>
-    <string name="debug_paywall_kofi_alt">Abbonati su Ko-fi</string>
-    <string name="debug_paywall_already">Sei già supporter?</string>
-    <string name="debug_paywall_send_now">Mi sono abbonato, invia ora</string>
-    <string name="debug_paywall_not_now">Non ora</string>
     <string name="diagnostics_share_title">Condividi il log di diagnostica</string>
     <string name="diagnostics_share_none">Nessun log di diagnostica. Usa prima \"Esecuzione diagnostica\".</string>
 

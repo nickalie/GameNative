@@ -22,11 +22,10 @@ import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ReplyAll
-import androidx.compose.material.icons.automirrored.filled.StarHalf
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -80,7 +79,7 @@ fun ProfileDialog(
     }
 
     var selectedItem by remember(state) { mutableStateOf(state) }
-    var showSupporters by remember { mutableStateOf(false) }
+    var showArtCredits by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
     AlertDialog(
@@ -162,10 +161,10 @@ fun ProfileDialog(
                                     Text(text = stringResource(R.string.help_and_support))
                                 }
 
-                                FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = { showSupporters = true }) {
-                                    Icon(imageVector = Icons.AutoMirrored.Filled.StarHalf, contentDescription = null)
+                                FilledTonalButton(modifier = Modifier.fillMaxWidth(), onClick = { showArtCredits = true }) {
+                                    Icon(imageVector = Icons.Filled.Palette, contentDescription = null)
                                     Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
-                                    Text(text = stringResource(R.string.hall_of_fame))
+                                    Text(text = stringResource(R.string.art_credits))
                                 }
 
                                 if(isOffline) {
@@ -237,7 +236,7 @@ fun ProfileDialog(
         },
     )
 
-    SupportersDialog(visible = showSupporters, onDismiss = { showSupporters = false })
+    ArtCreditsDialog(visible = showArtCredits, onDismiss = { showArtCredits = false })
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES or Configuration.UI_MODE_TYPE_NORMAL)
