@@ -685,7 +685,6 @@
 
     <!-- Profile & Menu -->
     <string name="help_and_support">ヘルプ &amp; サポート</string>
-    <string name="hall_of_fame">殿堂</string>
     <string name="go_online">オンラインにする</string>
     <string name="go_offline">オフラインにする</string>
     <string name="log_out">ログアウト</string>
@@ -963,21 +962,9 @@
     <string name="settings_accounts_rockstar_title">Rockstar アカウント</string>
     <string name="gamenative_account_title">GameNative アカウント</string>
     <string name="gamenative_account_sign_in">サインイン</string>
-    <string name="gamenative_account_sign_in_subtitle">サインインすると、プランの確認とサブスクリプションの管理ができます。</string>
+    <string name="gamenative_account_sign_in_subtitle">サインインすると、アプリ内でサポートと AI のヘルプを受けられます。</string>
     <string name="gamenative_account_loading">アカウント情報を読み込んでいます。</string>
     <string name="gamenative_account_load_failed">アカウント情報を読み込めませんでした。選択して再試行してください。</string>
-    <string name="gamenative_account_plan">プラン: %1$s</string>
-    <string name="gamenative_account_plan_none">プランなし</string>
-    <string name="gamenative_account_plan_basic">Basic</string>
-    <string name="gamenative_account_plan_pro">Pro</string>
-    <string name="gamenative_account_plan_patron">Patron</string>
-    <string name="gamenative_account_manage_subscription">サブスクリプションを管理</string>
-    <string name="gamenative_account_manage_subscription_subtitle">ブラウザーで請求ページを開きます。</string>
-    <string name="gamenative_account_manage_subscription_opening">請求ページを開いています。</string>
-    <string name="gamenative_account_manage_subscription_none">このアカウントには管理するサブスクリプションがありません。</string>
-    <string name="gamenative_account_managed_discord">このプランは Discord から提供されています。Discord で管理してください。</string>
-    <string name="gamenative_account_managed_kofi">このプランは Ko-fi から提供されています。Ko-fi で管理してください。</string>
-    <string name="gamenative_account_manage_subscription_failed">請求ページを開けませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="gamenative_account_sign_out">サインアウト</string>
     <string name="gamenative_account_sign_out_subtitle">このデバイスで GameNative アカウントからサインアウトします。</string>
     <string name="gamenative_account_discord">Discord</string>
@@ -1026,7 +1013,6 @@
     <string name="support_problem_too_long">メッセージが長すぎます。短くしてから、もう一度お試しください。</string>
     <string name="support_problem_too_large">このログは大きすぎて送信できません。</string>
     <string name="support_problem_no_logs">このデバイスには、このゲームの新しいログがありません。新しいデバッグ実行を開始してログを記録してください。</string>
-    <string name="support_problem_locked">この会話でさらにメッセージを送るには、プランが必要です。</string>
     <string name="support_problem_already_answered">結果はすでにお知らせいただいています。</string>
     <string name="support_label_you">あなた</string>
     <string name="support_label_report">あなたのレポート</string>
@@ -1040,28 +1026,14 @@
     <string name="support_outcome_broken">まだ直らない</string>
     <string name="support_outcome_recorded_worked">解決したとお知らせいただきました。ありがとうございます。</string>
     <string name="support_outcome_recorded_broken">まだ解決していないとお知らせいただきました。現在の状況を下に返信するか、新しいログを送信してください。</string>
-    <string name="support_notice_moved">この会話は Pro サポートで続きます。</string>
-    <string name="support_upgrade_title">続けるにはプランが必要です</string>
-    <string name="support_upgrade_reason_trial_used">最初の分析は無料でした。返信してこの問題について AI と話し続けるには、プランを選んでください。</string>
+    <string name="support_notice_moved">この会話は別のサポート窓口に移されました。</string>
     <string name="support_upgrade_reason_reply_cap">本日の公正利用の上限に達しました。数時間後にリセットされます。</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="other">本日のフェアユース上限に達しました。%1$d時間後にリセットされます。</item>
     </plurals>
-    <string name="support_upgrade_reply_cap_pro_hint">Pro のレポートはキューを待たずに処理されます。</string>
     <string name="support_limit_title">本日の公正利用の上限に達しました</string>
-    <string name="support_upgrade_reason_required">AI の返信には GameNative のサブスクリプションが必要です。すでに Discord または Ko-fi でサブスクリプションに登録している場合は、設定で Discord を連携してください。</string>
-    <string name="support_see_plans">プランを見る</string>
-    <string name="support_plan_basic_title">$5/月 · Basic</string>
-    <string name="support_plan_basic_body">ゲームを動かす。もっと快適に動かす。</string>
-    <string name="support_checkout_scan">このコードをスマートフォンでスキャンして、購入手続きを完了してください。このデバイスで完了することもできます。</string>
-    <string name="support_checkout_waiting">完了したら、ここに戻ってください。プランは自動的に更新されます。</string>
-    <string name="support_checkout_open">このデバイスで開く</string>
-    <string name="support_checkout_no_browser">購入ページを開くブラウザが見つかりませんでした。代わりに別のデバイスでコードをスキャンしてください。</string>
-    <string name="support_checkout_failed">購入ページを開けませんでした。接続を確認して、もう一度お試しください。</string>
-    <string name="support_checkout_done">完了</string>
-    <string name="support_already_subscribed">このアカウントにはすでにサブスクリプションがあります。プランは請求ページで変更できます。</string>
-    <string name="support_plan_active">プランが有効になりました。</string>
-    <string name="support_plan_pending">プランはまだ準備中です。1 分後にもう一度お試しください。</string>
+    <string name="support_unavailable_title">AIサポートは利用できません</string>
+    <string name="support_unavailable_reason">このアカウントではAIサポートを利用できません。</string>
     <string name="support_composer_hint">返信を入力</string>
     <string name="support_composer_analysing">しばらくお待ちください。AI がまだログを読んでいます。回答が届いたら返信できます。</string>
     <string name="support_send_logs">ログを送信</string>
@@ -1074,7 +1046,6 @@
     <string name="support_fix_request_run">修正を依頼</string>
     <string name="support_fix_request_failed">カスタム修正を開始できませんでした。もう一度お試しください。</string>
     <string name="support_fix_request_in_progress">このゲームのカスタム修正はすでに準備中です。</string>
-    <string name="support_fix_upgrade_reason">カスタム修正はすべてのプランに含まれています。</string>
     <string name="support_fix_quota">現在、カスタム修正をすべて使い切りました。</string>
     <string name="support_fix_quota_resets">カスタム修正をすべて使い切りました。%1$s にリセットされます。</string>
     <string name="support_run_check_title">動作はどうでしたか？</string>
@@ -1127,10 +1098,6 @@
 
     <!-- Settings: Info Group -->
     <string name="settings_info_title">情報</string>
-    <string name="settings_info_send_tip_title">メンバーになる</string>
-    <string name="settings_info_send_tip_subtitle">ゲームを動かす AI サポート、リリースへの早期アクセスなど</string>
-    <string name="settings_info_ask_tip_title">メンバーシップのご案内</string>
-    <string name="settings_info_ask_tip_subtitle">GameNativeメンバーになるための案内を時々表示します</string>
     <string name="settings_info_source_title">ソースコード</string>
     <string name="settings_info_source_subtitle">このプロジェクトのソースコードを表示する</string>
     <string name="settings_info_libraries_title">使用するライブラリ</string>
@@ -1303,11 +1270,6 @@
     <!-- PluviaMain: Crash & Support -->
     <string name="main_recent_crash_title">最近のクラッシュ</string>
     <string name="main_recent_crash_message">申し訳ありません!\n\' が抱えていた最近の問題について知っていただければ幸いです。\nアプリ\'s の設定で最新のクラッシュ ログを表示およびエクスポートし、プロジェクト ZESC4ZZs リポジトリの Github の問題として添付できます。\nGithub リポジトリへのリンクも設定にあります。</string>
-    <string name="main_thank_you_title">GameNativeを楽しんでいますか？</string>
-    <string name="main_thank_you_message">今すぐメンバーになりましょう。メンバー特典:\n\n• ゲームを動かすための AI サポート\n• 新リリースへの早期アクセス\n• Discordのプレミアムロールと限定チャンネル\n• …その他多数\n\n月額$5から</string>
-    <string name="main_join_kofi">メンバーになる</string>
-    <string name="pitch_session_title">%1$sを楽しんでいますか？</string>
-    <string name="pitch_five_star_title">%1$sが快適に動いてよかったです！</string>
     <string name="main_share">共有</string>
     <string name="main_share_text">GameNative をチェックしてください - クラウド セーブを完全にサポートし、Android で PC Steam ゲームをプレイしましょう!\nhttps://gamenative.app\nコミュニティに参加してください: https://discord.gg/2hKv4VfZfE</string>
     <string name="main_discord_support_title">ゲームはうまくいきましたか？</string>
@@ -1388,16 +1350,10 @@
     <string name="libraries_title">使用するライブラリ</string>
     <string name="libraries_message">Pluvia - github.com/oxters168/Pluvia\nJavaSteam - github.com/Longi94/JavaSteam\nWinlator &amp; Vortek - github.com/brunodev85/winlator\nWinlator Cmod - github.com/coffincolors/winlator\nWrapper - https://github.com/leegao/bionic-vulkan-wrapper &amp; https://github.com/pipetto-crypto/\nUbuntu RootFs - releases.ubuntu.com/focal</string>
 
-    <!-- Supporters Dialog -->
-    <string name="supporters_art_credits">アートクレジット</string>
-    <string name="supporters_app_icon">アプリアイコン：ハチ</string>
-    <string name="supporters_alt_icon">代替アプリアイコン: rhapsody_mdr</string>
-    <string name="supporters_loading">サポーターを読み込み中…</string>
-    <string name="supporters_error">サポーターをロードできません</string>
-    <string name="supporters_members">メンバー</string>
-    <string name="supporters_supporters">サポーター</string>
-    <string name="supporters_none">まだサポーターはいません。</string>
-    <string name="supporters_anonymous">匿名</string>
+    <!-- Art Credits Dialog -->
+    <string name="art_credits">アートクレジット</string>
+    <string name="art_credits_app_icon">アプリアイコン：ハチ</string>
+    <string name="art_credits_alt_icon">代替アプリアイコン: rhapsody_mdr</string>
 
     <!-- Chat Screen -->
     <string name="chat_preview_warning">チャットはまだ初期の機能です。\n問題があればプロジェクト リポジトリで報告してください。</string>
@@ -2035,25 +1991,9 @@
     <string name="debug_offer_confirm">デバッグ実行を開始</string>
     <string name="debug_prerun_title">AI のサポートを受ける</string>
     <string name="debug_prerun_message_1">デバッグログ付きでゲームを起動し、終了時にログを Discord の AI に共有します。問題が発生するまでゲームをプレイしてください。</string>
-    <string name="debug_prerun_message_2">AI の返信はサブスク会員限定です。</string>
     <string name="debug_prerun_message_1_app">デバッグログ付きでゲームを実行します。終了するとログが AI に送られ、回答は Discord に届きます。GameNative アカウントでサインインした場合はアプリに届きます。問題が発生するまでプレイしてください。</string>
-    <string name="debug_prerun_message_2_app">最初の分析は無料です。追加の返信にはプランが必要です。</string>
     <string name="debug_prerun_message_1_neutral">デバッグログ付きでゲームを実行します。終了するとログが AI に送られます。問題が発生するまでプレイしてください。</string>
-    <string name="debug_trial_note">無料トライアルあり。</string>
     <string name="debug_prerun_message_3">レポートは誰でも共有でき、人間のサポートを受けられます。</string>
-    <string name="debug_paywall_title">AI デバッグサポートを利用</string>
-    <string name="debug_paywall_pitch">ゲームを直すカスタム AI パッチとビルド。</string>
-    <string name="debug_paywall_tier5_title">$5/月 · Basic</string>
-    <string name="debug_paywall_tier5_body">カスタム修正は月 1 回、各最大 5 回まで試行。</string>
-    <string name="debug_paywall_tier10_title">$10/月 · Pro</string>
-    <string name="debug_paywall_tier10_body">カスタム修正は月 3 回、より速い返信、キューで最優先。</string>
-    <string name="debug_paywall_cancel_anytime">いつでも解約できます。フェアユース上限が適用されます。</string>
-    <string name="debug_paywall_costs_note">サブスクリプションは、この機能を支える AI サービスの費用に充てられます。</string>
-    <string name="debug_paywall_subscribe">Discord で登録する</string>
-    <string name="debug_paywall_kofi_alt">Ko-fi で登録する</string>
-    <string name="debug_paywall_already">すでにサポーターですか？</string>
-    <string name="debug_paywall_send_now">加入済みです。今すぐ送信</string>
-    <string name="debug_paywall_not_now">今はしない</string>
     <string name="diagnostics_share_title">診断ログを共有</string>
     <string name="diagnostics_share_none">診断ログがまだありません。先に「診断実行」を使用してください。</string>
 

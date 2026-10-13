@@ -5,7 +5,6 @@ import android.os.Process
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import app.gamenative.BuildConfig
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.AgentHooks
@@ -76,17 +75,12 @@ class MainViewModel @Inject constructor(
 
     companion object {
         private const val KEY_CURRENT_SCREEN_ROUTE = "current_screen_route"
-        private const val MIN_WARM_PITCH_SESSION_MS = 7 * 60 * 1000L
-        private const val WARM_PITCH_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000L
         private const val SHORT_SESSION_MS = 90 * 1000L
         private const val AI_DEBUG_OFFER_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000L
         private const val BOOT_GAME_SEEN_GRACE_MS = 15_000L
         private const val LOW_RATING_MAX = 3
         private val FAILURE_TAGS = setOf("does_not_open", "no_graphics", "directx_error")
         private const val BOOT_AD_REUSE_WINDOW_MS = 2 * 60 * 1000L
-
-        var gamePlayedThisSession = false
-            private set
     }
 
     private var gameSessionStartTime = 0L
@@ -96,7 +90,7 @@ class MainViewModel @Inject constructor(
     private var bootAdDwellReported = false
     private var bootAwaitingGameWindow = false
     private var gameWindowSeen = false
-    private var pendingWarmPitch: Pair<String, Boolean>? = null
+    private var pendingFeedbackAppId: String? = null
 
     /**
      * Set when Steam logged in while another screen covered the offline library; the library switches
@@ -104,26 +98,11 @@ class MainViewModel @Inject constructor(
      */
     var switchLibraryOnlineOnReturn = false
 
-    private fun warmPitchAllowed(): Boolean {
-        if (PrefManager.tipped || BuildConfig.GOLD) return false
-        return System.currentTimeMillis() - PrefManager.lastWarmPitchTime >= WARM_PITCH_COOLDOWN_MS
-    }
-
     fun onGameFeedbackResolved(context: Context, rating: Int?, tags: Set<String> = emptySet()) {
-        val (appId, sessionLongEnough) = pendingWarmPitch ?: return
-        pendingWarmPitch = null
+        val appId = pendingFeedbackAppId ?: return
+        pendingFeedbackAppId = null
         if (rating != null && (rating <= LOW_RATING_MAX || tags.any { it in FAILURE_TAGS })) {
             viewModelScope.launch { offerAiDebugRun(context, appId, "low_rating") }
-            return
-        }
-        val trigger = when {
-            rating == 5 -> "five_star"
-            rating == null && sessionLongEnough -> "long_session"
-            else -> return
-        }
-        if (!warmPitchAllowed()) return
-        viewModelScope.launch {
-            _uiEvent.send(MainUiEvent.ShowMembershipPitch(appId, trigger))
         }
     }
 
@@ -136,7 +115,6 @@ class MainViewModel @Inject constructor(
         data class SteamDisconnected(val isTerminal: Boolean) : MainUiEvent()
         data object ShowDiscordSupportDialog : MainUiEvent()
         data class ShowGameFeedbackDialog(val appId: String) : MainUiEvent()
-        data class ShowMembershipPitch(val appId: String, val trigger: String) : MainUiEvent()
         data class ShowDebugReportDialog(val appId: String) : MainUiEvent()
         data class ShowAiDebugOffer(val appId: String, val trigger: String) : MainUiEvent()
         data object ServiceReady : MainUiEvent()
@@ -599,8 +577,6 @@ class MainViewModel @Inject constructor(
     fun launchApp(context: Context, appId: String) {
         gameSessionStartTime = System.currentTimeMillis()
         gameWindowSeen = false
-        gamePlayedThisSession = true
-        PrefManager.hasAttemptedGameLaunch = true
         // Show booting splash before launching the app
         viewModelScope.launch {
             _state.value.takeIf { !it.debugRun && !it.bootToContainer && !it.testGraphics && !it.diagnostics }?.let {
@@ -755,7 +731,6 @@ class MainViewModel @Inject constructor(
                 } else {
                     0L
                 }
-                val sessionLongEnough = sessionLengthMs >= MIN_WARM_PITCH_SESSION_MS
                 gameSessionStartTime = 0L
 
                 if (debugRun) {
@@ -800,9 +775,7 @@ class MainViewModel @Inject constructor(
                 }
 
                 if (feedbackRequested) {
-                    pendingWarmPitch = appId to sessionLongEnough
-                } else if (sessionLongEnough && warmPitchAllowed()) {
-                    _uiEvent.send(MainUiEvent.ShowMembershipPitch(appId, "long_session"))
+                    pendingFeedbackAppId = appId
                 }
             } finally {
                 onComplete?.invoke()

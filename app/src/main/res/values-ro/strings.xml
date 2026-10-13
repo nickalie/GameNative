@@ -675,7 +675,6 @@
 
     <!-- Profile & Menu -->
 	<string name="help_and_support">Ajutor &amp; Suport</string>
-	<string name="hall_of_fame">Hall of Fame</string>
 	<string name="go_online">Mergi online</string>
 	<string name="go_offline">Mergi offline</string>
 	<string name="log_out">Deconectare</string>
@@ -994,21 +993,9 @@
     <string name="settings_accounts_rockstar_title">Cont Rockstar</string>
     <string name="gamenative_account_title">Cont GameNative</string>
     <string name="gamenative_account_sign_in">Conectare</string>
-    <string name="gamenative_account_sign_in_subtitle">Conectează-te pentru a vedea planul tău și a-ți gestiona abonamentul.</string>
+    <string name="gamenative_account_sign_in_subtitle">Conectează-te pentru a primi asistență și ajutor AI în aplicație.</string>
     <string name="gamenative_account_loading">Se încarcă detaliile contului.</string>
     <string name="gamenative_account_load_failed">Detaliile contului nu au putut fi încărcate. Selectează pentru a încerca din nou.</string>
-    <string name="gamenative_account_plan">Plan: %1$s</string>
-    <string name="gamenative_account_plan_none">Niciun plan</string>
-    <string name="gamenative_account_plan_basic">Basic</string>
-    <string name="gamenative_account_plan_pro">Pro</string>
-    <string name="gamenative_account_plan_patron">Patron</string>
-    <string name="gamenative_account_manage_subscription">Gestionează abonamentul</string>
-    <string name="gamenative_account_manage_subscription_subtitle">Deschide pagina de facturare în browser.</string>
-    <string name="gamenative_account_manage_subscription_opening">Se deschide pagina de facturare.</string>
-    <string name="gamenative_account_manage_subscription_none">Acest cont nu are niciun abonament de gestionat.</string>
-    <string name="gamenative_account_managed_discord">Planul tău vine de pe Discord. Gestionează-l pe Discord.</string>
-    <string name="gamenative_account_managed_kofi">Planul tău vine de pe Ko-fi. Gestionează-l pe Ko-fi.</string>
-    <string name="gamenative_account_manage_subscription_failed">Pagina de facturare nu a putut fi deschisă. Încearcă din nou mai târziu.</string>
     <string name="gamenative_account_sign_out">Deconectare</string>
     <string name="gamenative_account_sign_out_subtitle">Deconectează-te de la contul GameNative pe acest dispozitiv.</string>
     <string name="gamenative_account_discord">Discord</string>
@@ -1057,7 +1044,6 @@
     <string name="support_problem_too_long">Mesajul este prea lung. Scurtează-l și încearcă din nou.</string>
     <string name="support_problem_too_large">Aceste jurnale sunt prea mari pentru a fi trimise.</string>
     <string name="support_problem_no_logs">Nu există jurnale noi pentru acest joc pe acest dispozitiv. Pornește o nouă rulare de depanare pentru a le înregistra.</string>
-    <string name="support_problem_locked">Este nevoie de un plan pentru a trimite mai multe mesaje în această conversație.</string>
     <string name="support_problem_already_answered">Ne-ai spus deja cum a mers.</string>
     <string name="support_label_you">Tu</string>
     <string name="support_label_report">Raportul tău</string>
@@ -1071,30 +1057,16 @@
     <string name="support_outcome_broken">Tot nu merge</string>
     <string name="support_outcome_recorded_worked">Ai spus că soluția a funcționat. Îți mulțumim că ne-ai anunțat.</string>
     <string name="support_outcome_recorded_broken">Ai spus că problema nu este încă rezolvată. Răspunde mai jos cu ce se întâmplă acum sau trimite jurnale noi.</string>
-    <string name="support_notice_moved">Această conversație continuă acum cu asistența Pro.</string>
-    <string name="support_upgrade_title">Este nevoie de un plan pentru a continua</string>
-    <string name="support_upgrade_reason_trial_used">Prima analiză a fost gratuită. Pentru a răspunde și a continua discuția cu AI-ul despre această problemă, alege un plan.</string>
+    <string name="support_notice_moved">Această conversație a fost mutată într-o altă coadă de asistență.</string>
     <string name="support_upgrade_reason_reply_cap">Ai atins limita de utilizare corectă pentru azi. Se resetează în câteva ore.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Ai atins limita de utilizare corectă de azi. Se resetează în %1$d oră.</item>
         <item quantity="few">Ai atins limita de utilizare corectă de azi. Se resetează în %1$d ore.</item>
         <item quantity="other">Ai atins limita de utilizare corectă de azi. Se resetează în %1$d de ore.</item>
     </plurals>
-    <string name="support_upgrade_reply_cap_pro_hint">Rapoartele Pro sar peste coadă.</string>
     <string name="support_limit_title">Limita zilnică de utilizare corectă a fost atinsă</string>
-    <string name="support_upgrade_reason_required">Răspunsurile AI necesită un abonament GameNative. Dacă ai deja un abonament pe Discord sau Ko-fi, conectează Discord în Setări.</string>
-    <string name="support_see_plans">Vezi planurile</string>
-    <string name="support_plan_basic_title">$5/lună · Basic</string>
-    <string name="support_plan_basic_body">Fă-ți jocurile să ruleze sau să ruleze mai bine.</string>
-    <string name="support_checkout_scan">Scanează acest cod cu telefonul pentru a finaliza plata. O poți finaliza și pe acest dispozitiv.</string>
-    <string name="support_checkout_waiting">Când ai terminat, revino aici. Planul se actualizează singur.</string>
-    <string name="support_checkout_open">Deschide pe acest dispozitiv</string>
-    <string name="support_checkout_no_browser">Nu s-a găsit niciun browser pentru a deschide pagina de plată. Scanează codul cu alt dispozitiv.</string>
-    <string name="support_checkout_failed">Pagina de plată nu a putut fi deschisă. Verifică-ți conexiunea și încearcă din nou.</string>
-    <string name="support_checkout_done">Gata</string>
-    <string name="support_already_subscribed">Acest cont are deja un abonament. Îți poți schimba planul pe pagina de facturare.</string>
-    <string name="support_plan_active">Planul tău este activ.</string>
-    <string name="support_plan_pending">Planul tău încă este configurat. Încearcă din nou peste un minut.</string>
+    <string name="support_unavailable_title">Ajutorul AI nu este disponibil</string>
+    <string name="support_unavailable_reason">Ajutorul AI nu este disponibil pentru acest cont.</string>
     <string name="support_composer_hint">Scrie un răspuns</string>
     <string name="support_composer_analysing">Te rugăm să aștepți. AI-ul încă citește jurnalele tale. Poți răspunde după ce sosește răspunsul lui.</string>
     <string name="support_send_logs">Trimite jurnalele</string>
@@ -1107,7 +1079,6 @@
     <string name="support_fix_request_run">Cere remedierea</string>
     <string name="support_fix_request_failed">Nu s-a putut porni o remediere personalizată. Încearcă din nou.</string>
     <string name="support_fix_request_in_progress">O remediere personalizată pentru acest joc este deja în pregătire.</string>
-    <string name="support_fix_upgrade_reason">Remedierile personalizate sunt incluse în fiecare plan.</string>
     <string name="support_fix_quota">Ai folosit deocamdată toate remedierile personalizate.</string>
     <string name="support_fix_quota_resets">Ai folosit toate remedierile personalizate. Se resetează pe %1$s.</string>
     <string name="support_run_check_title">Cum a mers?</string>
@@ -1160,10 +1131,6 @@
 
 	<!-- Settings: Info Group -->
 	<string name="settings_info_title">Informații</string>
-    <string name="settings_info_send_tip_title">Devino membru</string>
-    <string name="settings_info_send_tip_subtitle">Ajutor cu AI pentru jocurile tale, acces anticipat la versiuni și altele</string>
-    <string name="settings_info_ask_tip_title">Oferte de membru</string>
-    <string name="settings_info_ask_tip_subtitle">Afișează ocazional oferte pentru a deveni membru GameNative</string>
 	<string name="settings_info_source_title">Cod sursă</string>
 	<string name="settings_info_source_subtitle">Vezi codul sursă al acestui proiect</string>
 	<string name="settings_info_libraries_title">Biblioteci utilizate</string>
@@ -1278,11 +1245,6 @@
 	<!-- PluviaMain: Crash & Support -->
 	<string name="main_recent_crash_title">Crash recent</string>
 	<string name="main_recent_crash_message">Ne pare rău!\nAr fi util să știm ce problemă ai întâmpinat.\nPoți vizualiza și exporta cel mai recent crash log din setările aplicației și îl poți atașa ca issue pe Github în repository-ul proiectului.\nLinkul către repo este tot în setări!</string>
-    <string name="main_thank_you_title">Îți place GameNative?</string>
-    <string name="main_thank_you_message">Devino membru astăzi. Membrii primesc:\n\n• Ajutor cu AI pentru a-ți face jocurile să funcționeze\n• Acces anticipat la versiuni noi\n• Roluri premium și canale exclusive pe Discord\n• …și altele\n\nDe la 5 $/lună</string>
-    <string name="main_join_kofi">Devino membru</string>
-    <string name="pitch_session_title">Îți place %1$s?</string>
-    <string name="pitch_five_star_title">Ne bucurăm că %1$s a mers excelent!</string>
 	<string name="main_share">Distribuie</string>
 	<string name="main_share_text">Descoperă GameNative - joacă jocurile tale Steam pe PC pe Android, cu suport complet pentru salvări în cloud!\nhttps://gamenative.app\nAlătură-te comunității: https://discord.gg/2hKv4VfZfE</string>
 	<string name="main_discord_support_title">A funcționat jocul?</string>
@@ -1352,15 +1314,9 @@
 	<string name="libraries_message">Pluvia - github.com/oxters168/Pluvia\nJavaSteam - github.com/Longi94/JavaSteam\nWinlator &amp; Vortek - github.com/brunodev85/winlator\nWinlator Cmod - github.com/coffincolors/winlator\nWrapper - https://github.com/leegao/bionic-vulkan-wrapper &amp; https://github.com/pipetto-crypto/\nUbuntu RootFs - releases.ubuntu.com/focal</string>
 
 	<!-- Supporters Dialog -->
-	<string name="supporters_art_credits">Credite artă</string>
-	<string name="supporters_app_icon">Icon aplicație: Hachi</string>
-	<string name="supporters_alt_icon">Icon alternativ: rhapsody_mdr</string>
-	<string name="supporters_loading">Se încarcă susținătorii…</string>
-	<string name="supporters_error">Nu s-au putut încărca susținătorii</string>
-	<string name="supporters_members">Membri</string>
-	<string name="supporters_supporters">Susținători</string>
-	<string name="supporters_none">Niciun susținător încă.</string>
-	<string name="supporters_anonymous">Anonim</string>
+	<string name="art_credits">Credite artă</string>
+	<string name="art_credits_app_icon">Icon aplicație: Hachi</string>
+	<string name="art_credits_alt_icon">Icon alternativ: rhapsody_mdr</string>
 
 	<!-- Chat Screen -->
 	<string name="chat_preview_warning">Funcția de chat este încă într-un stadiu incipient.\nTe rugăm să raportezi orice problemă în repo-ul proiectului.</string>
@@ -2051,25 +2007,9 @@
     <string name="debug_offer_confirm">Pornește rularea de depanare</string>
     <string name="debug_prerun_title">Primește ajutor de la AI</string>
     <string name="debug_prerun_message_1">Rulează jocul cu jurnal de depanare și partajează jurnalul cu AI-ul nostru pe Discord la ieșire. Joacă până când apare problema.</string>
-    <string name="debug_prerun_message_2">Răspunsurile AI sunt doar pentru abonați.</string>
     <string name="debug_prerun_message_1_app">Rulează jocul cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru, iar răspunsul vine pe Discordul nostru sau în aplicație, dacă te conectezi cu un cont GameNative. Joacă până când apare problema.</string>
-    <string name="debug_prerun_message_2_app">Prima analiză este gratuită. Răspunsurile ulterioare necesită un plan.</string>
     <string name="debug_prerun_message_1_neutral">Jocul rulează cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru. Joacă până când apare problema.</string>
-    <string name="debug_trial_note">Perioadă de probă gratuită disponibilă.</string>
     <string name="debug_prerun_message_3">Oricine poate partaja raportul pentru ajutor uman.</string>
-    <string name="debug_paywall_title">Obține suport de depanare AI</string>
-    <string name="debug_paywall_pitch">Patch-uri și build-uri AI personalizate care îți repară jocurile.</string>
-    <string name="debug_paywall_tier5_title">$5/lună · Basic</string>
-    <string name="debug_paywall_tier5_body">1 remediere personalizată pe lună, până la 5 încercări fiecare.</string>
-    <string name="debug_paywall_tier10_title">$10/lună · Pro</string>
-    <string name="debug_paywall_tier10_body">3 remedieri personalizate pe lună, răspunsuri mai rapide, primul la rând.</string>
-    <string name="debug_paywall_cancel_anytime">Anulează oricând. Se aplică limite de utilizare corectă.</string>
-    <string name="debug_paywall_costs_note">Abonamentele acoperă costurile serviciului AI care face posibilă această funcție.</string>
-    <string name="debug_paywall_subscribe">Abonează-te pe Discord</string>
-    <string name="debug_paywall_kofi_alt">Abonează-te pe Ko-fi</string>
-    <string name="debug_paywall_already">Ești deja susținător?</string>
-    <string name="debug_paywall_send_now">M-am abonat, trimite acum</string>
-    <string name="debug_paywall_not_now">Nu acum</string>
     <string name="diagnostics_share_title">Partajează jurnalul de diagnosticare</string>
     <string name="diagnostics_share_none">Încă nu există jurnal de diagnosticare. Folosește mai întâi \"Rulare de diagnosticare\".</string>
 

@@ -142,7 +142,7 @@ object SupportApi {
 
     sealed class Notice {
         data class Upgrade(val reason: String, val resetsAt: Long? = null, val message: String? = null) : Notice()
-        data class Moved(val tier: String) : Notice()
+        data object Moved : Notice()
         data class Outcome(val solved: Boolean, val note: String?) : Notice()
         data class Limit(val reason: String, val resetsAt: Long?, val message: String?) : Notice()
         data class Other(val type: String, val reason: String? = null, val message: String? = null) : Notice()
@@ -294,7 +294,7 @@ object SupportApi {
                 resetsAt = json.time("resets_at").takeIf { it > 0 },
                 message = json.str("message"),
             )
-            "moved" -> Notice.Moved(json.str("tier") ?: "pro")
+            "moved" -> Notice.Moved
             "outcome" -> Notice.Outcome(json.optBoolean("solved", false), json.str("note"))
             "limit" -> Notice.Limit(
                 reason = json.str("reason") ?: REASON_FAIR_USE,

@@ -67,7 +67,6 @@ android {
         versionCode = 23
         versionName = "1.3.0"
 
-        buildConfigField("boolean", "GOLD", "false")
         fun secret(name: String) =
             project.findProperty(name) as String? ?: System.getenv(name) ?: ""
 
@@ -183,7 +182,6 @@ android {
             isShrinkResources = true
             signingConfig = signingConfigs.getByName("pluvia")
             applicationIdSuffix = ".gold"
-            buildConfigField("boolean", "GOLD", "true")
             val iconValue = "@mipmap/ic_launcher_gold"
             val iconRoundValue = "@mipmap/ic_launcher_gold_round"
             manifestPlaceholders.putAll(

@@ -4,7 +4,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,8 +49,6 @@ fun SettingsGroupGameNativeAccount() {
     var showSignIn by rememberSaveable { mutableStateOf(false) }
     var loadFailed by remember { mutableStateOf(false) }
     var loadAttempt by remember { mutableIntStateOf(0) }
-    var portalBusy by remember { mutableStateOf(false) }
-    var portalMessage by remember { mutableStateOf<Int?>(null) }
     val discordConnected by PrefManager.discordRelayTokenPresent
     var discordLinkedName by remember { mutableStateOf("") }
     var showDiscordLink by rememberSaveable { mutableStateOf(false) }
@@ -127,58 +124,18 @@ fun SettingsGroupGameNativeAccount() {
             )
         } else {
             val current = account
-            val managedElsewhere = managedElsewhereMessage(current?.tierSource)
+            val status = when {
+                current != null -> null
+                loadFailed -> R.string.gamenative_account_load_failed
+                else -> R.string.gamenative_account_loading
+            }
             SettingsMenuLink(
                 colors = settingsTileColors(),
                 title = { Text(current?.email?.ifBlank { null } ?: stringResource(R.string.gamenative_account_title)) },
-                subtitle = {
-                    Text(
-                        when {
-                            current != null -> stringResource(R.string.gamenative_account_plan, tierLabel(current.tier))
-                            loadFailed -> stringResource(R.string.gamenative_account_load_failed)
-                            else -> stringResource(R.string.gamenative_account_loading)
-                        },
-                    )
-                },
+                subtitle = status?.let { res -> { Text(stringResource(res)) } },
                 icon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
                 onClick = {
                     if (current == null && loadFailed) loadAttempt++
-                },
-            )
-
-            SettingsMenuLink(
-                colors = settingsTileColors(),
-                title = { Text(stringResource(R.string.gamenative_account_manage_subscription)) },
-                subtitle = {
-                    Text(
-                        stringResource(
-                            portalMessage ?: managedElsewhere ?: R.string.gamenative_account_manage_subscription_subtitle,
-                        ),
-                    )
-                },
-                icon = { Icon(Icons.Filled.CreditCard, contentDescription = null) },
-                enabled = !portalBusy,
-                onClick = {
-                    portalBusy = true
-                    portalMessage = R.string.gamenative_account_manage_subscription_opening
-                    scope.launch {
-                        portalMessage = when (val result = AccountApi.createPortal()) {
-                            is ApiResult.Success -> {
-                                if (openAccountUrl(context, result.data)) {
-                                    null
-                                } else {
-                                    R.string.gamenative_account_manage_subscription_failed
-                                }
-                            }
-                            is ApiResult.HttpError -> when {
-                                result.code != 409 -> R.string.gamenative_account_manage_subscription_failed
-                                managedElsewhere != null -> managedElsewhere
-                                else -> R.string.gamenative_account_manage_subscription_none
-                            }
-                            is ApiResult.NetworkError -> R.string.gamenative_account_manage_subscription_failed
-                        }
-                        portalBusy = false
-                    }
                 },
             )
 
@@ -188,7 +145,6 @@ fun SettingsGroupGameNativeAccount() {
                 subtitle = { Text(stringResource(R.string.gamenative_account_sign_out_subtitle)) },
                 icon = { Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null) },
                 onClick = {
-                    portalMessage = null
                     loadFailed = false
                     scope.launch { AccountApi.signOut() }
                 },
@@ -226,20 +182,3 @@ fun SettingsGroupGameNativeAccount() {
         )
     }
 }
-
-private fun managedElsewhereMessage(tierSource: String?): Int? =
-    when (tierSource) {
-        "discord" -> R.string.gamenative_account_managed_discord
-        "kofi" -> R.string.gamenative_account_managed_kofi
-        else -> null
-    }
-
-@Composable
-private fun tierLabel(tier: String): String =
-    when (tier) {
-        "none" -> stringResource(R.string.gamenative_account_plan_none)
-        "basic" -> stringResource(R.string.gamenative_account_plan_basic)
-        "pro" -> stringResource(R.string.gamenative_account_plan_pro)
-        "patron" -> stringResource(R.string.gamenative_account_plan_patron)
-        else -> tier.replaceFirstChar { it.uppercase() }
-    }

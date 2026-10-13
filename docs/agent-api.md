@@ -419,8 +419,8 @@ ignored.
 - The game-feedback dialog appears after the first run of a game (the one-time Discord/support prompt) and
   after every run that followed a config change (every `containers.set`/`restore` write); custom games are
   exempt. For runs that end without a game window or within 90 s the
-  app may instead offer an AI debug run (at most every 3 days per game). A membership pitch may follow long
-  sessions. Dismiss them with `adb shell input keyevent BACK`.
+  app may instead offer an AI debug run (at most every 3 days per game). Dismiss them with
+  `adb shell input keyevent BACK`.
 - After a launch through the intent, the activity calls `finish()` when the game exits, returning to whatever
   launched it.
 

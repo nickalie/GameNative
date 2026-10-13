@@ -53,7 +53,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import app.gamenative.BuildConfig
-import app.gamenative.Constants
 import app.gamenative.MainActivity
 import app.gamenative.NetworkMonitor
 import app.gamenative.PluviaApp
@@ -116,7 +115,6 @@ import app.gamenative.launch.SteamAgreementGate
 import app.gamenative.ui.enums.DialogType
 import app.gamenative.ui.enums.Orientation
 import app.gamenative.ui.model.MainViewModel
-import app.gamenative.ui.screen.DebugPaywallScreen
 import app.gamenative.ui.screen.HomeScreen
 import app.gamenative.ui.screen.PluviaScreen
 import app.gamenative.ui.screen.login.UserLoginScreen
@@ -128,7 +126,7 @@ import app.gamenative.ui.screen.support.SupportReportSubmitter
 import app.gamenative.ui.screen.support.SupportScreen
 import app.gamenative.ui.screen.support.SupportRunFollowUp
 import app.gamenative.ui.screen.support.SupportSession
-import app.gamenative.ui.screen.support.SupportUpgradeDialog
+import app.gamenative.ui.screen.support.refusalReasonText
 import app.gamenative.ui.screen.xserver.XServerScreen
 import app.gamenative.ui.theme.PluviaTheme
 import app.gamenative.ui.util.LocalSnackbarHostController
@@ -356,17 +354,6 @@ private fun consumePendingSteamLoginError(context: Context) {
     SnackbarManager.show(context.getString(R.string.intent_launch_steam_login_failed))
 }
 
-private const val LAUNCH_PITCH_COOLDOWN_MS = 5 * 24 * 60 * 60 * 1000L
-
-private fun trackMembershipPrompt(event: String, trigger: String) {
-    if (PrefManager.usageAnalyticsEnabled) {
-        PostHog.capture(
-            event = event,
-            properties = mapOf("trigger" to trigger),
-        )
-    }
-}
-
 private const val SUPPORT_PROMPT_SIGN_IN = "sign_in"
 
 private fun trackAiDebugOffer(event: String, appId: String, trigger: String) {
@@ -457,7 +444,6 @@ fun PluviaMain(
         mutableStateOf(MessageDialogState(false))
     }
     val setMessageDialogState: (MessageDialogState) -> Unit = { msgDialogState = it }
-    var membershipPitchTrigger by rememberSaveable { mutableStateOf("launch") }
 
     var gameFeedbackState by rememberSaveable(stateSaver = GameFeedbackDialogState.Saver) {
         mutableStateOf(GameFeedbackDialogState(false))
@@ -466,7 +452,6 @@ fun PluviaMain(
     var debugReportState by rememberSaveable(stateSaver = DebugReportDialogState.Saver) {
         mutableStateOf(DebugReportDialogState(false))
     }
-    var debugPaywallReason by rememberSaveable { mutableStateOf<String?>(null) }
     var debugAccountPrompt by rememberSaveable { mutableStateOf<String?>(null) }
     var aiDebugOfferAppId by rememberSaveable { mutableStateOf("") }
     var aiDebugOfferTrigger by rememberSaveable { mutableStateOf("") }
@@ -724,13 +709,7 @@ fun PluviaMain(
                 }
 
                 MainViewModel.MainUiEvent.OnBackPressed -> {
-                    if (debugPaywallReason != null) {
-                        debugPaywallReason = null
-                        debugReportState = debugReportState.copy(
-                            visible = true,
-                            phase = DebugReportDialogState.PHASE_COMPOSE,
-                        )
-                    } else if (debugReportState.visible) {
+                    if (debugReportState.visible) {
                         if (debugReportState.phase != DebugReportDialogState.PHASE_SENDING) {
                             debugReportState = debugReportState.copy(visible = false)
                             SteamService.keepAlive = false
@@ -833,25 +812,6 @@ fun PluviaMain(
                     )
                 }
 
-                is MainViewModel.MainUiEvent.ShowMembershipPitch -> {
-                    val gameName = ContainerUtils.resolveGameName(event.appId)
-                    PrefManager.lastWarmPitchTime = System.currentTimeMillis()
-                    membershipPitchTrigger = event.trigger
-                    trackMembershipPrompt("membership_prompt_shown", event.trigger)
-                    msgDialogState = MessageDialogState(
-                        visible = true,
-                        type = DialogType.SUPPORT,
-                        title = if (event.trigger == "five_star") {
-                            context.getString(R.string.pitch_five_star_title, gameName)
-                        } else {
-                            context.getString(R.string.pitch_session_title, gameName)
-                        },
-                        message = context.getString(R.string.main_thank_you_message),
-                        confirmBtnText = context.getString(R.string.main_join_kofi),
-                        dismissBtnText = context.getString(R.string.close),
-                    )
-                }
-
                 is MainViewModel.MainUiEvent.ShowDebugReportDialog -> {
                     val runConversationId = SupportSession.conversationForRun(event.appId)
                     if (runConversationId != null) {
@@ -881,15 +841,14 @@ fun PluviaMain(
                     aiDebugOfferAppId = event.appId
                     aiDebugOfferTrigger = event.trigger
                     trackAiDebugOffer("ai_debug_offer_shown", event.appId, event.trigger)
-                    val offerMessage = context.getString(
-                        R.string.debug_offer_message,
-                        ContainerUtils.resolveGameName(event.appId),
-                    )
                     msgDialogState = MessageDialogState(
                         visible = true,
                         type = DialogType.AI_DEBUG_OFFER,
                         title = context.getString(R.string.debug_offer_title),
-                        message = offerMessage + " " + context.getString(R.string.debug_trial_note),
+                        message = context.getString(
+                            R.string.debug_offer_message,
+                            ContainerUtils.resolveGameName(event.appId),
+                        ),
                         confirmBtnText = context.getString(R.string.debug_offer_confirm),
                         dismissBtnText = context.getString(R.string.close),
                     )
@@ -1058,20 +1017,6 @@ fun PluviaMain(
             }
             onDismissRequest = {
                 setMessageDialogState(MessageDialogState(false))
-            }
-        }
-
-        DialogType.SUPPORT -> {
-            onConfirmClick = {
-                uriHandler.openUri(Constants.Misc.KO_FI_LINK)
-                trackMembershipPrompt("membership_prompt_clicked", membershipPitchTrigger)
-                msgDialogState = MessageDialogState(visible = false)
-            }
-            onDismissRequest = {
-                msgDialogState = MessageDialogState(visible = false)
-            }
-            onDismissClick = {
-                msgDialogState = MessageDialogState(visible = false)
             }
         }
 
@@ -1695,7 +1640,7 @@ fun PluviaMain(
                 PrefManager.discordOauthNonce = nonce
                 trackAiDebug(
                     "ai_debug_discord_connect_clicked",
-                    mapOf("surface" to if (debugPaywallReason != null) "paywall" else "report"),
+                    mapOf("surface" to "report"),
                 )
                 CustomTabsIntent.Builder()
                     .setShowTitle(true)
@@ -1766,9 +1711,9 @@ fun PluviaMain(
                         }
 
                         is DebugReportApi.SubmitResult.Forbidden -> {
-                            debugReportState = debugReportState.copy(visible = false)
-                            val reason = result.reason.ifEmpty { "no_subscription" }
-                            debugPaywallReason = reason
+                            val reason = result.reason.ifEmpty { SupportApi.REASON_NO_SUBSCRIPTION }
+                            debugReportState = debugReportState.copy(visible = true, phase = DebugReportDialogState.PHASE_COMPOSE)
+                            SnackbarManager.show(refusalReasonText(context, reason))
                             trackAiDebug(
                                 "ai_debug_report_result",
                                 mapOf("result" to "forbidden", "reason" to reason, "path" to "discord"),
@@ -1828,11 +1773,7 @@ fun PluviaMain(
                                 mapOf("result" to "forbidden", "reason" to outcome.reason, "path" to "app"),
                             )
                             composeAgain()
-                            debugAccountPrompt = outcome.reason
-                        }
-                        SupportReportSubmitter.Outcome.PlanPending -> {
-                            composeAgain()
-                            SnackbarManager.show(context.getString(R.string.support_plan_pending))
+                            SnackbarManager.show(refusalReasonText(context, outcome.reason))
                         }
                         SupportReportSubmitter.Outcome.LimitReached -> {
                             trackAiDebug(
@@ -1897,9 +1838,8 @@ fun PluviaMain(
                 }
             }
 
-            val debugFlowActive = debugReportState.visible || debugPaywallReason != null
-            LaunchedEffect(debugFlowActive) {
-                if (debugFlowActive) {
+            LaunchedEffect(debugReportState.visible) {
+                if (debugReportState.visible) {
                     SteamService.keepAlive = true
                 }
             }
@@ -1940,9 +1880,7 @@ fun PluviaMain(
                 onDismiss = {
                     debugReportState = debugReportState.copy(visible = false)
                     scope.markAppliedReported(context, debugReportState)
-                    if (debugPaywallReason == null) {
-                        SteamService.keepAlive = false
-                    }
+                    SteamService.keepAlive = false
                 },
             )
 
@@ -1954,44 +1892,6 @@ fun PluviaMain(
                 },
                 onDismiss = { debugAccountPrompt = null },
             )
-
-            SupportUpgradeDialog(
-                visible = debugAccountPrompt != null && debugAccountPrompt != SUPPORT_PROMPT_SIGN_IN,
-                reason = debugAccountPrompt,
-                onPlanChanged = { debugAccountPrompt = null },
-                onDismiss = { debugAccountPrompt = null },
-            )
-
-            debugPaywallReason?.let { reason ->
-                Box(modifier = Modifier.zIndex(5f)) {
-                    DebugPaywallScreen(
-                        gameName = debugReportState.gameName,
-                        deviceName = debugReportState.deviceName,
-                        reason = reason,
-                        hasDiscordToken = discordTokenPresent,
-                        onSubscribe = {
-                            trackAiDebug("ai_debug_paywall_subscribe_clicked", mapOf("store" to "discord", "reason" to reason))
-                            uriHandler.openUri(Constants.Misc.DISCORD_SHOP_LINK)
-                        },
-                        onSubscribeKofi = {
-                            trackAiDebug("ai_debug_paywall_subscribe_clicked", mapOf("store" to "kofi", "reason" to reason))
-                            uriHandler.openUri(Constants.Misc.KO_FI_LINK)
-                        },
-                        onConnectDiscord = openDiscordConnect,
-                        onRetry = {
-                            debugPaywallReason = null
-                            submitViaDiscord()
-                        },
-                        onDismiss = {
-                            debugPaywallReason = null
-                            debugReportState = debugReportState.copy(
-                                visible = true,
-                                phase = DebugReportDialogState.PHASE_COMPOSE,
-                            )
-                        },
-                    )
-                }
-            }
 
             Box(modifier = Modifier.zIndex(10f)) {
                 BootingSplash(
@@ -2064,7 +1964,7 @@ fun PluviaMain(
                         }
                     }
 
-                    // Show update/crash/support dialogs when Home is first displayed
+                    // Show update/crash dialogs when Home is first displayed
                     // Skip when offline with Steam credentials (avoid flash when Steam reconnects)
                     LaunchedEffect(Unit) {
                         val shouldShowDialogs = !isOffline || !SteamUtils.hasStoredCredentials()
@@ -2093,23 +1993,6 @@ fun PluviaMain(
                                     title = context.getString(R.string.main_recent_crash_title),
                                     message = context.getString(R.string.main_recent_crash_message),
                                     confirmBtnText = context.getString(R.string.ok),
-                                )
-                            } else if (!(PrefManager.tipped || BuildConfig.GOLD) &&
-                                PrefManager.hasAttemptedGameLaunch &&
-                                !MainViewModel.gamePlayedThisSession &&
-                                System.currentTimeMillis() - PrefManager.lastLaunchPitchTime >= LAUNCH_PITCH_COOLDOWN_MS
-                            ) {
-                                viewModel.setAnnoyingDialogShown(true)
-                                PrefManager.lastLaunchPitchTime = System.currentTimeMillis()
-                                membershipPitchTrigger = "launch"
-                                trackMembershipPrompt("membership_prompt_shown", "launch")
-                                msgDialogState = MessageDialogState(
-                                    visible = true,
-                                    type = DialogType.SUPPORT,
-                                    title = context.getString(R.string.main_thank_you_title),
-                                    message = context.getString(R.string.main_thank_you_message),
-                                    confirmBtnText = context.getString(R.string.main_join_kofi),
-                                    dismissBtnText = context.getString(R.string.close),
                                 )
                             }
                         }

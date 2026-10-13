@@ -663,7 +663,6 @@
 
     <!-- 个人资料与菜单 -->
     <string name="help_and_support">帮助与支持</string>
-    <string name="hall_of_fame">名人堂</string>
     <string name="go_online">进入在线模式</string>
     <string name="go_offline">进入离线模式</string>
     <string name="log_out">登出</string>
@@ -979,21 +978,9 @@
     <string name="settings_accounts_rockstar_title">Rockstar 账户</string>
     <string name="gamenative_account_title">GameNative 账户</string>
     <string name="gamenative_account_sign_in">登录</string>
-    <string name="gamenative_account_sign_in_subtitle">登录后可查看你的方案并管理订阅。</string>
+    <string name="gamenative_account_sign_in_subtitle">登录后可在应用中获得支持和 AI 帮助。</string>
     <string name="gamenative_account_loading">正在加载你的账户信息。</string>
     <string name="gamenative_account_load_failed">无法加载你的账户信息。选择以重试。</string>
-    <string name="gamenative_account_plan">方案：%1$s</string>
-    <string name="gamenative_account_plan_none">无方案</string>
-    <string name="gamenative_account_plan_basic">Basic</string>
-    <string name="gamenative_account_plan_pro">Pro</string>
-    <string name="gamenative_account_plan_patron">Patron</string>
-    <string name="gamenative_account_manage_subscription">管理订阅</string>
-    <string name="gamenative_account_manage_subscription_subtitle">在浏览器中打开账单页面。</string>
-    <string name="gamenative_account_manage_subscription_opening">正在打开账单页面。</string>
-    <string name="gamenative_account_manage_subscription_none">此账户没有可管理的订阅。</string>
-    <string name="gamenative_account_managed_discord">你的方案来自 Discord。请在 Discord 上管理。</string>
-    <string name="gamenative_account_managed_kofi">你的方案来自 Ko-fi。请在 Ko-fi 上管理。</string>
-    <string name="gamenative_account_manage_subscription_failed">无法打开账单页面。请稍后重试。</string>
     <string name="gamenative_account_sign_out">退出登录</string>
     <string name="gamenative_account_sign_out_subtitle">在此设备上退出你的 GameNative 账户。</string>
     <string name="gamenative_account_discord">Discord</string>
@@ -1042,7 +1029,6 @@
     <string name="support_problem_too_long">你的消息过长。请缩短后重试。</string>
     <string name="support_problem_too_large">这些日志太大，无法发送。</string>
     <string name="support_problem_no_logs">此设备上没有这款游戏的新日志。请开始新的调试运行来记录日志。</string>
-    <string name="support_problem_locked">需要订阅方案才能在此对话中继续发送消息。</string>
     <string name="support_problem_already_answered">你已经告诉过我们结果了。</string>
     <string name="support_label_you">你</string>
     <string name="support_label_report">你的报告</string>
@@ -1056,28 +1042,14 @@
     <string name="support_outcome_broken">仍有问题</string>
     <string name="support_outcome_recorded_worked">你表示修复方法有效。感谢你告诉我们。</string>
     <string name="support_outcome_recorded_broken">你表示问题尚未解决。请在下方回复现在的情况，或发送新的日志。</string>
-    <string name="support_notice_moved">此对话现在由 Pro 支持继续。</string>
-    <string name="support_upgrade_title">需要订阅方案才能继续</string>
-    <string name="support_upgrade_reason_trial_used">你的首次分析是免费的。要回复并继续与 AI 讨论此问题，请选择一个方案。</string>
+    <string name="support_notice_moved">此对话已转至其他支持队列。</string>
     <string name="support_upgrade_reason_reply_cap">你已达到今天的合理使用限额。几小时后会重置。</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="other">你已达到今日的合理使用上限。将在 %1$d 小时后重置。</item>
     </plurals>
-    <string name="support_upgrade_reply_cap_pro_hint">Pro 报告无需排队。</string>
     <string name="support_limit_title">已达到今天的合理使用限额</string>
-    <string name="support_upgrade_reason_required">AI 回复需要 GameNative 订阅。如果你已在 Discord 或 Ko-fi 上订阅，请在设置中连接 Discord。</string>
-    <string name="support_see_plans">查看方案</string>
-    <string name="support_plan_basic_title">$5/月 · Basic</string>
-    <string name="support_plan_basic_body">让你的游戏运行起来，或运行得更好。</string>
-    <string name="support_checkout_scan">用手机扫描此二维码以完成付款。你也可以在此设备上完成。</string>
-    <string name="support_checkout_waiting">完成后请回到这里。你的方案会自动更新。</string>
-    <string name="support_checkout_open">在此设备上打开</string>
-    <string name="support_checkout_no_browser">未找到可打开付款页面的浏览器。请改用其他设备扫描二维码。</string>
-    <string name="support_checkout_failed">无法打开付款页面。请检查网络连接后重试。</string>
-    <string name="support_checkout_done">完成</string>
-    <string name="support_already_subscribed">此账户已有订阅。你可以在账单页面更改方案。</string>
-    <string name="support_plan_active">你的方案已生效。</string>
-    <string name="support_plan_pending">你的方案仍在设置中。请一分钟后重试。</string>
+    <string name="support_unavailable_title">AI 帮助不可用</string>
+    <string name="support_unavailable_reason">此账号无法使用 AI 帮助。</string>
     <string name="support_composer_hint">输入回复</string>
     <string name="support_composer_analysing">请稍候。AI 仍在读取你的日志。收到它的回答后即可回复。</string>
     <string name="support_send_logs">发送日志</string>
@@ -1090,7 +1062,6 @@
     <string name="support_fix_request_run">请求修复</string>
     <string name="support_fix_request_failed">无法开始定制修复。请重试。</string>
     <string name="support_fix_request_in_progress">此游戏的自定义修复已在准备中。</string>
-    <string name="support_fix_upgrade_reason">所有方案都包含定制修复。</string>
     <string name="support_fix_quota">你目前已用完所有定制修复次数。</string>
     <string name="support_fix_quota_resets">你已用完所有定制修复次数。将于 %1$s 重置。</string>
     <string name="support_run_check_title">运行得怎么样？</string>
@@ -1143,10 +1114,6 @@
 
     <!-- 设置：信息组 -->
     <string name="settings_info_title">信息</string>
-    <string name="settings_info_send_tip_title">成为会员</string>
-    <string name="settings_info_send_tip_subtitle">AI 游戏运行帮助、版本抢先体验等</string>
-    <string name="settings_info_ask_tip_title">会员优惠</string>
-    <string name="settings_info_ask_tip_subtitle">偶尔显示成为 GameNative 会员的优惠信息</string>
     <string name="settings_info_source_title">源代码</string>
     <string name="settings_info_source_subtitle">查看此项目的源代码</string>
     <string name="settings_info_libraries_title">使用的库</string>
@@ -1256,11 +1223,6 @@
     <!-- 主界面：崩溃与支持 -->
     <string name="main_recent_crash_title">最近应用程序崩溃</string>
     <string name="main_recent_crash_message">若能了解您最近遇到的问题，将有助于我们改善应用程序。\n您可在应用程序设置中查看并导出最近的崩溃日志，将其附加至项目源代码仓库的 Github Issue中\nGithub 源代码仓库的链接亦位于设置页面内</string>
-    <string name="main_thank_you_title">喜欢 GameNative 吗？</string>
-    <string name="main_thank_you_message">立即成为会员。会员可享受：\n\n• AI 帮你解决游戏运行问题\n• 新版本抢先体验\n• Discord 高级身份组和专属频道\n• …以及更多\n\n每月 $5 起</string>
-    <string name="main_join_kofi">成为会员</string>
-    <string name="pitch_session_title">喜欢《%1$s》吗？</string>
-    <string name="pitch_five_star_title">很高兴《%1$s》运行顺畅！</string>
     <string name="main_share">分享</string>
     <string name="main_share_text">试试 GameNative - 在 Android 上畅玩您的 PC Steam 游戏，完整支持云存档！\nhttps://gamenative.app\n加入社区：https://discord.gg/2hKv4VfZfE</string>
     <string name="main_discord_support_title">游戏运行正常吗？</string>
@@ -1336,15 +1298,9 @@
     <string name="libraries_message">Pluvia - github.com/oxters168/Pluvia\nJavaSteam - github.com/Longi94/JavaSteam\nWinlator &amp; Vortek - github.com/brunodev85/winlator\nWinlator Cmod - github.com/coffincolors/winlator\nWrapper - https://github.com/leegao/bionic-vulkan-wrapper &amp; https://github.com/pipetto-crypto/\nUbuntu RootFs - releases.ubuntu.com/focal</string>
 
     <!-- 支持者对话框 -->
-    <string name="supporters_art_credits">美术鸣谢</string>
-    <string name="supporters_app_icon">应用图标：Hachi</string>
-    <string name="supporters_alt_icon">备用应用图标：rhapsody_mdr</string>
-    <string name="supporters_loading">正在加载支持者…</string>
-    <string name="supporters_error">无法加载支持者</string>
-    <string name="supporters_members">会员</string>
-    <string name="supporters_supporters">支持者</string>
-    <string name="supporters_none">尚无支持者。</string>
-    <string name="supporters_anonymous">匿名</string>
+    <string name="art_credits">美术鸣谢</string>
+    <string name="art_credits_app_icon">应用图标：Hachi</string>
+    <string name="art_credits_alt_icon">备用应用图标：rhapsody_mdr</string>
 
     <!-- 聊天界面 -->
     <string name="chat_preview_warning">聊天功能仍处于早期阶段，请将任何问题报告至项目仓库</string>
@@ -2088,25 +2044,9 @@
     <string name="debug_offer_confirm">开始调试运行</string>
     <string name="debug_prerun_title">获取 AI 帮助</string>
     <string name="debug_prerun_message_1">以调试日志运行游戏，退出后将日志分享给我们在 Discord 上的 AI。请一直运行游戏，直到出现问题。</string>
-    <string name="debug_prerun_message_2">AI 回复仅限订阅者。</string>
     <string name="debug_prerun_message_1_app">以调试日志运行游戏。退出后，日志会发送给我们的 AI，回答会发到我们的 Discord；如果你使用 GameNative 账户登录，回答会显示在应用内。请一直运行游戏，直到出现问题。</string>
-    <string name="debug_prerun_message_2_app">首次分析免费。后续回复需要方案。</string>
     <string name="debug_prerun_message_1_neutral">游戏将以调试日志运行。退出后，日志会发送给我们的 AI。请一直运行游戏，直到出现问题。</string>
-    <string name="debug_trial_note">提供免费试用。</string>
     <string name="debug_prerun_message_3">任何人都可以分享报告以获得人工帮助。</string>
-    <string name="debug_paywall_title">获取 AI 调试支持</string>
-    <string name="debug_paywall_pitch">定制 AI 补丁和构建，修好你的游戏。</string>
-    <string name="debug_paywall_tier5_title">$5/月 · Basic</string>
-    <string name="debug_paywall_tier5_body">每月 1 次定制修复，每次最多尝试 5 次。</string>
-    <string name="debug_paywall_tier10_title">$10/月 · Pro</string>
-    <string name="debug_paywall_tier10_body">每月 3 次定制修复，回复更快，优先排队。</string>
-    <string name="debug_paywall_cancel_anytime">随时可取消。适用合理使用上限。</string>
-    <string name="debug_paywall_costs_note">订阅费用用于支付支持此功能的 AI 服务成本。</string>
-    <string name="debug_paywall_subscribe">在 Discord 上订阅</string>
-    <string name="debug_paywall_kofi_alt">在 Ko-fi 上订阅</string>
-    <string name="debug_paywall_already">已经是支持者？</string>
-    <string name="debug_paywall_send_now">我已订阅，立即发送</string>
-    <string name="debug_paywall_not_now">暂不</string>
     <string name="diagnostics_share_title">分享诊断日志</string>
     <string name="diagnostics_share_none">尚无诊断日志。请先使用「诊断运行」。</string>
 

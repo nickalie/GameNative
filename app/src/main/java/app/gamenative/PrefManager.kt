@@ -1082,37 +1082,6 @@ object PrefManager {
             setPref(ALLOWED_ORIENTATION, Orientation.toInt(value))
         }
 
-    private val TIPPED = booleanPreferencesKey("tipped")
-    var tipped: Boolean
-        get() {
-            val value = getPref(TIPPED, false)
-            return value
-        }
-        set(value) {
-            setPref(TIPPED, value)
-        }
-
-    private val HAS_ATTEMPTED_GAME_LAUNCH = booleanPreferencesKey("has_attempted_game_launch")
-    var hasAttemptedGameLaunch: Boolean
-        get() = getPref(HAS_ATTEMPTED_GAME_LAUNCH, false)
-        set(value) {
-            setPref(HAS_ATTEMPTED_GAME_LAUNCH, value)
-        }
-
-    private val LAST_LAUNCH_PITCH_TIME = longPreferencesKey("last_launch_pitch_time")
-    var lastLaunchPitchTime: Long
-        get() = getPref(LAST_LAUNCH_PITCH_TIME, 0L)
-        set(value) {
-            setPref(LAST_LAUNCH_PITCH_TIME, value)
-        }
-
-    private val LAST_WARM_PITCH_TIME = longPreferencesKey("last_warm_pitch_time")
-    var lastWarmPitchTime: Long
-        get() = getPref(LAST_WARM_PITCH_TIME, 0L)
-        set(value) {
-            setPref(LAST_WARM_PITCH_TIME, value)
-        }
-
     private val DISCORD_RELAY_TOKEN = stringPreferencesKey("discord_relay_token")
     private val DISCORD_RELAY_TOKEN_ENC = byteArrayPreferencesKey("discord_relay_token_enc")
     val discordRelayTokenPresent = mutableStateOf(false)
