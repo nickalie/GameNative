@@ -409,6 +409,25 @@ class ContainerWriteCommandsTest {
     }
 
     @Test
+    fun envSecretsNeverAppearInResponses() {
+        val secret = "s3cr3tValue42"
+
+        val rejected = failure {
+            set("""{"app_id":"APP","values":{"containerVariant":"glibc"},"env":{"set":{"MY_TOKEN":"$secret"}}}""")
+        }
+        assertFalse(rejected.message.orEmpty().contains(secret))
+        assertFalse(rejected.details.toString().contains(secret))
+
+        val setResult = set("""{"app_id":"APP","env":{"set":{"MY_TOKEN":"$secret"}}}""")
+        assertTrue("secret was written", current().envVars.contains(secret))
+        assertFalse(setResult.toString().contains(secret))
+
+        val restoreResult = restore("""{"app_id":"APP","baseline":true}""")
+        assertFalse(restoreResult.toString().contains(secret))
+        assertFalse(backups().toString().contains(secret))
+    }
+
+    @Test
     fun providerFactoryRegistersWriteCommands() {
         val dispatcher = AgentProvider.createDispatcher(context, isEnabled = { true }, isReady = { true }, tracker = AgentSessionTracker())
 
