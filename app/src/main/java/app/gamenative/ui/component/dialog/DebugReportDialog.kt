@@ -3,6 +3,7 @@ package app.gamenative.ui.component.dialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -21,8 +22,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -54,10 +58,21 @@ fun DebugReportDialog(
     if (!state.visible) return
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    var saving by remember { mutableStateOf(false) }
     val saveLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.CreateDocument("application/zip"),
     ) { uri ->
-        if (uri != null) scope.launch { saveReport(context, File(state.reportDir), uri) }
+        if (uri == null) {
+            saving = false
+        } else {
+            scope.launch {
+                try {
+                    saveReport(context, File(state.reportDir), uri)
+                } finally {
+                    saving = false
+                }
+            }
+        }
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -142,8 +157,11 @@ fun DebugReportDialog(
                         Text(stringResource(R.string.close))
                     }
                     TextButton(
-                        onClick = { saveLauncher.launch("debug_${state.appId}.zip") },
-                        enabled = !state.preparing,
+                        onClick = {
+                            saving = true
+                            saveLauncher.launch("debug_${state.appId}.zip")
+                        },
+                        enabled = !state.preparing && !saving,
                         modifier = Modifier.padding(start = 8.dp),
                     ) {
                         Text(stringResource(R.string.save))
@@ -185,8 +203,15 @@ private fun shareReport(context: Context, reportDir: File) {
 private suspend fun saveReport(context: Context, reportDir: File, uri: Uri) {
     val message = try {
         withContext(Dispatchers.IO) {
-            val output = context.contentResolver.openOutputStream(uri) ?: error("Cannot open $uri")
-            DebugReportUtils.writeZip(reportDir, output)
+            try {
+                val output = context.contentResolver.openOutputStream(uri) ?: error("Cannot open $uri")
+                DebugReportUtils.writeZip(reportDir, output)
+            } catch (e: Throwable) {
+                // Do not leave an empty or truncated zip behind; best-effort, the provider may refuse.
+                runCatching { DocumentsContract.deleteDocument(context.contentResolver, uri) }
+                    .onFailure { Timber.w(it, "DebugReportDialog: Failed to delete partial $uri") }
+                throw e
+            }
         }
         context.getString(R.string.base_app_exported)
     } catch (e: CancellationException) {

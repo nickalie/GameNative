@@ -1,6 +1,10 @@
 package app.gamenative.utils
 
-/** WINEDEBUG rules shared by debug runs and `agent_debug` launches. */
+/**
+ * WINEDEBUG settings: [BASE_WINEDEBUG] is the base of both the built-in debug run and `agent_debug` launches;
+ * the channel rules ([CHANNEL_PATTERN], [BANNED_CHANNELS], [MAX_CHANNELS]) apply to the extra channels an
+ * `agent_debug` launch asks for.
+ */
 object DebugRunParams {
     const val BASE_WINEDEBUG = "warn+seh,+loaddll,+process,+timestamp,+pid,+tid"
 

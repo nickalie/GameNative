@@ -4,9 +4,8 @@ import app.gamenative.utils.DebugRunParams
 import com.winlator.core.envvars.EnvVars
 
 /**
- * Builds the verbose-logging env of an `agent_debug` launch. Channels follow the same rules as the
- * built-in debug run ([DebugRunParams]): pattern, banned channels, at most
- * [DebugRunParams.MAX_CHANNELS]. A channel already set by [DebugRunParams.BASE_WINEDEBUG] cannot be changed
+ * Builds the verbose-logging env of an `agent_debug` launch. Extra channels are checked against the
+ * [DebugRunParams] rules: pattern, banned channels, at most [DebugRunParams.MAX_CHANNELS]. A channel already set by [DebugRunParams.BASE_WINEDEBUG] cannot be changed
  * and is dropped too. Rejected channels never block the launch; they become session warnings.
  */
 object AgentDebugEnv {
@@ -31,7 +30,7 @@ object AgentDebugEnv {
 
     data class Channels(val accepted: List<String>, val dropped: List<Dropped>)
 
-    /** Splits the comma-separated extra and applies the debug-run channel rules, keeping input order. */
+    /** Splits the comma-separated extra and applies the [DebugRunParams] channel rules, keeping input order. */
     fun filterChannels(raw: String?): Channels {
         val accepted = mutableListOf<String>()
         val dropped = mutableListOf<Dropped>()

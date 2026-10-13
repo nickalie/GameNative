@@ -18,6 +18,7 @@ import app.gamenative.mods.NexusAuthManager
 import app.gamenative.powercontrol.PowerManager
 import app.gamenative.service.ActiveGameRegistry
 import app.gamenative.service.DownloadService
+import app.gamenative.service.NotificationHelper
 import app.gamenative.service.SteamService
 import app.gamenative.sync.FrontendSyncManager
 import app.gamenative.ui.screen.xserver.RadialMenuCoordinator
@@ -89,6 +90,8 @@ class PluviaApp : SplitCompatApplication() {
         app.gamenative.service.gog.GOGConstants.init(this)
 
         DownloadService.populateDownloadService(this)
+
+        NotificationHelper.deleteRemovedChannels(this)
 
         migrateGogAmazonPaths()
 

@@ -12,6 +12,7 @@ import app.gamenative.api.SuggestionConfigKeys.ConfigValueType
 import app.gamenative.ui.screen.support.SupportSuggestionApplier
 import app.gamenative.utils.BestConfigService
 import app.gamenative.utils.ContainerUtils
+import app.gamenative.utils.SecretEnv
 import app.gamenative.utils.SessionReport
 import com.winlator.container.Container
 import com.winlator.container.ContainerData
@@ -317,21 +318,16 @@ class ContainerCommands(
         const val SOURCE_RESTORE = "agent_api_restored"
 
         const val ENV_KEY = "envVars"
-        const val MASK = "***"
+        const val MASK = SecretEnv.MASK
         val READ_ONLY_KEYS = listOf("containerVariant")
 
         // One writer at a time: backups and the container file must not interleave between binder threads.
         private val WRITE_LOCK = Any()
 
-        // Whole name segments only, so DXVK_..._BYPASS or ..._PASSTHROUGH stay readable.
-        private val SECRET_ENV = Regex("(^|_)(TOKEN|KEY|SECRET|PASSWORD|PASS|AUTH)(_|$)")
-
-        fun isSecretEnv(name: String): Boolean = SECRET_ENV.containsMatchIn(name.uppercase(Locale.ROOT))
-
         fun maskedEnv(envVars: String): JsonObject {
             val env = EnvVars(envVars)
             return buildJsonObject {
-                env.forEach { name -> put(name, if (isSecretEnv(name)) MASK else env.get(name)) }
+                env.forEach { name -> put(name, if (SecretEnv.isSecret(name)) MASK else env.get(name)) }
             }
         }
 

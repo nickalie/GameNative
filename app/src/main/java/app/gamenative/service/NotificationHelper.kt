@@ -37,10 +37,20 @@ class NotificationHelper @Inject constructor(@ApplicationContext appContext: Con
 
         const val ACTION_EXIT = "com.oxgames.pluvia.EXIT"
 
-        // Channels of the removed in-app support chat; deleted so they don't linger in system settings.
+        // Channels of the removed in-app support chat.
         private val REMOVED_CHANNELS = listOf("support_wait", "support_replies_v2", "support_replies")
 
         private const val NO_PROGRESS = -2
+
+        /**
+         * Deletes the channels of removed features so they don't linger in system settings. Called at app
+         * start, since this helper itself is only built by the store services. Note: should remove after a
+         * few release versions.
+         */
+        fun deleteRemovedChannels(context: Context) {
+            val manager = context.getSystemService(NotificationManager::class.java) ?: return
+            REMOVED_CHANNELS.forEach(manager::deleteNotificationChannel)
+        }
     }
 
     private val notificationManager: NotificationManager =
@@ -74,7 +84,6 @@ class NotificationHelper @Inject constructor(@ApplicationContext appContext: Con
         }
 
         notificationManager.createNotificationChannel(channel)
-        REMOVED_CHANNELS.forEach(notificationManager::deleteNotificationChannel)
     }
 
     @Synchronized

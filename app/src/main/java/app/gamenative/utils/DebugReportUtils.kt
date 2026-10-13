@@ -3,6 +3,7 @@ package app.gamenative.utils
 import android.content.Context
 import android.os.Build
 import app.gamenative.BuildConfig
+import app.gamenative.agent.LogRedactor
 import app.gamenative.filedetect.GameFileDetection
 import com.winlator.core.GPUInformation
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,8 @@ object DebugReportUtils {
     private const val LOG_FILE = "log.gz"
     private const val PERF_FILE = "perf.json"
     private const val LOGCAT_FILE = "logcat.gz"
+    private const val ENV_VARS_KEY = "envVars"
+    private const val EXEC_ARGS_KEY = "execArgs"
 
     @Volatile
     private var logcatProcess: Process? = null
@@ -100,16 +103,27 @@ object DebugReportUtils {
         null
     }
 
-    fun newestReport(context: Context, appId: String): File? {
+    /** The `<appId>_<timestamp>` report directories of [appId]. */
+    private fun reportDirs(context: Context, appId: String): List<File> {
         val prefix = "${appId}_"
-        return reportsDir(context).listFiles()
-            ?.filter { dir ->
-                dir.isDirectory &&
-                    dir.name.startsWith(prefix) &&
-                    dir.name.removePrefix(prefix).toLongOrNull() != null &&
-                    logFile(dir).exists()
-            }
-            ?.maxByOrNull { it.name.removePrefix(prefix).toLong() }
+        return reportsDir(context).listFiles().orEmpty().filter { dir ->
+            dir.isDirectory && dir.name.startsWith(prefix) && dir.name.removePrefix(prefix).toLongOrNull() != null
+        }
+    }
+
+    fun newestReport(context: Context, appId: String): File? =
+        reportDirs(context, appId)
+            .filter { logFile(it).exists() }
+            .maxByOrNull { it.name.substringAfterLast('_').toLong() }
+
+    /**
+     * Deletes [appId]'s reports other than [keep]. Runs when a new report is written rather than when the
+     * dialog closes, because an app the report was shared to may still be reading the files then.
+     */
+    private fun deleteOlderReports(context: Context, appId: String, keep: File) {
+        reportDirs(context, appId).filter { it != keep }.forEach { dir ->
+            if (!dir.deleteRecursively()) Timber.w("DebugReportUtils: Failed to delete old report $dir")
+        }
     }
 
     suspend fun createPendingReport(context: Context, appId: String): File? = withContext(Dispatchers.IO) {
@@ -151,6 +165,7 @@ object DebugReportUtils {
             rawLogcat.delete()
             headerFile(dir).writeText(header.toString())
             claimedLog.delete()
+            deleteOlderReports(context, appId, keep = dir)
 
             dir
         } catch (e: Exception) {
@@ -200,7 +215,7 @@ object DebugReportUtils {
             put("gpuName", gpu)
             put("androidVersion", Build.VERSION.RELEASE)
             put("appVersion", BuildConfig.VERSION_NAME)
-            put("configs", JSONObject(container.containerJson))
+            put("configs", redactedConfigs(container.containerJson))
             if (avgFps != null) put("avgFps", avgFps.toDouble()) else put("avgFps", JSONObject.NULL)
             if (sessionLengthSec != null) put("sessionLengthSec", sessionLengthSec) else put("sessionLengthSec", JSONObject.NULL)
             if (totalFrames != null) put("totalFrames", totalFrames) else put("totalFrames", JSONObject.NULL)
@@ -208,6 +223,15 @@ object DebugReportUtils {
                 put(key, if (value is List<*>) JSONArray(value) else value)
             }
         }
+    }
+
+    /**
+     * The container config for the header, which leaves the device on Share or Save: secret env values
+     * ([SecretEnv]) and secret-looking launch arguments ([LogRedactor]) are masked.
+     */
+    internal fun redactedConfigs(containerJson: String): JSONObject = JSONObject(containerJson).apply {
+        optString(ENV_VARS_KEY).takeIf { it.isNotEmpty() }?.let { put(ENV_VARS_KEY, SecretEnv.mask(it)) }
+        optString(EXEC_ARGS_KEY).takeIf { it.isNotEmpty() }?.let { put(EXEC_ARGS_KEY, LogRedactor.redact(it)) }
     }
 
     private fun compressLog(source: File, destination: File) {
