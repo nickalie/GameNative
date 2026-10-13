@@ -118,7 +118,7 @@ object BootAdRepository {
 
     // Weighted random among sponsors in window, under cap, renderable, not shown last boot.
     private fun eligibleSponsor(): BootAdItem? {
-        if (!PrefManager.bootScreenAdsEnabled) return null
+        if (!PrefManager.showRecommendations || !PrefManager.bootScreenAdsEnabled) return null
         val eligible = cachedAds().filter { isRenderable(it) && isWithinWindow(it) && it.flavors.targetsThisBuild() }
             .filter { it.maxShowsPerDay <= 0 || showsToday(it.campaignId) < it.maxShowsPerDay }
         if (eligible.isEmpty()) return null
@@ -135,7 +135,7 @@ object BootAdRepository {
      * pick, which carries a trailer), never repeating the previous boot's card.
      */
     fun recommendationCard(): BootAdItem? {
-        if (!PrefManager.bootScreenRecommendationsEnabled) return null
+        if (!PrefManager.showRecommendations || !PrefManager.bootScreenRecommendationsEnabled) return null
         val candidates = buildList {
             RecommendationRepository.getCurrentHeroRecommendation()?.let { rec ->
                 if (rec.heroImageUrl.isNotEmpty()) add(heroPickCard(rec))
@@ -156,6 +156,7 @@ object BootAdRepository {
      * the still for the video when this returns. Null when there's nothing to upgrade.
      */
     suspend fun resolveHouseTrailer(ad: BootAdItem): BootAdItem? {
+        if (!PrefManager.showRecommendations) return null
         if (ad.sponsored || ad.template == TEMPLATE_VIDEO_CARD) return null
         if (!NetworkMonitor.hasWifiOrEthernet.value) return null
         val productId = ad.campaignId.removePrefix("rec-gog-").toLongOrNull() ?: return null

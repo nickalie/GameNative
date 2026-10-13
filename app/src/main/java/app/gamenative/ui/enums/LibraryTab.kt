@@ -103,6 +103,27 @@ enum class LibraryTab(
         val visibleEntries: List<LibraryTab>
             get() = entries.toList()
 
+        /** Tabs the UI may show: [RECOMMENDED] only while recommendations are enabled in settings. */
+        fun availableEntries(recommendationsEnabled: Boolean): List<LibraryTab> =
+            visibleEntries.filter { it != RECOMMENDED || recommendationsEnabled }
+
+        /**
+         * The tabs to render from the persisted selection. A selected [RECOMMENDED] stays in the
+         * saved preference (it comes back when recommendations are re-enabled) but is dropped here
+         * while they are off.
+         */
+        fun effectiveVisibleTabs(
+            selected: List<LibraryTab>,
+            recommendationsEnabled: Boolean,
+        ): List<LibraryTab> {
+            val available = availableEntries(recommendationsEnabled)
+            return selected.filter { it in available }
+        }
+
+        /** Store-tab choices offered in settings; [RECOMMENDED] only while recommendations are enabled. */
+        fun configurableEntriesFor(recommendationsEnabled: Boolean): List<LibraryTab> =
+            configurableEntries.filter { it != RECOMMENDED || recommendationsEnabled }
+
         fun normalizeVisibleTabs(
             serialized: String,
             supportedTabs: List<LibraryTab> = visibleEntries,

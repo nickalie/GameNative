@@ -69,7 +69,8 @@ data class LibraryState(
 
     // Current library tab for quick filter access
     val currentTab: LibraryTab = LibraryTab.ALL,
-    val visibleLibraryTabs: List<LibraryTab> = PrefManager.libraryTabs.filter { it in LibraryTab.visibleEntries },
+    val visibleLibraryTabs: List<LibraryTab> =
+        LibraryTab.effectiveVisibleTabs(PrefManager.libraryTabs, PrefManager.showRecommendations),
 
     // Per-source game counts for tab badges
     val allCount: Int = 0,

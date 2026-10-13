@@ -1722,7 +1722,7 @@
     <string name="review_mostly_negative">Plutôt négatif</string>
     <string name="review_overwhelmingly_negative">Extrêmement négatif</string>
     <string name="settings_interface_show_recommendations_title">Afficher les recommandations de jeux</string>
-    <string name="settings_interface_show_recommendations_subtitle">Affiche des recommandations personnalisées. Le laisser activé aide à soutenir GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">L\'onglet « Recommandés », les jeux sponsorisés et recommandés dans la bibliothèque et les cartes sur les écrans de chargement. Désactivé, rien de tout cela n\'est affiché ni téléchargé.</string>
     <string name="settings_interface_library_tabs_title">Onglets de la bibliothèque</string>
     <string name="settings_interface_library_tabs_subtitle">Choisissez les onglets de boutiques affichés dans la bibliothèque.</string>
     <string name="settings_interface_library_tabs_none">Aucun onglet de boutique</string>

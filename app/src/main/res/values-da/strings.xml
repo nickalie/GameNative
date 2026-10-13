@@ -1574,7 +1574,7 @@
     <string name="review_mostly_negative">Overvejende negativ</string>
     <string name="review_overwhelmingly_negative">Overvældende negativ</string>
     <string name="settings_interface_show_recommendations_title">Vis spilanbefalinger</string>
-    <string name="settings_interface_show_recommendations_subtitle">Vis personlige anbefalinger. At holde dette slået til hjælper med at støtte GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Fanen «Anbefalet», sponsorerede og anbefalede spil i biblioteket og kort på indlæsningsskærme. Når slået fra, vises eller hentes intet af dette.</string>
     <string name="settings_interface_library_tabs_title">Bibliotekfaner</string>
     <string name="settings_interface_library_tabs_subtitle">Vælg, hvilke butiksfaner der vises i biblioteket.</string>
     <string name="settings_interface_library_tabs_none">Ingen butiksfaner</string>

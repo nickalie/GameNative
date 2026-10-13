@@ -1702,7 +1702,7 @@
     <string name="review_mostly_negative">Переважно негативні</string>
     <string name="review_overwhelmingly_negative">Надзвичайно негативні</string>
     <string name="settings_interface_show_recommendations_title">Показувати рекомендації ігор</string>
-    <string name="settings_interface_show_recommendations_subtitle">Показує персональні рекомендації. Залишивши це ввімкненим, ви допомагаєте підтримати GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Вкладка «Рекомендовані», спонсорські та рекомендовані ігри в бібліотеці, картки на екранах завантаження. Якщо вимкнено, нічого з цього не показується і не завантажується.</string>
     <string name="settings_interface_library_tabs_title">Вкладки бібліотеки</string>
     <string name="settings_interface_library_tabs_subtitle">Виберіть, які вкладки магазинів показувати в бібліотеці.</string>
     <string name="settings_interface_library_tabs_none">Немає вкладок магазинів</string>

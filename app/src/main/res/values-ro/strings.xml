@@ -1683,7 +1683,7 @@
     <string name="review_mostly_negative">Majoritar negativ</string>
     <string name="review_overwhelmingly_negative">Copleșitor de negativ</string>
     <string name="settings_interface_show_recommendations_title">Afișează recomandări de jocuri</string>
-    <string name="settings_interface_show_recommendations_subtitle">Afișează recomandări personalizate. Menținerea activă ajută la susținerea GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Fila „Recomandate”, jocurile sponsorizate și recomandate din bibliotecă și cardurile de pe ecranele de încărcare. Când este dezactivat, nimic din acestea nu este afișat sau descărcat.</string>
     <string name="settings_interface_library_tabs_title">File bibliotecă</string>
     <string name="settings_interface_library_tabs_subtitle">Alege ce file de magazine apar în bibliotecă.</string>
     <string name="settings_interface_library_tabs_none">Fără file de magazine</string>

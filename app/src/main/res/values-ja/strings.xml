@@ -1759,7 +1759,7 @@
     <string name="lsfg_installing">Lossless Scaling をダウンロード中…</string>
     <string name="lsfg_performance_mode_desc">処理を早くするために品質を下げる</string>
     <string name="settings_interface_show_recommendations_title">ゲームのおすすめを表示</string>
-    <string name="settings_interface_show_recommendations_subtitle">パーソナライズされたおすすめを表示します。オンのままにすると GameNative の支援につながります。</string>
+    <string name="settings_interface_show_recommendations_subtitle">「おすすめ」タブ、ライブラリ内のスポンサーゲームとおすすめゲーム、読み込み画面のカード。オフの場合、これらは表示も取得もされません。</string>
     <string name="settings_interface_library_tabs_title">ライブラリのタブ</string>
     <string name="settings_interface_library_tabs_subtitle">ライブラリに表示するストアのタブを選択します。</string>
     <string name="settings_interface_library_tabs_none">ストアのタブなし</string>
