@@ -993,7 +993,7 @@
     <string name="settings_accounts_rockstar_title">Rockstar 계정</string>
     <string name="gamenative_account_title">GameNative 계정</string>
     <string name="gamenative_account_sign_in">로그인</string>
-    <string name="gamenative_account_sign_in_subtitle">로그인하면 요금제를 확인하고 구독을 관리할 수 있습니다.</string>
+    <string name="gamenative_account_sign_in_subtitle">로그인하면 앱에서 지원과 AI 도움을 받을 수 있습니다.</string>
     <string name="gamenative_account_loading">계정 정보를 불러오는 중입니다.</string>
     <string name="gamenative_account_load_failed">계정 정보를 불러오지 못했습니다. 선택하여 다시 시도하세요.</string>
     <string name="gamenative_account_sign_out">로그아웃</string>
@@ -1057,7 +1057,7 @@
     <string name="support_outcome_broken">여전히 안 됨</string>
     <string name="support_outcome_recorded_worked">해결되었다고 알려 주셨습니다. 알려 주셔서 감사합니다.</string>
     <string name="support_outcome_recorded_broken">아직 해결되지 않았다고 알려 주셨습니다. 지금 어떤 일이 일어나는지 아래에 답장하거나 새 로그를 보내세요.</string>
-    <string name="support_notice_moved">이 대화는 이제 Pro 지원으로 계속됩니다.</string>
+    <string name="support_notice_moved">이 대화는 다른 지원 대기열로 옮겨졌습니다.</string>
     <string name="support_upgrade_reason_reply_cap">오늘의 공정 사용 한도에 도달했습니다. 몇 시간 후에 초기화됩니다.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="other">오늘의 공정 사용 한도에 도달했습니다. %1$d시간 후에 초기화됩니다.</item>
@@ -2025,9 +2025,7 @@
     <string name="debug_offer_confirm">디버그 실행 시작</string>
     <string name="debug_prerun_title">AI 도움 받기</string>
     <string name="debug_prerun_message_1">디버그 로깅으로 게임을 실행하고, 종료 시 로그를 Discord의 AI에 공유합니다. 문제가 발생할 때까지 게임을 플레이하세요.</string>
-    <string name="debug_prerun_message_2">AI 답변은 구독자 전용입니다.</string>
     <string name="debug_prerun_message_1_app">디버그 로깅으로 게임을 실행합니다. 종료하면 로그가 AI에 전송되고, 답변은 Discord로 전달됩니다. GameNative 계정으로 로그인하면 앱에서 받을 수 있습니다. 문제가 발생할 때까지 플레이하세요.</string>
-    <string name="debug_prerun_message_2_app">첫 분석은 무료입니다. 추가 답변에는 플랜이 필요합니다.</string>
     <string name="debug_prerun_message_1_neutral">게임이 디버그 로깅으로 실행됩니다. 종료하면 로그가 AI에 전송됩니다. 문제가 발생할 때까지 플레이하세요.</string>
     <string name="debug_prerun_message_3">리포트는 누구나 공유해 사람의 도움을 받을 수 있습니다.</string>
     <string name="diagnostics_share_title">진단 로그 공유</string>

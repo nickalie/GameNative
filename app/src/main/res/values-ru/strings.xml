@@ -1171,7 +1171,7 @@ https://gamenative.app
     <string name="settings_accounts_rockstar_title">Учётная запись Rockstar</string>
     <string name="gamenative_account_title">Аккаунт GameNative</string>
     <string name="gamenative_account_sign_in">Войти</string>
-    <string name="gamenative_account_sign_in_subtitle">Войдите, чтобы увидеть свой тариф и управлять подпиской.</string>
+    <string name="gamenative_account_sign_in_subtitle">Войдите, чтобы получать поддержку и помощь AI в приложении.</string>
     <string name="gamenative_account_loading">Загрузка данных аккаунта.</string>
     <string name="gamenative_account_load_failed">Не удалось загрузить данные аккаунта. Выберите, чтобы повторить попытку.</string>
     <string name="gamenative_account_sign_out">Выйти</string>
@@ -1235,7 +1235,7 @@ https://gamenative.app
     <string name="support_outcome_broken">Всё ещё не работает</string>
     <string name="support_outcome_recorded_worked">Вы сообщили, что решение сработало. Спасибо, что дали знать.</string>
     <string name="support_outcome_recorded_broken">Вы сообщили, что проблема ещё не решена. Ответьте ниже, что происходит сейчас, или отправьте новые логи.</string>
-    <string name="support_notice_moved">Этот разговор теперь продолжается в поддержке Pro.</string>
+    <string name="support_notice_moved">Этот разговор перенесён в другую очередь поддержки.</string>
     <string name="support_upgrade_reason_reply_cap">Вы достигли сегодняшнего лимита честного использования. Он сбросится через несколько часов.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Вы достигли сегодняшнего лимита добросовестного использования. Он сбросится через %1$d час.</item>
@@ -1955,9 +1955,7 @@ https://gamenative.app
     <string name="debug_offer_confirm">Начать отладочный запуск</string>
     <string name="debug_prerun_title">Получить помощь AI</string>
     <string name="debug_prerun_message_1">Запускает игру с отладочным журналом и после выхода отправляет журнал нашему AI в Discord. Играйте, пока не возникнет проблема.</string>
-    <string name="debug_prerun_message_2">Ответы AI доступны только подписчикам.</string>
     <string name="debug_prerun_message_1_app">Запускает игру с отладочным журналом. После выхода журнал отправляется нашему AI, а ответ придёт в наш Discord или в приложение, если вы войдёте в аккаунт GameNative. Играйте, пока не возникнет проблема.</string>
-    <string name="debug_prerun_message_2_app">Первый анализ бесплатный. Для дальнейших ответов нужен план.</string>
     <string name="debug_prerun_message_1_neutral">Игра запускается с отладочным журналом. После выхода журнал отправляется нашему AI. Играйте, пока не возникнет проблема.</string>
     <string name="debug_prerun_message_3">Любой может поделиться отчётом, чтобы получить помощь людей.</string>
     <string name="diagnostics_share_title">Поделиться журналом диагностики</string>

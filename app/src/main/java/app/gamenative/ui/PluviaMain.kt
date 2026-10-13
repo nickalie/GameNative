@@ -1932,7 +1932,7 @@ fun PluviaMain(
                 ) { backStackEntry ->
                     val isOffline = backStackEntry.arguments?.getBoolean("offline") ?: false
 
-                    // Show update/crash/support dialogs when Home is first displayed
+                    // Show update/crash dialogs when Home is first displayed
                     // Skip when offline with Steam credentials (avoid flash when Steam reconnects)
                     LaunchedEffect(Unit) {
                         val shouldShowDialogs = !isOffline || !SteamUtils.hasStoredCredentials()

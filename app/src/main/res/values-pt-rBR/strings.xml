@@ -808,7 +808,7 @@
     <string name="settings_accounts_rockstar_title">Conta Rockstar</string>
     <string name="gamenative_account_title">Conta GameNative</string>
     <string name="gamenative_account_sign_in">Entrar</string>
-    <string name="gamenative_account_sign_in_subtitle">Entre para ver seu plano e gerenciar sua assinatura.</string>
+    <string name="gamenative_account_sign_in_subtitle">Entre para receber suporte e ajuda da AI no app.</string>
     <string name="gamenative_account_loading">Carregando os dados da sua conta.</string>
     <string name="gamenative_account_load_failed">Não foi possível carregar os dados da sua conta. Selecione para tentar novamente.</string>
     <string name="gamenative_account_sign_out">Sair</string>
@@ -872,7 +872,7 @@
     <string name="support_outcome_broken">Ainda com problema</string>
     <string name="support_outcome_recorded_worked">Você disse que a solução funcionou. Obrigado por nos avisar.</string>
     <string name="support_outcome_recorded_broken">Você disse que o problema ainda não foi resolvido. Responda abaixo com o que acontece agora, ou envie novos logs.</string>
-    <string name="support_notice_moved">Esta conversa agora continua com o suporte Pro.</string>
+    <string name="support_notice_moved">Esta conversa foi movida para outra fila de suporte.</string>
     <string name="support_upgrade_reason_reply_cap">Você atingiu o limite de uso justo de hoje. Ele é redefinido em algumas horas.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Você atingiu o limite de uso justo de hoje. Ele é redefinido em %1$d hora.</item>
@@ -1899,9 +1899,7 @@
     <string name="debug_offer_confirm">Iniciar execução de depuração</string>
     <string name="debug_prerun_title">Receba ajuda da AI</string>
     <string name="debug_prerun_message_1">Executa o jogo com registro de depuração e compartilha o log com nossa AI no Discord ao sair. Jogue até que o problema aconteça.</string>
-    <string name="debug_prerun_message_2">As respostas da AI são apenas para assinantes.</string>
     <string name="debug_prerun_message_1_app">Roda o jogo com registro de depuração. Ao sair, o log vai para nossa AI, e a resposta chega no nosso Discord, ou no app se você entrar com uma conta GameNative. Jogue até que o problema aconteça.</string>
-    <string name="debug_prerun_message_2_app">A primeira análise é gratuita. Respostas seguintes exigem um plano.</string>
     <string name="debug_prerun_message_1_neutral">O jogo roda com registro de depuração. Ao sair, o log vai para nossa AI. Jogue até que o problema aconteça.</string>
     <string name="debug_prerun_message_3">Qualquer pessoa pode compartilhar o relatório para receber ajuda humana.</string>
     <string name="diagnostics_share_title">Compartilhar registro de diagnóstico</string>

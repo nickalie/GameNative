@@ -962,7 +962,7 @@
     <string name="settings_accounts_rockstar_title">Rockstar アカウント</string>
     <string name="gamenative_account_title">GameNative アカウント</string>
     <string name="gamenative_account_sign_in">サインイン</string>
-    <string name="gamenative_account_sign_in_subtitle">サインインすると、プランの確認とサブスクリプションの管理ができます。</string>
+    <string name="gamenative_account_sign_in_subtitle">サインインすると、アプリ内でサポートと AI のヘルプを受けられます。</string>
     <string name="gamenative_account_loading">アカウント情報を読み込んでいます。</string>
     <string name="gamenative_account_load_failed">アカウント情報を読み込めませんでした。選択して再試行してください。</string>
     <string name="gamenative_account_sign_out">サインアウト</string>
@@ -1026,7 +1026,7 @@
     <string name="support_outcome_broken">まだ直らない</string>
     <string name="support_outcome_recorded_worked">解決したとお知らせいただきました。ありがとうございます。</string>
     <string name="support_outcome_recorded_broken">まだ解決していないとお知らせいただきました。現在の状況を下に返信するか、新しいログを送信してください。</string>
-    <string name="support_notice_moved">この会話は Pro サポートで続きます。</string>
+    <string name="support_notice_moved">この会話は別のサポート窓口に移されました。</string>
     <string name="support_upgrade_reason_reply_cap">本日の公正利用の上限に達しました。数時間後にリセットされます。</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="other">本日のフェアユース上限に達しました。%1$d時間後にリセットされます。</item>
@@ -1992,9 +1992,7 @@
     <string name="debug_offer_confirm">デバッグ実行を開始</string>
     <string name="debug_prerun_title">AI のサポートを受ける</string>
     <string name="debug_prerun_message_1">デバッグログ付きでゲームを起動し、終了時にログを Discord の AI に共有します。問題が発生するまでゲームをプレイしてください。</string>
-    <string name="debug_prerun_message_2">AI の返信はサブスク会員限定です。</string>
     <string name="debug_prerun_message_1_app">デバッグログ付きでゲームを実行します。終了するとログが AI に送られ、回答は Discord に届きます。GameNative アカウントでサインインした場合はアプリに届きます。問題が発生するまでプレイしてください。</string>
-    <string name="debug_prerun_message_2_app">最初の分析は無料です。追加の返信にはプランが必要です。</string>
     <string name="debug_prerun_message_1_neutral">デバッグログ付きでゲームを実行します。終了するとログが AI に送られます。問題が発生するまでプレイしてください。</string>
     <string name="debug_prerun_message_3">レポートは誰でも共有でき、人間のサポートを受けられます。</string>
     <string name="diagnostics_share_title">診断ログを共有</string>

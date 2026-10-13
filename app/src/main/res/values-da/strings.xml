@@ -808,7 +808,7 @@
     <string name="settings_accounts_rockstar_title">Rockstar-konto</string>
     <string name="gamenative_account_title">GameNative-konto</string>
     <string name="gamenative_account_sign_in">Log ind</string>
-    <string name="gamenative_account_sign_in_subtitle">Log ind for at se dit abonnement og administrere det.</string>
+    <string name="gamenative_account_sign_in_subtitle">Log ind for at få support og AI-hjælp i appen.</string>
     <string name="gamenative_account_loading">Indlæser dine kontooplysninger.</string>
     <string name="gamenative_account_load_failed">Dine kontooplysninger kunne ikke indlæses. Vælg for at prøve igen.</string>
     <string name="gamenative_account_sign_out">Log ud</string>
@@ -872,7 +872,7 @@
     <string name="support_outcome_broken">Virker stadig ikke</string>
     <string name="support_outcome_recorded_worked">Du sagde, at løsningen virkede. Tak, fordi du gav os besked.</string>
     <string name="support_outcome_recorded_broken">Du sagde, at problemet ikke er løst endnu. Svar nedenfor med, hvad der sker nu, eller send nye logfiler.</string>
-    <string name="support_notice_moved">Denne samtale fortsætter nu med Pro-support.</string>
+    <string name="support_notice_moved">Denne samtale er flyttet til en anden supportkø.</string>
     <string name="support_upgrade_reason_reply_cap">Du har nået dagens fair-use-grænse. Den nulstilles om nogle timer.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Du har nået dagens fair use-grænse. Den nulstilles om %1$d time.</item>
@@ -1899,9 +1899,7 @@
     <string name="debug_offer_confirm">Start fejlfindingskørsel</string>
     <string name="debug_prerun_title">Få AI-hjælp</string>
     <string name="debug_prerun_message_1">Kører spillet med debug-logning og deler loggen med vores AI på Discord, når du afslutter. Spil, indtil du oplever problemet.</string>
-    <string name="debug_prerun_message_2">AI-svar er kun for abonnenter.</string>
     <string name="debug_prerun_message_1_app">Kører spillet med debug-logning. Når du afslutter, sendes loggen til vores AI, og svaret kommer i vores Discord eller i appen, hvis du logger ind med en GameNative-konto. Kør spillet, indtil problemet opstår.</string>
-    <string name="debug_prerun_message_2_app">Den første analyse er gratis. Opfølgende svar kræver en plan.</string>
     <string name="debug_prerun_message_1_neutral">Spillet kører med debug-logning. Når du afslutter, sendes loggen til vores AI. Spil, indtil problemet opstår.</string>
     <string name="debug_prerun_message_3">Alle kan dele rapporten for at få menneskelig hjælp.</string>
     <string name="diagnostics_share_title">Del diagnostiklog</string>

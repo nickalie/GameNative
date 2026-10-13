@@ -980,7 +980,7 @@
     <string name="settings_accounts_rockstar_title">Rockstar 帳戶</string>
     <string name="gamenative_account_title">GameNative 帳戶</string>
     <string name="gamenative_account_sign_in">登入</string>
-    <string name="gamenative_account_sign_in_subtitle">登入後即可查看你的方案並管理訂閱。</string>
+    <string name="gamenative_account_sign_in_subtitle">登入後即可在應用程式中取得支援與 AI 協助。</string>
     <string name="gamenative_account_loading">正在載入你的帳戶資訊。</string>
     <string name="gamenative_account_load_failed">無法載入你的帳戶資訊。選擇以重試。</string>
     <string name="gamenative_account_sign_out">登出</string>
@@ -1044,7 +1044,7 @@
     <string name="support_outcome_broken">仍有問題</string>
     <string name="support_outcome_recorded_worked">你表示修正方法有效。感謝你告訴我們。</string>
     <string name="support_outcome_recorded_broken">你表示問題尚未解決。請在下方回覆現在的情況，或傳送新的記錄檔。</string>
-    <string name="support_notice_moved">此對話現在由 Pro 支援繼續。</string>
+    <string name="support_notice_moved">此對話已移至其他支援佇列。</string>
     <string name="support_upgrade_reason_reply_cap">你已達到今天的合理使用額度。幾小時後會重設。</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="other">你已達到今日的合理使用上限。將在 %1$d 小時後重設。</item>
@@ -2036,9 +2036,7 @@
     <string name="debug_offer_confirm">開始除錯執行</string>
     <string name="debug_prerun_title">取得 AI 協助</string>
     <string name="debug_prerun_message_1">以除錯日誌執行遊戲，退出後將日誌分享給我們在 Discord 上的 AI。請持續執行遊戲，直到問題出現。</string>
-    <string name="debug_prerun_message_2">AI 回覆僅限訂閱者。</string>
     <string name="debug_prerun_message_1_app">以除錯日誌執行遊戲。退出後，日誌會傳送給我們的 AI，回答會發送到我們的 Discord；如果你使用 GameNative 帳戶登入，回答會顯示在應用程式內。請持續執行遊戲，直到問題出現。</string>
-    <string name="debug_prerun_message_2_app">首次分析免費。後續回覆需要方案。</string>
     <string name="debug_prerun_message_1_neutral">遊戲將以除錯日誌執行。退出後，日誌會傳送給我們的 AI。請持續執行遊戲，直到問題出現。</string>
     <string name="debug_prerun_message_3">任何人都可以分享報告以獲得人工協助。</string>
     <string name="diagnostics_share_title">分享診斷日誌</string>

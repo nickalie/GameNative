@@ -993,7 +993,7 @@
     <string name="settings_accounts_rockstar_title">Cont Rockstar</string>
     <string name="gamenative_account_title">Cont GameNative</string>
     <string name="gamenative_account_sign_in">Conectare</string>
-    <string name="gamenative_account_sign_in_subtitle">Conectează-te pentru a vedea planul tău și a-ți gestiona abonamentul.</string>
+    <string name="gamenative_account_sign_in_subtitle">Conectează-te pentru a primi asistență și ajutor AI în aplicație.</string>
     <string name="gamenative_account_loading">Se încarcă detaliile contului.</string>
     <string name="gamenative_account_load_failed">Detaliile contului nu au putut fi încărcate. Selectează pentru a încerca din nou.</string>
     <string name="gamenative_account_sign_out">Deconectare</string>
@@ -1057,7 +1057,7 @@
     <string name="support_outcome_broken">Tot nu merge</string>
     <string name="support_outcome_recorded_worked">Ai spus că soluția a funcționat. Îți mulțumim că ne-ai anunțat.</string>
     <string name="support_outcome_recorded_broken">Ai spus că problema nu este încă rezolvată. Răspunde mai jos cu ce se întâmplă acum sau trimite jurnale noi.</string>
-    <string name="support_notice_moved">Această conversație continuă acum cu asistența Pro.</string>
+    <string name="support_notice_moved">Această conversație a fost mutată într-o altă coadă de asistență.</string>
     <string name="support_upgrade_reason_reply_cap">Ai atins limita de utilizare corectă pentru azi. Se resetează în câteva ore.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Ai atins limita de utilizare corectă de azi. Se resetează în %1$d oră.</item>
@@ -2008,9 +2008,7 @@
     <string name="debug_offer_confirm">Pornește rularea de depanare</string>
     <string name="debug_prerun_title">Primește ajutor de la AI</string>
     <string name="debug_prerun_message_1">Rulează jocul cu jurnal de depanare și partajează jurnalul cu AI-ul nostru pe Discord la ieșire. Joacă până când apare problema.</string>
-    <string name="debug_prerun_message_2">Răspunsurile AI sunt doar pentru abonați.</string>
     <string name="debug_prerun_message_1_app">Rulează jocul cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru, iar răspunsul vine pe Discordul nostru sau în aplicație, dacă te conectezi cu un cont GameNative. Joacă până când apare problema.</string>
-    <string name="debug_prerun_message_2_app">Prima analiză este gratuită. Răspunsurile ulterioare necesită un plan.</string>
     <string name="debug_prerun_message_1_neutral">Jocul rulează cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru. Joacă până când apare problema.</string>
     <string name="debug_prerun_message_3">Oricine poate partaja raportul pentru ajutor uman.</string>
     <string name="diagnostics_share_title">Partajează jurnalul de diagnosticare</string>

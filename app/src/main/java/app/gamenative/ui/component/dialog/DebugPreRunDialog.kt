@@ -75,18 +75,6 @@ fun DebugPreRunDialog(
                             .padding(bottom = 8.dp),
                     )
                     Text(
-                        text = if (appChat == true) {
-                            stringResource(R.string.debug_prerun_message_2_app)
-                        } else {
-                            stringResource(R.string.debug_prerun_message_2)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .align(Alignment.Start)
-                            .padding(bottom = 8.dp),
-                    )
-                    Text(
                         text = stringResource(R.string.debug_prerun_message_3),
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier

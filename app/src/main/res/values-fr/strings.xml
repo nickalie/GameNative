@@ -1010,7 +1010,7 @@
     <string name="settings_accounts_rockstar_title">Compte Rockstar</string>
     <string name="gamenative_account_title">Compte GameNative</string>
     <string name="gamenative_account_sign_in">Se connecter</string>
-    <string name="gamenative_account_sign_in_subtitle">Connectez-vous pour voir votre offre et gérer votre abonnement.</string>
+    <string name="gamenative_account_sign_in_subtitle">Connectez-vous pour obtenir de l\'assistance et l\'aide de l\'AI dans l\'application.</string>
     <string name="gamenative_account_loading">Chargement des informations de votre compte.</string>
     <string name="gamenative_account_load_failed">Les informations de votre compte n\'ont pas pu être chargées. Sélectionnez pour réessayer.</string>
     <string name="gamenative_account_sign_out">Se déconnecter</string>
@@ -1074,7 +1074,7 @@
     <string name="support_outcome_broken">Toujours en panne</string>
     <string name="support_outcome_recorded_worked">Vous avez indiqué que la solution a fonctionné. Merci de nous l\'avoir dit.</string>
     <string name="support_outcome_recorded_broken">Vous avez indiqué que le problème n\'est pas encore résolu. Répondez ci-dessous avec ce qui se passe maintenant, ou envoyez de nouveaux journaux.</string>
-    <string name="support_notice_moved">Cette conversation continue maintenant avec l\'assistance Pro.</string>
+    <string name="support_notice_moved">Cette conversation a été transférée vers une autre file d\'assistance.</string>
     <string name="support_upgrade_reason_reply_cap">Vous avez atteint la limite d\'usage raisonnable d\'aujourd\'hui. Elle se réinitialise dans quelques heures.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Vous avez atteint la limite d\'usage raisonnable d\'aujourd\'hui. Elle se réinitialise dans %1$d heure.</item>
@@ -2047,9 +2047,7 @@
     <string name="debug_offer_confirm">Démarrer l\'exécution de débogage</string>
     <string name="debug_prerun_title">Obtenez l\'aide de l\'AI</string>
     <string name="debug_prerun_message_1">Lance le jeu avec les journaux de débogage et les partage avec notre AI sur Discord quand vous quittez. Jouez jusqu\'à ce que le problème se produise.</string>
-    <string name="debug_prerun_message_2">Les réponses de l\'AI sont réservées aux abonnés.</string>
     <string name="debug_prerun_message_1_app">Lance le jeu avec les journaux de débogage. Quand vous quittez, le journal est envoyé à notre AI, et la réponse arrive sur notre Discord, ou dans l\'app si vous vous connectez avec un compte GameNative. Jouez jusqu\'à ce que le problème se produise.</string>
-    <string name="debug_prerun_message_2_app">La première analyse est gratuite. Les réponses suivantes nécessitent un abonnement.</string>
     <string name="debug_prerun_message_1_neutral">Le jeu se lance avec les journaux de débogage. Quand vous quittez, le journal est envoyé à notre AI. Jouez jusqu\'à ce que le problème se produise.</string>
     <string name="debug_prerun_message_3">Tout le monde peut partager le rapport pour obtenir de l\'aide humaine.</string>
     <string name="diagnostics_share_title">Partager le journal de diagnostic</string>

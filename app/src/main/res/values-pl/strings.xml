@@ -1001,7 +1001,7 @@
     <string name="settings_accounts_rockstar_title">Konto Rockstar</string>
     <string name="gamenative_account_title">Konto GameNative</string>
     <string name="gamenative_account_sign_in">Zaloguj się</string>
-    <string name="gamenative_account_sign_in_subtitle">Zaloguj się, aby zobaczyć swój plan i zarządzać subskrypcją.</string>
+    <string name="gamenative_account_sign_in_subtitle">Zaloguj się, aby uzyskać wsparcie i pomoc AI w aplikacji.</string>
     <string name="gamenative_account_loading">Wczytywanie danych konta.</string>
     <string name="gamenative_account_load_failed">Nie udało się wczytać danych konta. Wybierz, aby spróbować ponownie.</string>
     <string name="gamenative_account_sign_out">Wyloguj się</string>
@@ -1065,7 +1065,7 @@
     <string name="support_outcome_broken">Nadal nie działa</string>
     <string name="support_outcome_recorded_worked">Zgłoszono, że rozwiązanie zadziałało. Dziękujemy za informację.</string>
     <string name="support_outcome_recorded_broken">Zgłoszono, że problem nie jest jeszcze rozwiązany. Odpowiedz poniżej, co dzieje się teraz, albo wyślij nowe logi.</string>
-    <string name="support_notice_moved">Ta rozmowa jest teraz kontynuowana w ramach pomocy Pro.</string>
+    <string name="support_notice_moved">Ta rozmowa została przeniesiona do innej kolejki pomocy.</string>
     <string name="support_upgrade_reason_reply_cap">Osiągnięto dzisiejszy limit uczciwego użytkowania. Zresetuje się za kilka godzin.</string>
     <plurals name="support_fair_use_resets_in_hours">
         <item quantity="one">Osiągnięto dzisiejszy limit uczciwego użytkowania. Zresetuje się za %1$d godzinę.</item>
@@ -2031,9 +2031,7 @@
     <string name="debug_offer_confirm">Rozpocznij uruchomienie debugowania</string>
     <string name="debug_prerun_title">Uzyskaj pomoc AI</string>
     <string name="debug_prerun_message_1">Uruchamia grę z logowaniem debugowania i po wyjściu udostępnia log naszemu AI na Discordzie. Graj, aż wystąpi problem.</string>
-    <string name="debug_prerun_message_2">Odpowiedzi AI są tylko dla subskrybentów.</string>
     <string name="debug_prerun_message_1_app">Uruchamia grę z logowaniem debugowania. Po wyjściu log trafia do naszego AI, a odpowiedź przychodzi na naszym Discordzie lub w aplikacji, jeśli zalogujesz się na konto GameNative. Graj, aż wystąpi problem.</string>
-    <string name="debug_prerun_message_2_app">Pierwsza analiza jest darmowa. Kolejne odpowiedzi wymagają planu.</string>
     <string name="debug_prerun_message_1_neutral">Gra uruchamia się z logowaniem debugowania. Po wyjściu log trafia do naszego AI. Graj, aż wystąpi problem.</string>
     <string name="debug_prerun_message_3">Każdy może udostępnić raport, aby uzyskać pomoc od ludzi.</string>
     <string name="diagnostics_share_title">Udostępnij dziennik diagnostyki</string>
