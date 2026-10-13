@@ -1713,7 +1713,7 @@
     <string name="review_mostly_negative">Größtenteils negativ</string>
     <string name="review_overwhelmingly_negative">Überwältigend negativ</string>
     <string name="settings_interface_show_recommendations_title">Spielempfehlungen anzeigen</string>
-    <string name="settings_interface_show_recommendations_subtitle">Zeigt personalisierte Empfehlungen. Wenn du dies aktiviert lässt, unterstützt du GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Der Tab „Empfohlen“, gesponserte und empfohlene Spiele in der Bibliothek sowie Karten auf Ladebildschirmen. Wenn deaktiviert, wird nichts davon angezeigt oder geladen.</string>
     <string name="settings_interface_library_tabs_title">Bibliothek-Tabs</string>
     <string name="settings_interface_library_tabs_subtitle">Wähle, welche Store-Tabs in der Bibliothek angezeigt werden.</string>
     <string name="settings_interface_library_tabs_none">Keine Store-Tabs</string>

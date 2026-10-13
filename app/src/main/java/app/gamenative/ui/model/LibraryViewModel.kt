@@ -20,6 +20,7 @@ import app.gamenative.data.GameCompatibilityStatus
 import app.gamenative.data.GameSource
 import app.gamenative.data.HiddenGameFilter
 import app.gamenative.data.LibraryItem
+import app.gamenative.data.gog.GogRecCard
 import app.gamenative.data.gog.GogRecommendationsRepository
 import app.gamenative.data.gog.GogSeedCollector
 import app.gamenative.service.gog.GOGAuthManager
@@ -76,6 +77,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -184,6 +186,11 @@ class LibraryViewModel @Inject constructor(
     @Volatile private var cachedFeatured: app.gamenative.data.FeaturedItem? = null
     @Volatile private var cachedRecTeaser: Boolean = false
     @Volatile private var cachedRecLoading: Boolean = false
+
+    // The in-flight hero/recommendation refresh; each new refresh (including the one fired
+    // when the settings switch goes off) cancels the previous one.
+    private var heroJob: Job? = null
+    private val heroJobLock = Any()
 
     // Track debounce job for search
     private var searchDebounceJob: Job? = null
@@ -396,7 +403,12 @@ class LibraryViewModel @Inject constructor(
     }
 
     private fun refreshRecommendationHero() {
-        viewModelScope.launch(Dispatchers.IO) {
+        synchronized(heroJobLock) { launchRecommendationHeroRefresh() }
+    }
+
+    private fun launchRecommendationHeroRefresh() {
+        heroJob?.cancel()
+        heroJob = viewModelScope.launch(Dispatchers.IO) {
             if (!PrefManager.showRecommendations) {
                 // Recommendations are off: no hero fetch, no GOG seed collection, nothing cached.
                 clearRecommendationHero()
@@ -404,6 +416,7 @@ class LibraryViewModel @Inject constructor(
                 return@launch
             }
             val hero = RecommendationRepository.getHero(context)
+            ensureActive()
             // Switched off while the fetch was in flight: drop the result.
             if (!PrefManager.showRecommendations) {
                 clearRecommendationHero()
@@ -411,8 +424,8 @@ class LibraryViewModel @Inject constructor(
                 return@launch
             }
             val daySeed = System.currentTimeMillis() / (24L * 60 * 60 * 1000)
-            cachedFeatured = hero.featured
             val personalized = PrefManager.showRecommendations && PrefManager.recDisclosureShown
+            var pool = emptyList<GogRecCard>()
             val recommendation = when {
                 personalized -> runCatching {
                     val owned = GogSeedCollector.collect(
@@ -423,14 +436,21 @@ class LibraryViewModel @Inject constructor(
                         amazonGameDao,
                     )
                     val userId = GOGAuthManager.getStoredCredentials(context).getOrNull()?.userId
-                    RecommendationRepository.setRecommendationPool(
-                        GogRecommendationsRepository.getRecommendations(context, owned, userId, daySeed),
-                    )
+                    pool = GogRecommendationsRepository.getRecommendations(context, owned, userId, daySeed)
                     GogRecommendationsRepository.getDailyHero(context, owned, userId, daySeed)
                 }.getOrNull() ?: hero.recommendation
                 else -> hero.recommendation
             }
-            if (!personalized) RecommendationRepository.setRecommendationPool(emptyList())
+            // runCatching swallows cancellation; a newer refresh owns the state now.
+            ensureActive()
+            // Switched off during the GOG calls: write nothing back.
+            if (!PrefManager.showRecommendations) {
+                clearRecommendationHero()
+                onFilterApps(paginationCurrentPage)
+                return@launch
+            }
+            cachedFeatured = hero.featured
+            RecommendationRepository.setRecommendationPool(pool)
             RecommendationRepository.setCurrentHeroRecommendation(recommendation)
             // A live featured takes the slot (still gated by the showRecommendations
             // toggle at display time), regardless of GOG consent.

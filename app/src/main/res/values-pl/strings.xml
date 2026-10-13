@@ -1775,7 +1775,7 @@
     <string name="review_mostly_negative">W większości negatywne</string>
     <string name="review_overwhelmingly_negative">Przytłaczająco negatywne</string>
     <string name="settings_interface_show_recommendations_title">Pokaż rekomendacje gier</string>
-    <string name="settings_interface_show_recommendations_subtitle">Pokazuje spersonalizowane rekomendacje. Pozostawienie tej opcji włączonej wspiera GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Karta „Polecane”, sponsorowane i polecane gry w bibliotece oraz karty na ekranach ładowania. Gdy wyłączone, nic z tego nie jest wyświetlane ani pobierane.</string>
     <string name="settings_interface_library_tabs_title">Karty biblioteki</string>
     <string name="settings_interface_library_tabs_subtitle">Wybierz, które karty sklepów mają być widoczne w bibliotece.</string>
     <string name="settings_interface_library_tabs_none">Brak kart sklepów</string>

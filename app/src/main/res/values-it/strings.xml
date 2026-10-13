@@ -1764,7 +1764,7 @@
     <string name="review_mostly_negative">Perlopiù negativo</string>
     <string name="review_overwhelmingly_negative">Estremamente negativo</string>
     <string name="settings_interface_show_recommendations_title">Mostra consigli di gioco</string>
-    <string name="settings_interface_show_recommendations_subtitle">Mostra consigli personalizzati. Tenerlo attivo aiuta a supportare GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">La scheda «Consigliati», i giochi sponsorizzati e consigliati nella libreria e le schede nelle schermate di caricamento. Se disattivato, nulla di tutto ciò viene mostrato o scaricato.</string>
     <string name="settings_interface_library_tabs_title">Schede della libreria</string>
     <string name="settings_interface_library_tabs_subtitle">Scegli quali schede degli store mostrare nella libreria.</string>
     <string name="settings_interface_library_tabs_none">Nessuna scheda store</string>
