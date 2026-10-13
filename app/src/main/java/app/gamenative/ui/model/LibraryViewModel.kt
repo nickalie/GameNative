@@ -136,6 +136,8 @@ class LibraryViewModel @Inject constructor(
             cachedRecLoading = true
             onFilterApps(paginationCurrentPage)
         }
+        // The settings master switch also shows/hides the Recommended tab.
+        updateVisibleLibraryTabs(PrefManager.libraryTabs)
         refreshRecommendationHero()
     }
 
@@ -395,7 +397,19 @@ class LibraryViewModel @Inject constructor(
 
     private fun refreshRecommendationHero() {
         viewModelScope.launch(Dispatchers.IO) {
+            if (!PrefManager.showRecommendations) {
+                // Recommendations are off: no hero fetch, no GOG seed collection, nothing cached.
+                clearRecommendationHero()
+                onFilterApps(paginationCurrentPage)
+                return@launch
+            }
             val hero = RecommendationRepository.getHero(context)
+            // Switched off while the fetch was in flight: drop the result.
+            if (!PrefManager.showRecommendations) {
+                clearRecommendationHero()
+                onFilterApps(paginationCurrentPage)
+                return@launch
+            }
             val daySeed = System.currentTimeMillis() / (24L * 60 * 60 * 1000)
             cachedFeatured = hero.featured
             val personalized = PrefManager.showRecommendations && PrefManager.recDisclosureShown
@@ -432,6 +446,15 @@ class LibraryViewModel @Inject constructor(
             cachedRecLoading = false
             onFilterApps(paginationCurrentPage)
         }
+    }
+
+    private fun clearRecommendationHero() {
+        cachedFeatured = null
+        cachedRecommendation = null
+        cachedRecTeaser = false
+        cachedRecLoading = false
+        RecommendationRepository.setRecommendationPool(emptyList())
+        RecommendationRepository.setCurrentHeroRecommendation(null)
     }
 
     override fun onCleared() {
@@ -523,7 +546,8 @@ class LibraryViewModel @Inject constructor(
         onFilterApps(0)
     }
 
-    private fun updateVisibleLibraryTabs(visibleTabs: List<LibraryTab>) {
+    private fun updateVisibleLibraryTabs(selectedTabs: List<LibraryTab>) {
+        val visibleTabs = LibraryTab.effectiveVisibleTabs(selectedTabs, PrefManager.showRecommendations)
         var tabChanged = false
         _state.update { currentState ->
             val currentTab = if (currentState.currentTab in visibleTabs) {

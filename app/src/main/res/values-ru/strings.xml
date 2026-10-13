@@ -1699,7 +1699,7 @@ https://gamenative.app
     <string name="review_mostly_negative">В основном отрицательные</string>
     <string name="review_overwhelmingly_negative">Крайне отрицательные</string>
     <string name="settings_interface_show_recommendations_title">Показывать рекомендации игр</string>
-    <string name="settings_interface_show_recommendations_subtitle">Показывает персональные рекомендации. Оставив это включённым, вы помогаете поддержать GameNative.</string>
+    <string name="settings_interface_show_recommendations_subtitle">Вкладка «Рекомендации», спонсорские и рекомендованные игры в библиотеке, карточки на экранах загрузки. Если выключено, ничего из этого не показывается и не загружается.</string>
     <string name="settings_interface_library_tabs_title">Вкладки библиотеки</string>
     <string name="settings_interface_library_tabs_subtitle">Выберите, какие вкладки магазинов отображать в библиотеке.</string>
     <string name="settings_interface_library_tabs_none">Нет вкладок магазинов</string>

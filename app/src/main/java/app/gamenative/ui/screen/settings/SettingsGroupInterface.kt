@@ -463,31 +463,35 @@ fun SettingsGroupInterface(
             },
         )
 
-        var bootScreenAds by rememberSaveable { mutableStateOf(PrefManager.bootScreenAdsEnabled) }
-        SettingsSwitch(
-            colors = settingsTileColorsAlt(),
-            title = { Text(text = stringResource(R.string.settings_info_boot_ads_title)) },
-            subtitle = { Text(text = stringResource(R.string.settings_info_boot_ads_subtitle)) },
-            state = bootScreenAds,
-            onCheckedChange = {
-                bootScreenAds = it
-                PrefManager.bootScreenAdsEnabled = it
-            },
-        )
+        // Boot-splash cards are recommendation surfaces: only configurable while the master
+        // "Show game recommendations" switch is on.
+        if (showRecommendations) {
+            var bootScreenAds by rememberSaveable { mutableStateOf(PrefManager.bootScreenAdsEnabled) }
+            SettingsSwitch(
+                colors = settingsTileColorsAlt(),
+                title = { Text(text = stringResource(R.string.settings_info_boot_ads_title)) },
+                subtitle = { Text(text = stringResource(R.string.settings_info_boot_ads_subtitle)) },
+                state = bootScreenAds,
+                onCheckedChange = {
+                    bootScreenAds = it
+                    PrefManager.bootScreenAdsEnabled = it
+                },
+            )
 
-        var bootScreenRecs by rememberSaveable { mutableStateOf(PrefManager.bootScreenRecommendationsEnabled) }
-        SettingsSwitch(
-            colors = settingsTileColorsAlt(),
-            title = { Text(text = stringResource(R.string.settings_info_boot_recs_title)) },
-            subtitle = { Text(text = stringResource(R.string.settings_info_boot_recs_subtitle)) },
-            state = bootScreenRecs,
-            onCheckedChange = {
-                bootScreenRecs = it
-                PrefManager.bootScreenRecommendationsEnabled = it
-            },
-        )
+            var bootScreenRecs by rememberSaveable { mutableStateOf(PrefManager.bootScreenRecommendationsEnabled) }
+            SettingsSwitch(
+                colors = settingsTileColorsAlt(),
+                title = { Text(text = stringResource(R.string.settings_info_boot_recs_title)) },
+                subtitle = { Text(text = stringResource(R.string.settings_info_boot_recs_subtitle)) },
+                state = bootScreenRecs,
+                onCheckedChange = {
+                    bootScreenRecs = it
+                    PrefManager.bootScreenRecommendationsEnabled = it
+                },
+            )
+        }
 
-        val configurableLibraryTabs = LibraryTab.configurableEntries
+        val configurableLibraryTabs = LibraryTab.configurableEntriesFor(showRecommendations)
         val selectedLibraryTabIndices = configurableLibraryTabs.mapIndexedNotNull { index, tab ->
             index.takeIf { tab in libraryTabs }
         }

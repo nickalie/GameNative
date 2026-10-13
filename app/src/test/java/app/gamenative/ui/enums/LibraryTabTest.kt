@@ -115,4 +115,46 @@ class LibraryTabTest {
         assertEquals(LibraryTab.ALL, LibraryTab.GOG.next(visible))
         assertEquals(LibraryTab.GOG, LibraryTab.ALL.previous(visible))
     }
+
+    @Test
+    fun effectiveVisibleTabs_dropsRecommendedWhileRecommendationsAreOff() {
+        val persisted = LibraryTab.normalizeVisibleTabs("v2:RECOMMENDED,STEAM", LibraryTab.entries.toList())
+
+        assertEquals(
+            listOf(LibraryTab.ALL, LibraryTab.FAVORITES, LibraryTab.STEAM, LibraryTab.LOCAL),
+            LibraryTab.effectiveVisibleTabs(persisted, recommendationsEnabled = false),
+        )
+        assertEquals(
+            listOf(LibraryTab.RECOMMENDED, LibraryTab.ALL, LibraryTab.FAVORITES, LibraryTab.STEAM, LibraryTab.LOCAL),
+            LibraryTab.effectiveVisibleTabs(persisted, recommendationsEnabled = true),
+        )
+    }
+
+    @Test
+    fun effectiveVisibleTabs_traversalNeverReachesRecommendedWhileOff() {
+        val visible = LibraryTab.effectiveVisibleTabs(LibraryTab.entries.toList(), recommendationsEnabled = false)
+
+        assertEquals(LibraryTab.LOCAL, LibraryTab.ALL.previous(visible))
+        assertEquals(LibraryTab.ALL, LibraryTab.LOCAL.next(visible))
+        // A stale current tab that is no longer visible falls back into the visible list.
+        assertEquals(LibraryTab.FAVORITES, LibraryTab.RECOMMENDED.next(visible))
+    }
+
+    @Test
+    fun availableEntries_gatesOnlyRecommended() {
+        assertEquals(LibraryTab.entries.toList(), LibraryTab.availableEntries(recommendationsEnabled = true))
+        assertEquals(
+            LibraryTab.entries.filter { it != LibraryTab.RECOMMENDED },
+            LibraryTab.availableEntries(recommendationsEnabled = false),
+        )
+    }
+
+    @Test
+    fun configurableEntriesFor_hidesRecommendedWhileOff() {
+        assertEquals(
+            listOf(LibraryTab.STEAM, LibraryTab.GOG, LibraryTab.EPIC, LibraryTab.AMAZON),
+            LibraryTab.configurableEntriesFor(recommendationsEnabled = false),
+        )
+        assertEquals(LibraryTab.configurableEntries, LibraryTab.configurableEntriesFor(recommendationsEnabled = true))
+    }
 }

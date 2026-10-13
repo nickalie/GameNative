@@ -398,6 +398,7 @@ class MainViewModel @Inject constructor(
             // once the daily cap is crossed, unmounting the sponsor card while the splash is up.
             val held = _state.value.bootAd
             val heldAllowed = held != null &&
+                PrefManager.showRecommendations &&
                 (if (held.sponsored) PrefManager.bootScreenAdsEnabled else PrefManager.bootScreenRecommendationsEnabled)
             val reuse = heldAllowed && System.currentTimeMillis() - bootAdHiddenAtMs < BOOT_AD_REUSE_WINDOW_MS
             val dismissed = System.currentTimeMillis() - bootAdDismissedAtMs < BOOT_AD_REUSE_WINDOW_MS

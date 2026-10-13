@@ -95,6 +95,8 @@ object PrefManager {
     }
 
     fun clearPreferences() {
+        // Match the cleared store's default so the master switch does not stay on in memory.
+        showRecommendationsCache = false
         scope.launch {
             dataStore.edit { it.clear() }
         }
@@ -1452,11 +1454,22 @@ object PrefManager {
             setPref(HIDE_AI_FEATURES, value)
         }
 
-    // Show game recommendations in library
+    /**
+     * Master switch for every recommendation surface: the Recommended library tab, the All-tab
+     * hero (featured / recommendation / teaser), GOG recommendations and seed collection, and the
+     * boot-splash sponsor and recommendation cards. When off, none of them is shown and the
+     * hero/recommendation endpoints are not called. Off by default.
+     */
     private val SHOW_RECOMMENDATIONS = booleanPreferencesKey("show_recommendations")
+
+    // Cached in memory because the DataStore write is async: the library reacts to the settings
+    // toggle immediately, before the write lands on disk.
+    @Volatile private var showRecommendationsCache: Boolean? = null
     var showRecommendations: Boolean
-        get() = getPref(SHOW_RECOMMENDATIONS, true)
+        get() = showRecommendationsCache
+            ?: getPref(SHOW_RECOMMENDATIONS, false).also { showRecommendationsCache = it }
         set(value) {
+            showRecommendationsCache = value
             setPref(SHOW_RECOMMENDATIONS, value)
         }
 

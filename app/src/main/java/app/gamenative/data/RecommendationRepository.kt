@@ -347,7 +347,7 @@ object RecommendationRepository {
                 val bootAds = fetched.bootAds.ifEmpty { listOfNotNull(fetched.bootAd) }
                     .filter { it.flavors.targetsThisBuild() }
                 BootAdRepository.store(bootAds)
-                if (PrefManager.bootScreenAdsEnabled) BootAdRepository.prefetchVideos(context, bootAds)
+                if (PrefManager.showRecommendations && PrefManager.bootScreenAdsEnabled) BootAdRepository.prefetchVideos(context, bootAds)
                 return@withContext HeroResponse(
                     recommendation = stableRecommendation(fetched.recommendation),
                     featured = featured,
