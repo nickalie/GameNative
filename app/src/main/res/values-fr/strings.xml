@@ -1234,7 +1234,6 @@
     <string name="login_qr_instructions">Ouvrez l\'application mobile Steam et scannez ce code QR pour vous connecter instantanément</string>
     <string name="login_skip_steam">Ignorer la connexion Steam</string>
     <string name="login_or_sign_in_with">Ou connectez-vous avec:</string>
-    <string name="login_skip_login">Ignorer la connexion</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">Continuer</string>

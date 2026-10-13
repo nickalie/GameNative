@@ -1214,7 +1214,6 @@
     <string name="login_qr_instructions">Steam 모바일 앱을 열고 이 QR 코드를 스캔하여 즉시 로그인하세요</string>
     <string name="login_skip_steam">Steam 로그인 건너뛰기</string>
     <string name="login_or_sign_in_with">또는 로그인:</string>
-    <string name="login_skip_login">로그인 건너뛰기</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">계속</string>

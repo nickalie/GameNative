@@ -1218,7 +1218,6 @@
 	<string name="login_qr_instructions">Deschide aplicația Steam pe mobil și scanează acest cod QR pentru autentificare instantă</string>
 	<string name="login_skip_steam">Omite autentificarea Steam</string>
 	<string name="login_or_sign_in_with">Sau conectează-te cu:</string>
-	<string name="login_skip_login">Omite autentificarea</string>
 
 	<!-- Generic/Reusable strings -->
 	<string name="continue_action">Continuă</string>

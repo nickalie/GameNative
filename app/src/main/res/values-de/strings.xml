@@ -1178,7 +1178,6 @@
     <string name="login_qr_instructions">Öffne die Steam Mobile App und scanne diesen QR-Code, um dich sofort anzumelden</string>
     <string name="login_skip_steam">Steam-Anmeldung überspringen</string>
     <string name="login_or_sign_in_with">Oder anmelden mit:</string>
-    <string name="login_skip_login">Anmeldung überspringen</string>
     <!-- Generic/Reusable strings -->
     <string name="continue_action">Fortfahren</string>
     <string name="settings_text">Einstellungen</string>

@@ -529,7 +529,7 @@ private fun UserLoginScreenContent(
                 }
             }
 
-            // Or sign in with: Epic · GOG · Amazon · Skip login
+            // Or sign in with: Epic · GOG · Amazon
             if (
                 userLoginState.isLoggingIn.not() &&
                 userLoginState.loginResult != LoginResult.Success
@@ -566,13 +566,6 @@ private fun UserLoginScreenContent(
                         TextButton(onClick = onLaunchAmazon) {
                             Text(
                                 text = "Amazon",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.primary,
-                            )
-                        }
-                        TextButton(onClick = onContinueOffline) {
-                            Text(
-                                text = stringResource(R.string.login_skip_login),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.primary,
                             )

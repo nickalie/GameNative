@@ -55,7 +55,7 @@ It's still early. Not every game runs yet, and some need tweaking to play well, 
 
 1. Download the latest release [here](https://downloads.gamenative.app/releases//gamenative-v.apk)
 2. Install the APK on your Android device
-3. Log in to your Steam account
+3. The app opens straight to the library; sign in with "Sign in to Steam" in the menu
 4. Install your game
 5. Hit play and enjoy
 

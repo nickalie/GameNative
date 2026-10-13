@@ -138,7 +138,6 @@ import app.gamenative.utils.ContainerUtils
 import app.gamenative.utils.DebugReportUtils
 import app.gamenative.utils.DebugRunParamsHolder
 import app.gamenative.utils.HardwareUtils
-import app.gamenative.utils.PlatformAuthUtils
 import app.gamenative.utils.CustomGameScanner
 import app.gamenative.utils.ManifestInstaller
 import app.gamenative.utils.GameFeedbackUtils
@@ -189,18 +188,28 @@ private var steamUpdateDeferred: CompletableDeferred<Boolean>? = null
 /** Valve Windows client tree (build 1788652215, 2026-09-03) + headless steam.exe for Real Steam mode; see extractSteamFiles. */
 const val REAL_STEAM_CLIENT_ARCHIVE = "steamhost-20261009.4.tzst"
 
-private fun NavHostController.navigateFromLoginIfNeeded(
-    targetRoute: String,
-    logTag: String = "PluviaMain",
-) {
+private fun NavHostController.navigateFromLoginIfNeeded(targetRoute: String) {
     val currentRoute = currentDestination?.route
     if (currentRoute == PluviaScreen.LoginUser.route) {
-        Timber.tag(logTag).i("Navigating from LoginUser to $targetRoute")
+        Timber.tag("LogonEnded").i("Navigating from LoginUser to $targetRoute")
+        // The login screen is opened on top of the library, so replace the whole stack: an
+        // offline library left behind it would come back on Back
         navigate(targetRoute) {
-            popUpTo(PluviaScreen.LoginUser.route) {
+            popUpTo(graph.id) {
                 inclusive = true
             }
         }
+    }
+}
+
+/** Start route of the nav graph: always the library, online only when Steam is already logged in. */
+internal fun startRoute(isSteamLoggedIn: Boolean): String =
+    PluviaScreen.Home.route + "?offline=${!isSteamLoggedIn}"
+
+/** Opens the library as a not-signed-in user and clears the back stack (login screen included). */
+private fun NavHostController.navigateToOfflineLibrary() {
+    navigate(startRoute(isSteamLoggedIn = false)) {
+        popUpTo(graph.id) { inclusive = true }
     }
 }
 
@@ -704,12 +713,10 @@ fun PluviaMain(
                 MainViewModel.MainUiEvent.OnLoggedOut -> {
                     // Clear persisted route so next login starts fresh from Home
                     viewModel.clearPersistedRoute()
-                    // Pop stack and go back to login
-                    navController.popBackStack(
-                        route = PluviaScreen.LoginUser.route,
-                        inclusive = false,
-                        saveState = false,
-                    )
+                    // Back to the library as a signed-out user; leave a running game alone
+                    if (navController.currentDestination?.route != PluviaScreen.XServer.route) {
+                        navController.navigateToOfflineLibrary()
+                    }
                 }
 
                 is MainViewModel.MainUiEvent.OnLogonEnded -> {
@@ -722,7 +729,7 @@ fun PluviaMain(
                                 val currentRoute = navController.currentDestination?.route
                                 val targetRoute = viewModel.getPersistedRoute() ?: PluviaScreen.Home.route
                                 if (currentRoute == PluviaScreen.LoginUser.route) {
-                                    navController.navigateFromLoginIfNeeded(targetRoute, "LogonEnded")
+                                    navController.navigateFromLoginIfNeeded(targetRoute)
                                 } else if (currentRoute == PluviaScreen.Home.route + "?offline={offline}") {
                                     val isCurrentlyOffline = navController.currentBackStackEntry
                                         ?.arguments?.getBoolean("offline") ?: false
@@ -936,23 +943,6 @@ fun PluviaMain(
             ) {
                 Timber.d("[PluviaMain]: Starting AmazonService for logged-in user")
                 AmazonService.start(context)
-            }
-
-            // Handle navigation when already logged in (e.g., app resumed with active session)
-            // Only navigate if currently on LoginUser screen to avoid disrupting user's current view
-            if (PlatformAuthUtils.isSignedInToAnyPlatform(context) && !SteamService.keepAlive) {
-                val baseRoute = viewModel.getPersistedRoute() ?: PluviaScreen.Home.route
-                val targetRoute = if (SteamService.isLoggedIn) {
-                    baseRoute
-                } else {
-                    // Non-Steam platforms: ensure offline param for Home
-                    if (baseRoute.startsWith(PluviaScreen.Home.route)) {
-                        PluviaScreen.Home.route + "?offline=true"
-                    } else {
-                        baseRoute
-                    }
-                }
-                navController.navigateFromLoginIfNeeded(targetRoute, "ResumeSession")
             }
         }
     }
@@ -1987,18 +1977,9 @@ fun PluviaMain(
                 }
             }
 
-            val startDestination = rememberSaveable {
-                when {
-                    SteamService.isLoggedIn -> PluviaScreen.Home.route + "?offline=false"
-                    // skip login screen if any service has stored credentials
-                    SteamUtils.hasStoredCredentials() ||
-                        GOGService.hasStoredCredentials(context) ||
-                        EpicService.hasStoredCredentials(context) ||
-                        AmazonService.hasStoredCredentials(context) ->
-                        PluviaScreen.Home.route + "?offline=true"
-                    else -> PluviaScreen.LoginUser.route
-                }
-            }
+            // Always start in the library; the login screen is only opened from the in-app
+            // "Sign in" entry (onGoOnline). Saved Steam credentials still auto-reconnect.
+            val startDestination = rememberSaveable { startRoute(SteamService.isLoggedIn) }
 
             NavHost(
                 navController = navController,
@@ -2009,14 +1990,8 @@ fun PluviaMain(
                     UserLoginScreen(
                         connectionState = state.connectionState,
                         onRetryConnection = viewModel::retryConnection,
-                        onContinueOffline = {
-                            navController.navigate(PluviaScreen.Home.route + "?offline=true")
-                        },
-                        onPlatformSignedIn = {
-                            navController.navigate(PluviaScreen.Home.route + "?offline=true") {
-                                popUpTo(PluviaScreen.LoginUser.route) { inclusive = true }
-                            }
-                        },
+                        onContinueOffline = { navController.navigateToOfflineLibrary() },
+                        onPlatformSignedIn = { navController.navigateToOfflineLibrary() },
                     )
                 }
                 /** Library, Downloads **/
