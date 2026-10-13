@@ -37,7 +37,7 @@ class RadialMenuCoordinator(
     private val anchor: View,
     private val container: Container,
     private val xServer: XServer,
-    private val showKeyboard: (View, String) -> Unit,
+    private val showKeyboard: (View) -> Unit,
     private val openQuickMenu: () -> Unit,
     private val onSettingsVisibilityChanged: (Boolean) -> Unit,
 ) : InputControlsView.RadialMenuListener {
@@ -50,7 +50,7 @@ class RadialMenuCoordinator(
             anchor: View,
             container: Container,
             xServer: XServer,
-            showKeyboard: (View, String) -> Unit,
+            showKeyboard: (View) -> Unit,
             openQuickMenu: () -> Unit,
             onSettingsVisibilityChanged: (Boolean) -> Unit,
         ): RadialMenuCoordinator {
@@ -546,7 +546,7 @@ class RadialMenuCoordinator(
             return
         }
         if (binding == Binding.SHOW_KEYBOARD) {
-            if (isActionDown) showKeyboard(inputControlsView ?: host, "onscreen_keyboard_enabled_from_radial_menu")
+            if (isActionDown) showKeyboard(inputControlsView ?: host)
             return
         }
 

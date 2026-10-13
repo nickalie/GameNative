@@ -28,9 +28,9 @@ object GogRecommendationsRepository {
 
     fun isAffiliateLink(url: String): Boolean = url.startsWith(CJ_CLICK)
 
-    /** CJ sub-ID for a click: placement + rank, plus a per-click token when usage analytics is on. */
-    fun affiliateSubId(source: String, rank: Int, clickId: String?): String =
-        listOfNotNull("gn", source.ifBlank { "unknown" }, "r$rank", clickId)
+    /** CJ sub-ID for a click: placement + rank. */
+    fun affiliateSubId(source: String, rank: Int): String =
+        listOf("gn", source.ifBlank { "unknown" }, "r$rank")
             .joinToString("_")
             .replace(Regex("[^A-Za-z0-9_-]"), "-")
             .take(CJ_SID_MAX)

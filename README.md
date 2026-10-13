@@ -93,20 +93,7 @@ An AI agent or a script on a computer connected over ADB can drive GameNative wi
 
 ## Analytics & privacy
 
-GameNative uses [PostHog](https://posthog.com) for anonymous analytics. No personal information is ever collected — no names, emails, IPs or device identifiers.
-
-**Always collected**, to improve game compatibility:
-- Game launch, close and exit events (game name, store, session length, average FPS, container config)
-- Game install, cancel and uninstall events
-
-This is how we figure out which games work, how well they run, and which configs to apply automatically for the next person. It can't identify you.
-
-**Optional**, and switchable under *Settings → Info → Usage Analytics*:
-- Feature usage (on-screen keyboard, controller, HUD, control editor)
-- Login success/failure events
-- Recommendation interactions
-- App lifecycle events (foreground/background)
-- Cloud sync events
+This build has no analytics SDK. It sends no usage events, game launch/exit stats or device details to an analytics service.
 
 The full [Privacy Policy](PrivacyPolicy/README.md) has the details.
 

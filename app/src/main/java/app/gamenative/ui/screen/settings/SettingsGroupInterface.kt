@@ -426,15 +426,6 @@ fun SettingsGroupInterface(
                 showRecommendations = enabled
                 PrefManager.showRecommendations = enabled
                 PluviaApp.events.emit(AndroidEvent.RecommendationToggleChanged)
-                if (PrefManager.usageAnalyticsEnabled) {
-                    com.posthog.PostHog.capture(
-                        event = "\$set",
-                        properties = mapOf("\$set" to mapOf("recommendation_enabled" to enabled)),
-                    )
-                    if (!enabled) {
-                        com.posthog.PostHog.capture("recommendation_disabled")
-                    }
-                }
             },
         )
 

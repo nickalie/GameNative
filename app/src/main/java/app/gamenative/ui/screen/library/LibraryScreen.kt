@@ -120,7 +120,6 @@ import app.gamenative.service.gog.GOGService
 import app.gamenative.utils.CustomGameScanner
 import app.gamenative.utils.PlatformOAuthHandlers
 import app.gamenative.utils.SteamUtils
-import com.posthog.PostHog
 import kotlinx.coroutines.launch
 import android.os.SystemClock
 
@@ -338,14 +337,7 @@ private fun LibraryScreenContent(
     var recDisclosureShown by remember { mutableStateOf(PrefManager.recDisclosureShown) }
     var showRecTeaserDialog by remember { mutableStateOf(false) }
     val onRecTeaserTapped = {
-        if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "rec_teaser_tapped")
         showRecTeaserDialog = true
-    }
-    val recTeaserVisible = state.appInfoList.firstOrNull()?.isRecTeaser == true
-    LaunchedEffect(recTeaserVisible) {
-        if (recTeaserVisible && PrefManager.usageAnalyticsEnabled) {
-            PostHog.capture(event = "rec_teaser_shown")
-        }
     }
 
     // Initialize layout if undecided
@@ -994,7 +986,6 @@ private fun LibraryScreenContent(
                             PrefManager.recTeaserDismissedDay = System.currentTimeMillis() / (24L * 60 * 60 * 1000)
                             showRecTeaserDialog = false
                         },
-                        source = "hero",
                     )
                 }
                 // When on Steam/GOG/Epic/Amazon tab and not logged in, or LOCAL tab with no custom games, show splash

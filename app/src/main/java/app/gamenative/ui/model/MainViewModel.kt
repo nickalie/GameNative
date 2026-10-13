@@ -28,8 +28,6 @@ import app.gamenative.service.amazon.AmazonService
 import app.gamenative.service.epic.EpicCloudSavesManager
 import app.gamenative.service.epic.EpicService
 import app.gamenative.service.gog.GOGService
-import app.gamenative.utils.BootAdView
-import app.gamenative.utils.ConversionTracker
 import app.gamenative.utils.CustomGameScanner
 import app.gamenative.ui.data.MainState
 import app.gamenative.ui.enums.ConnectionState
@@ -90,10 +88,8 @@ class MainViewModel @Inject constructor(
     }
 
     private var gameSessionStartTime = 0L
-    private var bootAdShownAtMs = 0L
     private var bootAdHiddenAtMs = 0L
     private var bootAdDismissedAtMs = 0L
-    private var bootAdDwellReported = false
     private var bootAwaitingGameWindow = false
     private var gameWindowSeen = false
     private var pendingWarmPitch: Pair<String, Boolean>? = null
@@ -107,7 +103,7 @@ class MainViewModel @Inject constructor(
         val (appId, sessionLongEnough) = pendingWarmPitch ?: return
         pendingWarmPitch = null
         if (rating != null && (rating <= LOW_RATING_MAX || tags.any { it in FAILURE_TAGS })) {
-            viewModelScope.launch { offerAiDebugRun(context, appId, "low_rating") }
+            viewModelScope.launch { offerAiDebugRun(context, appId) }
             return
         }
         val trigger = when {
@@ -132,7 +128,7 @@ class MainViewModel @Inject constructor(
         data class ShowGameFeedbackDialog(val appId: String) : MainUiEvent()
         data class ShowMembershipPitch(val appId: String, val trigger: String) : MainUiEvent()
         data class ShowDebugReportDialog(val appId: String) : MainUiEvent()
-        data class ShowAiDebugOffer(val appId: String, val trigger: String) : MainUiEvent()
+        data class ShowAiDebugOffer(val appId: String) : MainUiEvent()
         data object ServiceReady : MainUiEvent()
     }
 
@@ -405,9 +401,6 @@ class MainViewModel @Inject constructor(
                 held
             } else {
                 BootAdRepository.pickBootCard()?.also {
-                    bootAdShownAtMs = System.currentTimeMillis()
-                    bootAdDwellReported = false
-                    BootAdView.begin(it)
                     if (it.sponsored) BootAdRepository.recordShown(it.campaignId) else BootAdRepository.noteShown(it.campaignId)
                 }
             }
@@ -424,17 +417,6 @@ class MainViewModel @Inject constructor(
         } else if (!value && wasShowing) {
             Timber.tag("BootAdTrace").i("hide: ad=%s", _state.value.bootAd?.campaignId)
             bootAdHiddenAtMs = System.currentTimeMillis()
-            _state.value.bootAd?.let { ad ->
-                if (!bootAdDwellReported) {
-                    bootAdDwellReported = true
-                    val dwellSeconds = (System.currentTimeMillis() - bootAdShownAtMs) / 1000L
-                    if (ad.sponsored) {
-                        ConversionTracker.bootAdShown(campaignId = ad.campaignId, dwellSeconds = dwellSeconds)
-                    } else {
-                        ConversionTracker.bootRecShown(campaignId = ad.campaignId, dwellSeconds = dwellSeconds)
-                    }
-                }
-            }
             // bootAd stays in state so the exit fade keeps rendering it; the next show replaces it.
             PluviaApp.isBootingSplashShowing = false
             _state.update { it.copy(showBootingSplash = false) }
@@ -809,15 +791,11 @@ class MainViewModel @Inject constructor(
     }
 
     private suspend fun maybeOfferAiDebugRun(context: Context, appId: String, sessionLengthMs: Long): Boolean {
-        val trigger = when {
-            !gameWindowSeen -> "no_window"
-            sessionLengthMs in 1 until SHORT_SESSION_MS -> "short_session"
-            else -> return false
-        }
-        return offerAiDebugRun(context, appId, trigger)
+        if (gameWindowSeen && sessionLengthMs !in 1 until SHORT_SESSION_MS) return false
+        return offerAiDebugRun(context, appId)
     }
 
-    private suspend fun offerAiDebugRun(context: Context, appId: String, trigger: String): Boolean {
+    private suspend fun offerAiDebugRun(context: Context, appId: String): Boolean {
         if (PrefManager.hideAiFeatures) return false
         return try {
             val container = ContainerUtils.getContainer(context, appId)
@@ -827,7 +805,7 @@ class MainViewModel @Inject constructor(
 
             container.putExtra("ai_debug_offer_last_shown", now.toString())
             container.saveData()
-            _uiEvent.send(MainUiEvent.ShowAiDebugOffer(appId, trigger))
+            _uiEvent.send(MainUiEvent.ShowAiDebugOffer(appId))
             true
         } catch (e: Exception) {
             Timber.w(e, "Failed to evaluate AI debug offer for $appId")
@@ -1066,37 +1044,9 @@ class MainViewModel @Inject constructor(
     fun dismissBootAd(optOut: Boolean) {
         val ad = _state.value.bootAd ?: return
         val now = System.currentTimeMillis()
-        val dwellMs = now - bootAdShownAtMs
-        Timber.tag("BootAdTrace").i("dismiss: ad=%s optOut=%s dwellMs=%d", ad.campaignId, optOut, dwellMs)
-        ConversionTracker.track(
-            "boot_ad_dismissed",
-            mapOf(
-                "campaign_id" to ad.campaignId,
-                "sponsored" to ad.sponsored,
-                "template" to ad.template,
-                "opt_out" to optOut,
-                "dwell_ms" to dwellMs,
-            ),
-        )
+        Timber.tag("BootAdTrace").i("dismiss: ad=%s optOut=%s", ad.campaignId, optOut)
         if (optOut) {
             if (ad.sponsored) PrefManager.bootScreenAdsEnabled = false else PrefManager.bootScreenRecommendationsEnabled = false
-            ConversionTracker.track(
-                "boot_ad_opted_out",
-                mapOf(
-                    "campaign_id" to ad.campaignId,
-                    "sponsored" to ad.sponsored,
-                    "\$set" to mapOf((if (ad.sponsored) "boot_ads_enabled" else "boot_recs_enabled") to false),
-                ),
-            )
-        }
-        if (!bootAdDwellReported) {
-            bootAdDwellReported = true
-            val dwellSeconds = dwellMs / 1000L
-            if (ad.sponsored) {
-                ConversionTracker.bootAdShown(campaignId = ad.campaignId, dwellSeconds = dwellSeconds)
-            } else {
-                ConversionTracker.bootRecShown(campaignId = ad.campaignId, dwellSeconds = dwellSeconds)
-            }
         }
         bootAdDismissedAtMs = now
         _state.update { it.copy(bootAd = null) }
