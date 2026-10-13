@@ -1030,7 +1030,6 @@
     <string name="login_qr_instructions">Abra o aplicativo móvel do Steam e escaneie este código QR para entrar instantaneamente</string>
     <string name="login_skip_steam">Pular login do Steam</string>
     <string name="login_or_sign_in_with">Ou entre com:</string>
-    <string name="login_skip_login">Pular login</string>
 
     <!-- TODO: Revisão manual - Strings genéricas/reutilizáveis -->
     <string name="continue_action">Continuar</string>

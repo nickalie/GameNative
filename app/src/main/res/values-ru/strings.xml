@@ -793,7 +793,6 @@ Ubuntu RootFs - releases.ubuntu.com/focal</string>
     <string name="login_remember_session">Запомнить сеанс</string>
     <string name="login_retry_qr">Повторить QR код</string>
     <string name="login_sign_in">Войти</string>
-    <string name="login_skip_login">Пропустить вход</string>
     <string name="login_skip_steam">Пропустить вход в Steam</string>
     <string name="login_subtitle">Войдите, чтобы получить доступ к вашей библиотеке Steam</string>
     <string name="login_tab_credentials">Учётные данные</string>

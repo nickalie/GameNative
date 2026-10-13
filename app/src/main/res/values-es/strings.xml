@@ -1224,7 +1224,6 @@
     <string name="login_qr_instructions">Abre la aplicación móvil de Steam y escanea este código QR para iniciar sesión al instante.</string>
     <string name="login_skip_steam">Omitir inicio de sesión en Steam</string>
     <string name="login_or_sign_in_with">O iniciar sesión con:</string>
-    <string name="login_skip_login">Omitir inicio de sesión</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">Continuar</string>

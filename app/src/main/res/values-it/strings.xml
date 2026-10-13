@@ -1208,7 +1208,6 @@
     <string name="login_qr_instructions">Apri l\'app mobile di Steam e scansiona questo codice QR per accedere istantaneamente</string>
     <string name="login_skip_steam">Salta l\'accesso a Steam</string>
     <string name="login_or_sign_in_with">Oppure accedi con:</string>
-    <string name="login_skip_login">Salta l\'accesso</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">Continua</string>

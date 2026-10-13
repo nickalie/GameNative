@@ -1240,7 +1240,6 @@
     <string name="login_qr_instructions">Steam モバイル アプリを開いてこの QR コードをスキャンすると、すぐにサインインできます</string>
     <string name="login_skip_steam">Steam ログインをスキップする</string>
     <string name="login_or_sign_in_with">または、次の方法でサインインします。</string>
-    <string name="login_skip_login">ログインをスキップする</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">続く</string>

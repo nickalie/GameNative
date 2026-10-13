@@ -1227,7 +1227,6 @@
     <string name="login_qr_instructions">Otwórz aplikację mobilną Steam i zeskanuj ten kod QR, aby zalogować się natychmiast</string>
     <string name="login_skip_steam">Pomiń logowanie do Steam</string>
     <string name="login_or_sign_in_with">Lub zaloguj się przez:</string>
-    <string name="login_skip_login">Pomiń logowanie</string>
 
     <!-- Generic/Reusable strings -->
     <string name="continue_action">Kontynuuj</string>

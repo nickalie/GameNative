@@ -98,6 +98,12 @@ class MainViewModel @Inject constructor(
     private var gameWindowSeen = false
     private var pendingWarmPitch: Pair<String, Boolean>? = null
 
+    /**
+     * Set when Steam logged in while another screen covered the offline library; the library switches
+     * to online once it is shown again (an explicit "Go offline" never sets it).
+     */
+    var switchLibraryOnlineOnReturn = false
+
     private fun warmPitchAllowed(): Boolean {
         if (PrefManager.tipped || BuildConfig.GOLD) return false
         return System.currentTimeMillis() - PrefManager.lastWarmPitchTime >= WARM_PITCH_COOLDOWN_MS
