@@ -507,7 +507,6 @@
     <string name="connection_retry">Prøv igen</string>
 
     <!-- Profile & Menu -->
-    <string name="help_and_support">Hjælp &amp; support</string>
     <string name="hall_of_fame">Hall of Fame</string>
     <string name="go_online">Gå online</string>
     <string name="go_offline">Gå offline</string>
@@ -768,7 +767,6 @@
     <string name="select_wine_debug_channels">Vælg Wine debug-kanaler</string>
     <string name="cpu_label">CPU%d</string>
     <string name="describe_what_happened">Beskriv hvad der skete</string>
-    <string name="get_support_on_discord">Få support på Discord</string>
 
     <!-- Driver Manager -->
     <string name="driver_manager">Driverhåndtering</string>
@@ -821,23 +819,10 @@
     <string name="gamenative_account_manage_subscription_subtitle">Åbner betalingssiden i din browser.</string>
     <string name="gamenative_account_manage_subscription_opening">Åbner betalingssiden.</string>
     <string name="gamenative_account_manage_subscription_none">Der er intet abonnement på denne konto at administrere.</string>
-    <string name="gamenative_account_managed_discord">Dit abonnement kommer fra Discord. Administrer det på Discord.</string>
     <string name="gamenative_account_managed_kofi">Dit abonnement kommer fra Ko-fi. Administrer det på Ko-fi.</string>
     <string name="gamenative_account_manage_subscription_failed">Betalingssiden kunne ikke åbnes. Prøv igen senere.</string>
     <string name="gamenative_account_sign_out">Log ud</string>
     <string name="gamenative_account_sign_out_subtitle">Log ud af din GameNative-konto på denne enhed.</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">Ikke forbundet › Forbind</string>
-    <string name="gamenative_account_discord_connected">Forbundet › Afbryd</string>
-    <string name="gamenative_account_discord_connected_as">Forbundet som %1$s › Afbryd</string>
-    <string name="gamenative_account_discord_link_scan">Scan denne kode med din telefon, eller åbn denne adresse på en anden enhed for at forbinde Discord.</string>
-    <string name="gamenative_account_discord_link_this_device">Eller åbn på denne enhed</string>
-    <string name="gamenative_account_discord_link_waiting">Venter på, at du forbinder Discord.</string>
-    <string name="gamenative_account_discord_link_starting">Forbereder din kode.</string>
-    <string name="gamenative_account_discord_link_expired">Denne kode er udløbet. Vælg Prøv igen for at få en ny kode.</string>
-    <string name="gamenative_account_discord_link_failed">Forbindelse til Discord er ikke tilgængelig lige nu. Tjek din forbindelse, og prøv igen.</string>
-    <string name="gamenative_account_discord_link_connected_as">Forbundet som %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">Der blev ikke fundet en browser til at åbne Discord. Scan koden med en anden enhed i stedet.</string>
     <string name="gamenative_sign_in_title">Log ind på GameNative</string>
     <string name="gamenative_sign_in_scan">Scan denne kode med din telefon for at logge ind. Du kan også logge ind på denne enhed.</string>
     <string name="gamenative_sign_in_code">Kode: %1$s</string>
@@ -854,7 +839,6 @@
     <string name="support_refresh">Opdater</string>
     <string name="support_signed_out_title">Få hjælp med dine spil</string>
     <string name="support_signed_out_body">Log ind på din GameNative-konto for at se dine supportsamtaler og tale med vores AI om problemer med dine spil.</string>
-    <string name="support_signed_out_discord">Du kan også få hjælp i vores Discord</string>
     <string name="support_empty_title">Ingen samtaler endnu</string>
     <string name="support_empty_body">Vælg “Få AI-hjælp” på et spil i dit bibliotek for at starte en. Spil, indtil problemet opstår, luk spillet, og beskriv derefter, hvad der gik galt.</string>
     <string name="support_state_waiting">Venter på svar</string>
@@ -864,7 +848,7 @@
     <string name="support_started">Startet %1$s</string>
     <string name="support_last_activity">Seneste aktivitet %1$s</string>
     <string name="support_problem_network">Der kunne ikke oprettes forbindelse. Tjek din forbindelse, og prøv igen.</string>
-    <string name="support_problem_unavailable">Supportchat i appen er ikke tilgængelig endnu. Indtil da foregår AI-hjælpen på vores Discord.</string>
+    <string name="support_problem_unavailable">Supportchat i appen er ikke tilgængelig endnu.</string>
     <string name="support_problem_unauthorized">Din GameNative-konto kunne ikke bekræftes. Prøv igen senere, eller log ud og ind igen under Indstillinger.</string>
     <string name="support_problem_rate_limited">Du har sendt meget på kort tid. Vent lidt, og prøv igen.</string>
     <string name="support_problem_not_found">Denne samtale blev ikke fundet.</string>
@@ -896,7 +880,7 @@
     </plurals>
     <string name="support_upgrade_reply_cap_pro_hint">Pro-rapporter springer køen over.</string>
     <string name="support_limit_title">Dagens fair-use-grænse er nået</string>
-    <string name="support_upgrade_reason_required">AI-svar kræver et GameNative-abonnement. Hvis du allerede abonnerer via Discord eller Ko-fi, så forbind Discord i Indstillinger.</string>
+    <string name="support_upgrade_reason_required">AI-svar kræver et GameNative-abonnement.</string>
     <string name="support_see_plans">Se planer</string>
     <string name="support_plan_basic_title">$5/måned · Basic</string>
     <string name="support_plan_basic_body">Få dine spil til at køre, eller til at køre bedre.</string>
@@ -933,8 +917,6 @@
     <string name="support_run_check_send_last">Send den seneste kørsel</string>
     <string name="support_uploading">Uploader dine logfiler</string>
     <string name="support_share_file">Åbn fil</string>
-    <string name="debug_report_use_discord">Brug Discord i stedet</string>
-    <string name="debug_report_use_app">Brug chatten i appen i stedet</string>
     <string name="settings_emulation_orientations_title">Tilladte orienteringer</string>
     <string name="settings_emulation_orientations_subtitle">Vælg hvilke orienteringer der kan roteres til i spillet</string>
     <string name="settings_emulation_default_config_title">Redigér standardkonfiguration</string>
@@ -1095,15 +1077,11 @@
     <string name="main_recent_crash_title">Nylig crash</string>
     <string name="main_recent_crash_message">Beklager det!\nDet ville være dejligt at vide om det nylige problem, du har haft.\nDu kan se og eksportere den nyeste crash-log i appens indstillinger og vedhæfte den som et Github-problem i projektets repository.\nLink til Github-repo er også i indstillinger!</string>
     <string name="main_thank_you_title">Nyder du GameNative?</string>
-    <string name="main_thank_you_message">Bliv medlem i dag. Medlemmer får:\n\n• AI-hjælp til at få dine spil til at køre\n• Tidlig adgang til nye udgivelser\n• Premium-roller og eksklusive kanaler på Discord\n• …og mere\n\nFra $5/måned</string>
+    <string name="main_thank_you_message">Bliv medlem i dag. Medlemmer får:\n\n• AI-hjælp til at få dine spil til at køre\n• Tidlig adgang til nye udgivelser\n• …og mere\n\nFra $5/måned</string>
     <string name="main_join_kofi">Bliv medlem</string>
     <string name="pitch_session_title">Nyder du %1$s?</string>
     <string name="pitch_five_star_title">Godt, at %1$s kørte perfekt!</string>
     <string name="main_share">Del</string>
-    <string name="main_share_text">Prøv GameNative - spil dine PC Steam-spil på Android med fuld understøttelse af cloud-gemmer!\nhttps://gamenative.app\nTilmeld dig fællesskabet: https://discord.gg/2hKv4VfZfE</string>
-    <string name="main_discord_support_title">Virkede spillet?</string>
-    <string name="main_discord_support_message">Tilmeld dig Discord for at få support til at rette dit spil eller forbedre ydelsen.</string>
-    <string name="main_open_discord">Åbn Discord</string>
     <string name="main_downloading_entry">Downloader %s</string>
 
     <!-- TODO: Manual review - PluviaMain: Game Launch -->
@@ -1616,7 +1594,6 @@
     <string name="option_open_container">Åbn container</string>
     <string name="option_edit_container">Redigér container</string>
     <string name="option_reset_to_defaults">Nulstil container</string>
-    <string name="option_get_support">Få support</string>
     <string name="option_submit_feedback">Send feedback</string>
     <string name="option_reset_drm">Nulstil DRM</string>
     <string name="option_use_known_config">Brug kendt konfiguration</string>
@@ -1713,7 +1690,6 @@
     <string name="game_launch_tip_14">Tip: Du kan få tastaturet frem med din enheds tilbage-knap.</string>
     <string name="game_launch_tip_15">Tip: Du kan trykke med to fingre inde i containeren for at højreklikke.</string>
     <string name="game_launch_tip_16">Tip: Hvis du bruger skærmcontrolleren, kan du deaktivere musen for at forhindre utilsigtede berøringer.</string>
-    <string name="game_launch_tip_17">Tip: Rapporter problemer på Discord, så vi kan rette dem.</string>
     <string name="game_launch_tip_18">Tip: Brug Turnip Gen8 V25/V30- eller MrPurple T26-driveren, hvis du er på en 8 Elite-enhed.</string>
     <string name="game_launch_tip_19">Tip: Sænk opløsningen og brug FSR fra hurtigmenuen i spillet for at øge ydelsen.</string>
     <string name="game_launch_tip_20">Tip: Hvis hele appen går ned efter indlæsning af et spil, er din enhed ved at løbe tør for RAM.</string>
@@ -1926,42 +1902,28 @@
     <string name="debug_report_what_went_wrong">Hvad gik galt?</string>
     <string name="debug_report_send">Send</string>
     <string name="debug_report_share_instead">Del i stedet</string>
-    <string name="debug_report_connect_hint">Forbind din Discord-konto, så vores AI kan svare dig i en supporttråd.</string>
-    <string name="debug_report_connect_discord">Forbind Discord</string>
     <string name="debug_report_sending">Sender din rapport…</string>
-    <string name="debug_report_success_title">Rapport sendt</string>
-    <string name="debug_report_success_message">Der blev åbnet en supporttråd i vores Discord. Vores AI læser din log og svarer der.</string>
-    <string name="debug_report_open_discord">Åbn Discord</string>
     <string name="debug_report_failed_title">Kunne ikke sende rapporten</string>
     <string name="debug_report_failed_message">Din rapport er gemt på denne enhed. Prøv igen, når du er online, eller del loggen i stedet.</string>
     <string name="debug_report_retry">Prøv igen</string>
     <string name="debug_report_share_log_title">Del fejlfindingslog</string>
-    <string name="debug_report_discord_linked">Discord forbundet</string>
     <string name="debug_report_no_log">Der blev ikke optaget nogen fejlfindingslog for denne kørsel.</string>
     <string name="debug_offer_title">Få AI-hjælp til dette nedbrud</string>
     <string name="debug_offer_message">Den session sluttede for tidligt. Kør %1$s en gang til med fejlfindingslogning, så læser vores AI loggen og fortæller dig, hvad du skal ændre.</string>
     <string name="debug_offer_confirm">Start fejlfindingskørsel</string>
     <string name="debug_prerun_title">Få AI-hjælp</string>
-    <string name="debug_prerun_message_1">Kører spillet med debug-logning og deler loggen med vores AI på Discord, når du afslutter. Spil, indtil du oplever problemet.</string>
     <string name="debug_prerun_message_2">AI-svar er kun for abonnenter.</string>
-    <string name="debug_prerun_message_1_app">Kører spillet med debug-logning. Når du afslutter, sendes loggen til vores AI, og svaret kommer i vores Discord eller i appen, hvis du logger ind med en GameNative-konto. Kør spillet, indtil problemet opstår.</string>
+    <string name="debug_prerun_message_1_app">Kører spillet med debug-logning. Når du afslutter, sendes loggen til vores AI, og svaret kommer i appen, hvis du logger ind med en GameNative-konto. Kør spillet, indtil problemet opstår.</string>
     <string name="debug_prerun_message_2_app">Den første analyse er gratis. Opfølgende svar kræver en plan.</string>
     <string name="debug_prerun_message_1_neutral">Spillet kører med debug-logning. Når du afslutter, sendes loggen til vores AI. Spil, indtil problemet opstår.</string>
     <string name="debug_trial_note">Gratis prøveperiode tilgængelig.</string>
     <string name="debug_prerun_message_3">Alle kan dele rapporten for at få menneskelig hjælp.</string>
     <string name="debug_paywall_title">Få AI-fejlfindingshjælp</string>
     <string name="debug_paywall_pitch">Tilpassede AI-patches og builds, der retter dine spil.</string>
-    <string name="debug_paywall_tier5_title">$5/måned · Basic</string>
-    <string name="debug_paywall_tier5_body">1 tilpasset rettelse om måneden, op til 5 forsøg hver.</string>
     <string name="debug_paywall_tier10_title">$10/måned · Pro</string>
     <string name="debug_paywall_tier10_body">3 tilpassede rettelser om måneden, hurtigere svar, først i køen.</string>
     <string name="debug_paywall_cancel_anytime">Opsig når som helst. Fair use-grænser gælder.</string>
     <string name="debug_paywall_costs_note">Abonnementer dækker AI-tjenesteomkostningerne, der gør denne funktion mulig.</string>
-    <string name="debug_paywall_subscribe">Abonnér på Discord</string>
-    <string name="debug_paywall_kofi_alt">Abonnér på Ko-fi</string>
-    <string name="debug_paywall_already">Allerede supporter?</string>
-    <string name="debug_paywall_send_now">Jeg har tegnet abonnement, send nu</string>
-    <string name="debug_paywall_not_now">Ikke nu</string>
     <string name="diagnostics_share_title">Del diagnostiklog</string>
     <string name="diagnostics_share_none">Ingen diagnostiklog endnu. Brug \"Diagnostisk kørsel\" først.</string>
 

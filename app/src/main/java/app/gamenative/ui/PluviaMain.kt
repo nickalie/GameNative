@@ -3,9 +3,7 @@ package app.gamenative.ui
 import android.content.Context
 import android.app.Activity
 import android.content.Intent
-import android.net.Uri
 import androidx.activity.compose.BackHandler
-import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.content.FileProvider
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
@@ -94,14 +92,11 @@ import app.gamenative.ui.component.GameInviteOverlay
 import app.gamenative.service.epic.EpicService
 import app.gamenative.service.gog.GOGService
 import app.gamenative.api.AccountApi
-import app.gamenative.api.DebugReportApi
 import app.gamenative.api.SupportApi
-import app.gamenative.ui.component.dialog.AI_HELP_PATH_APP
 import app.gamenative.ui.component.dialog.AccountSignInDialog
 import app.gamenative.ui.component.dialog.ContainerConfigDialog
 import app.gamenative.ui.component.dialog.DebugPreRunDialog
 import app.gamenative.ui.component.dialog.DebugReportDialog
-import app.gamenative.ui.component.dialog.debugReportUsesApp
 import app.gamenative.ui.component.dialog.GameFeedbackDialog
 import app.gamenative.ui.component.dialog.LoadingDialog
 import app.gamenative.ui.component.dialog.MessageDialog
@@ -116,7 +111,6 @@ import app.gamenative.launch.SteamAgreementGate
 import app.gamenative.ui.enums.DialogType
 import app.gamenative.ui.enums.Orientation
 import app.gamenative.ui.model.MainViewModel
-import app.gamenative.ui.screen.DebugPaywallScreen
 import app.gamenative.ui.screen.HomeScreen
 import app.gamenative.ui.screen.PluviaScreen
 import app.gamenative.ui.screen.login.UserLoginScreen
@@ -161,7 +155,6 @@ import com.winlator.xenvironment.ImageFs
 import com.winlator.xenvironment.ImageFsInstaller
 import `in`.dragonbra.javasteam.protobufs.steamclient.SteammessagesClientObjects.ECloudPendingRemoteOperation
 import java.io.File
-import java.security.SecureRandom
 import java.util.Locale
 import java.util.Date
 import java.util.EnumSet
@@ -422,23 +415,12 @@ fun PluviaMain(
     var debugReportState by rememberSaveable(stateSaver = DebugReportDialogState.Saver) {
         mutableStateOf(DebugReportDialogState(false))
     }
-    var debugPaywallReason by rememberSaveable { mutableStateOf<String?>(null) }
     var debugAccountPrompt by rememberSaveable { mutableStateOf<String?>(null) }
     var aiDebugOfferAppId by rememberSaveable { mutableStateOf("") }
     var aiDebugOfferTrigger by rememberSaveable { mutableStateOf("") }
     var debugPreRunVisible by rememberSaveable { mutableStateOf(false) }
     var debugPreRunAppId by rememberSaveable { mutableStateOf("") }
     var debugPreRunOffline by rememberSaveable { mutableStateOf(false) }
-    val discordTokenPresent by PrefManager.discordRelayTokenPresent
-    var aiHelpPreferredPath by remember { mutableStateOf(PrefManager.aiHelpPreferredPath) }
-
-    LaunchedEffect(Unit) {
-        if (!PrefManager.discordRelayTokenPresent.value) {
-            PrefManager.discordRelayTokenPresent.value = withContext(Dispatchers.IO) {
-                PrefManager.discordRelayToken.isNotEmpty()
-            }
-        }
-    }
 
     var hasBack by rememberSaveable { mutableStateOf(navController.previousBackStackEntry?.destination?.route != null) }
 
@@ -679,13 +661,7 @@ fun PluviaMain(
                 }
 
                 MainViewModel.MainUiEvent.OnBackPressed -> {
-                    if (debugPaywallReason != null) {
-                        debugPaywallReason = null
-                        debugReportState = debugReportState.copy(
-                            visible = true,
-                            phase = DebugReportDialogState.PHASE_COMPOSE,
-                        )
-                    } else if (debugReportState.visible) {
+                    if (debugReportState.visible) {
                         if (debugReportState.phase != DebugReportDialogState.PHASE_SENDING) {
                             debugReportState = debugReportState.copy(visible = false)
                             SteamService.keepAlive = false
@@ -768,17 +744,6 @@ fun PluviaMain(
                     }
                 }
 
-                MainViewModel.MainUiEvent.ShowDiscordSupportDialog -> {
-                    msgDialogState = MessageDialogState(
-                        visible = true,
-                        type = DialogType.DISCORD,
-                        title = context.getString(R.string.main_discord_support_title),
-                        message = context.getString(R.string.main_discord_support_message),
-                        confirmBtnText = context.getString(R.string.main_open_discord),
-                        dismissBtnText = context.getString(R.string.close),
-                    )
-                }
-
                 is MainViewModel.MainUiEvent.ShowGameFeedbackDialog -> {
                     gameFeedbackState = GameFeedbackDialogState(
                         visible = true,
@@ -823,10 +788,7 @@ fun PluviaMain(
                             AccountApi.loadSignedInState()
                             SupportApi.checkAvailability()
                         }
-                        trackAiDebug(
-                            "ai_debug_report_shown",
-                            mapOf("discord_linked" to PrefManager.discordRelayTokenPresent.value),
-                        )
+                        trackAiDebug("ai_debug_report_shown")
                     }
                 }
 
@@ -1009,19 +971,6 @@ fun PluviaMain(
     val onConfirmClick: (() -> Unit)?
     var onActionClick: (() -> Unit)? = null
     when (msgDialogState.type) {
-        DialogType.DISCORD -> {
-            onConfirmClick = {
-                setMessageDialogState(MessageDialogState(false))
-                uriHandler.openUri("https://discord.gg/2hKv4VfZfE")
-            }
-            onDismissClick = {
-                setMessageDialogState(MessageDialogState(false))
-            }
-            onDismissRequest = {
-                setMessageDialogState(MessageDialogState(false))
-            }
-        }
-
         DialogType.SUPPORT -> {
             onConfirmClick = {
                 uriHandler.openUri(Constants.Misc.KO_FI_LINK)
@@ -1645,24 +1594,7 @@ fun PluviaMain(
                     gameFeedbackState = GameFeedbackDialogState(visible = false)
                     viewModel.onGameFeedbackResolved(context, null)
                 },
-                onDiscordSupport = {
-                    uriHandler.openUri("https://discord.gg/2hKv4VfZfE")
-                },
             )
-
-            val openDiscordConnect: () -> Unit = {
-                val nonce = ByteArray(16).also { SecureRandom().nextBytes(it) }
-                    .joinToString("") { "%02x".format(it) }
-                PrefManager.discordOauthNonce = nonce
-                trackAiDebug(
-                    "ai_debug_discord_connect_clicked",
-                    mapOf("surface" to if (debugPaywallReason != null) "paywall" else "report"),
-                )
-                CustomTabsIntent.Builder()
-                    .setShowTitle(true)
-                    .build()
-                    .launchUrl(context, Uri.parse("${DebugReportApi.OAUTH_START_URL}?app_state=$nonce"))
-            }
 
             val shareDebugLog: () -> Unit = {
                 val reportDir = File(debugReportState.reportDir)
@@ -1693,65 +1625,11 @@ fun PluviaMain(
                 }
             }
 
-            val submitViaDiscord: () -> Unit = submit@{
-                val current = debugReportState
-                if (current.reportDir.isEmpty()) return@submit
-                debugReportState = current.copy(visible = true, phase = DebugReportDialogState.PHASE_SENDING)
-                scope.launch {
-                    val dir = File(current.reportDir)
-                    val header = withContext(Dispatchers.IO) {
-                        if (DebugReportUtils.writeIssueText(dir, current.issueText)) {
-                            DebugReportUtils.readHeader(dir)
-                        } else {
-                            null
-                        }
-                    }
-                    val logFile = DebugReportUtils.logFile(dir)
-                    if (header == null || !logFile.exists()) {
-                        debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
-                        return@launch
-                    }
-                    val perfFile = DebugReportUtils.perfFile(dir)
-                    val logcatFile = DebugReportUtils.logcatFile(dir)
-                    when (val result = DebugReportApi.submit(header, logFile, PrefManager.discordRelayToken, perfFile, logcatFile)) {
-                        is DebugReportApi.SubmitResult.Success -> {
-                            trackAiDebug("ai_debug_report_result", mapOf("result" to "success", "path" to "discord"))
-                            withContext(Dispatchers.IO) {
-                                DebugReportUtils.deleteReport(dir)
-                                SupportAppliedRun.recordReportedRun(context, current.appId, header)
-                            }
-                            debugReportState = debugReportState.copy(
-                                phase = DebugReportDialogState.PHASE_SUCCESS,
-                                threadUrl = result.threadUrl,
-                            )
-                        }
-
-                        is DebugReportApi.SubmitResult.Forbidden -> {
-                            debugReportState = debugReportState.copy(visible = false)
-                            val reason = result.reason.ifEmpty { "no_subscription" }
-                            debugPaywallReason = reason
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "forbidden", "reason" to reason, "path" to "discord"),
-                            )
-                        }
-
-                        is DebugReportApi.SubmitResult.Failure -> {
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "failure", "reason" to result.message, "path" to "discord"),
-                            )
-                            debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
-                        }
-                    }
-                }
-            }
-
             val submitDebugReport: () -> Unit = submit@{
                 val current = debugReportState
                 if (current.reportDir.isEmpty()) return@submit
                 if (SupportApi.available.value == false) {
-                    submitViaDiscord()
+                    SnackbarManager.show(context.getString(R.string.support_problem_unavailable))
                     return@submit
                 }
                 if (!PrefManager.gameNativeSignedIn.value) {
@@ -1777,7 +1655,8 @@ fun PluviaMain(
                             navController.navigate(PluviaScreen.Support.route) { launchSingleTop = true }
                         }
                         SupportReportSubmitter.Outcome.Unavailable -> {
-                            if (PrefManager.discordRelayTokenPresent.value) submitViaDiscord() else composeAgain()
+                            composeAgain()
+                            SnackbarManager.show(context.getString(R.string.support_problem_unavailable))
                         }
                         SupportReportSubmitter.Outcome.SignedOut -> {
                             composeAgain()
@@ -1858,52 +1737,23 @@ fun PluviaMain(
                 }
             }
 
-            val debugFlowActive = debugReportState.visible || debugPaywallReason != null
-            LaunchedEffect(debugFlowActive) {
-                if (debugFlowActive) {
+            LaunchedEffect(debugReportState.visible) {
+                if (debugReportState.visible) {
                     SteamService.keepAlive = true
                 }
             }
 
             DebugReportDialog(
                 state = debugReportState,
-                hasDiscordToken = discordTokenPresent,
                 appChatEnabled = SupportApi.available.value != false,
-                accountSignedIn = PrefManager.gameNativeSignedIn.value,
-                preferredPath = aiHelpPreferredPath,
                 sendProgress = SupportReportSubmitter.progress.value,
                 onStateChange = { debugReportState = it },
-                onSend = {
-                    val usesApp = debugReportUsesApp(
-                        appChatEnabled = SupportApi.available.value != false,
-                        hasDiscordToken = discordTokenPresent,
-                        accountSignedIn = PrefManager.gameNativeSignedIn.value,
-                        preferredPath = aiHelpPreferredPath,
-                    )
-                    if (usesApp) submitDebugReport() else submitViaDiscord()
-                },
+                onSend = submitDebugReport,
                 onShare = shareDebugLog,
-                onConnectDiscord = openDiscordConnect,
-                onSignInForApp = {
-                    aiHelpPreferredPath = AI_HELP_PATH_APP
-                    PrefManager.aiHelpPreferredPath = AI_HELP_PATH_APP
-                    submitDebugReport()
-                },
-                onPreferredPathChange = { path ->
-                    aiHelpPreferredPath = path
-                    PrefManager.aiHelpPreferredPath = path
-                },
-                onOpenThread = {
-                    if (debugReportState.threadUrl.isNotEmpty()) {
-                        uriHandler.openUri(debugReportState.threadUrl)
-                    }
-                },
                 onDismiss = {
                     debugReportState = debugReportState.copy(visible = false)
                     scope.markAppliedReported(context, debugReportState)
-                    if (debugPaywallReason == null) {
-                        SteamService.keepAlive = false
-                    }
+                    SteamService.keepAlive = false
                 },
             )
 
@@ -1922,37 +1772,6 @@ fun PluviaMain(
                 onPlanChanged = { debugAccountPrompt = null },
                 onDismiss = { debugAccountPrompt = null },
             )
-
-            debugPaywallReason?.let { reason ->
-                Box(modifier = Modifier.zIndex(5f)) {
-                    DebugPaywallScreen(
-                        gameName = debugReportState.gameName,
-                        deviceName = debugReportState.deviceName,
-                        reason = reason,
-                        hasDiscordToken = discordTokenPresent,
-                        onSubscribe = {
-                            trackAiDebug("ai_debug_paywall_subscribe_clicked", mapOf("store" to "discord", "reason" to reason))
-                            uriHandler.openUri(Constants.Misc.DISCORD_SHOP_LINK)
-                        },
-                        onSubscribeKofi = {
-                            trackAiDebug("ai_debug_paywall_subscribe_clicked", mapOf("store" to "kofi", "reason" to reason))
-                            uriHandler.openUri(Constants.Misc.KO_FI_LINK)
-                        },
-                        onConnectDiscord = openDiscordConnect,
-                        onRetry = {
-                            debugPaywallReason = null
-                            submitViaDiscord()
-                        },
-                        onDismiss = {
-                            debugPaywallReason = null
-                            debugReportState = debugReportState.copy(
-                                visible = true,
-                                phase = DebugReportDialogState.PHASE_COMPOSE,
-                            )
-                        },
-                    )
-                }
-            }
 
             Box(modifier = Modifier.zIndex(10f)) {
                 BootingSplash(

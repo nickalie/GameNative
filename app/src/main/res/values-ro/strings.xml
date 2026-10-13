@@ -674,7 +674,6 @@
 
 
     <!-- Profile & Menu -->
-	<string name="help_and_support">Ajutor &amp; Suport</string>
 	<string name="hall_of_fame">Hall of Fame</string>
 	<string name="go_online">Mergi online</string>
 	<string name="go_offline">Mergi offline</string>
@@ -953,7 +952,6 @@
 	<string name="select_wine_debug_channels">Selectează canalele de debug Wine</string>
 	<string name="cpu_label">CPU%d</string>
 	<string name="describe_what_happened">Descrie ce s-a întâmplat</string>
-	<string name="get_support_on_discord">Obține suport pe Discord</string>
 
 	<!-- Driver Manager -->
 	<string name="driver_manager">Manager drivere</string>
@@ -1006,23 +1004,10 @@
     <string name="gamenative_account_manage_subscription_subtitle">Deschide pagina de facturare în browser.</string>
     <string name="gamenative_account_manage_subscription_opening">Se deschide pagina de facturare.</string>
     <string name="gamenative_account_manage_subscription_none">Acest cont nu are niciun abonament de gestionat.</string>
-    <string name="gamenative_account_managed_discord">Planul tău vine de pe Discord. Gestionează-l pe Discord.</string>
     <string name="gamenative_account_managed_kofi">Planul tău vine de pe Ko-fi. Gestionează-l pe Ko-fi.</string>
     <string name="gamenative_account_manage_subscription_failed">Pagina de facturare nu a putut fi deschisă. Încearcă din nou mai târziu.</string>
     <string name="gamenative_account_sign_out">Deconectare</string>
     <string name="gamenative_account_sign_out_subtitle">Deconectează-te de la contul GameNative pe acest dispozitiv.</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">Neconectat › Conectează</string>
-    <string name="gamenative_account_discord_connected">Conectat › Deconectează</string>
-    <string name="gamenative_account_discord_connected_as">Conectat ca %1$s › Deconectează</string>
-    <string name="gamenative_account_discord_link_scan">Scanează acest cod cu telefonul sau deschide această adresă pe alt dispozitiv pentru a conecta Discord.</string>
-    <string name="gamenative_account_discord_link_this_device">Sau deschide pe acest dispozitiv</string>
-    <string name="gamenative_account_discord_link_waiting">Se așteaptă să termini conectarea Discord.</string>
-    <string name="gamenative_account_discord_link_starting">Se pregătește codul.</string>
-    <string name="gamenative_account_discord_link_expired">Acest cod a expirat. Selectează Încearcă din nou pentru a obține un cod nou.</string>
-    <string name="gamenative_account_discord_link_failed">Conectarea Discord nu este disponibilă acum. Verifică conexiunea și încearcă din nou.</string>
-    <string name="gamenative_account_discord_link_connected_as">Conectat ca %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">Nu a fost găsit niciun browser pentru a deschide Discord. Scanează codul cu alt dispozitiv.</string>
     <string name="gamenative_sign_in_title">Conectează-te la GameNative</string>
     <string name="gamenative_sign_in_scan">Scanează acest cod cu telefonul pentru a te conecta. Te poți conecta și pe acest dispozitiv.</string>
     <string name="gamenative_sign_in_code">Cod: %1$s</string>
@@ -1039,7 +1024,6 @@
     <string name="support_refresh">Reîmprospătează</string>
     <string name="support_signed_out_title">Primește ajutor pentru jocurile tale</string>
     <string name="support_signed_out_body">Conectează-te la contul GameNative ca să vezi conversațiile de asistență și să vorbești cu AI-ul nostru despre problemele cu jocurile tale.</string>
-    <string name="support_signed_out_discord">Poți primi ajutor și pe Discordul nostru</string>
     <string name="support_empty_title">Nicio conversație încă</string>
     <string name="support_empty_body">Pentru a începe una, alege „Primește ajutor de la AI” la un joc din bibliotecă. Joacă până apare problema, închide jocul și apoi descrie ce nu a mers.</string>
     <string name="support_state_waiting">Se așteaptă un răspuns</string>
@@ -1049,7 +1033,7 @@
     <string name="support_started">Începută pe %1$s</string>
     <string name="support_last_activity">Ultima activitate %1$s</string>
     <string name="support_problem_network">Nu s-a putut realiza conexiunea. Verifică-ți conexiunea și încearcă din nou.</string>
-    <string name="support_problem_unavailable">Chatul de asistență din aplicație nu este încă disponibil. Până atunci, ajutorul AI continuă pe Discordul nostru.</string>
+    <string name="support_problem_unavailable">Chatul de asistență din aplicație nu este încă disponibil.</string>
     <string name="support_problem_unauthorized">Contul tău GameNative nu a putut fi confirmat. Încearcă din nou mai târziu sau deconectează-te și conectează-te din nou din Setări.</string>
     <string name="support_problem_rate_limited">Ai trimis mult într-un timp scurt. Așteaptă puțin și încearcă din nou.</string>
     <string name="support_problem_not_found">Această conversație nu a fost găsită.</string>
@@ -1082,7 +1066,7 @@
     </plurals>
     <string name="support_upgrade_reply_cap_pro_hint">Rapoartele Pro sar peste coadă.</string>
     <string name="support_limit_title">Limita zilnică de utilizare corectă a fost atinsă</string>
-    <string name="support_upgrade_reason_required">Răspunsurile AI necesită un abonament GameNative. Dacă ai deja un abonament pe Discord sau Ko-fi, conectează Discord în Setări.</string>
+    <string name="support_upgrade_reason_required">Răspunsurile AI necesită un abonament GameNative.</string>
     <string name="support_see_plans">Vezi planurile</string>
     <string name="support_plan_basic_title">$5/lună · Basic</string>
     <string name="support_plan_basic_body">Fă-ți jocurile să ruleze sau să ruleze mai bine.</string>
@@ -1119,8 +1103,6 @@
     <string name="support_run_check_send_last">Trimite ultima rulare</string>
     <string name="support_uploading">Se încarcă jurnalele</string>
     <string name="support_share_file">Deschide fișierul</string>
-    <string name="debug_report_use_discord">Folosește Discord</string>
-    <string name="debug_report_use_app">Folosește chatul din aplicație</string>
 	<string name="settings_emulation_orientations_title">Orientări permise</string>
 	<string name="settings_emulation_orientations_subtitle">Alege orientările în care se poate roti în timpul jocului</string>
 	<string name="settings_emulation_default_config_title">Modifică configurația implicită</string>
@@ -1280,15 +1262,11 @@
 	<string name="main_recent_crash_title">Crash recent</string>
 	<string name="main_recent_crash_message">Ne pare rău!\nAr fi util să știm ce problemă ai întâmpinat.\nPoți vizualiza și exporta cel mai recent crash log din setările aplicației și îl poți atașa ca issue pe Github în repository-ul proiectului.\nLinkul către repo este tot în setări!</string>
     <string name="main_thank_you_title">Îți place GameNative?</string>
-    <string name="main_thank_you_message">Devino membru astăzi. Membrii primesc:\n\n• Ajutor cu AI pentru a-ți face jocurile să funcționeze\n• Acces anticipat la versiuni noi\n• Roluri premium și canale exclusive pe Discord\n• …și altele\n\nDe la 5 $/lună</string>
+    <string name="main_thank_you_message">Devino membru astăzi. Membrii primesc:\n\n• Ajutor cu AI pentru a-ți face jocurile să funcționeze\n• Acces anticipat la versiuni noi\n• …și altele\n\nDe la 5 $/lună</string>
     <string name="main_join_kofi">Devino membru</string>
     <string name="pitch_session_title">Îți place %1$s?</string>
     <string name="pitch_five_star_title">Ne bucurăm că %1$s a mers excelent!</string>
 	<string name="main_share">Distribuie</string>
-	<string name="main_share_text">Descoperă GameNative - joacă jocurile tale Steam pe PC pe Android, cu suport complet pentru salvări în cloud!\nhttps://gamenative.app\nAlătură-te comunității: https://discord.gg/2hKv4VfZfE</string>
-	<string name="main_discord_support_title">A funcționat jocul?</string>
-	<string name="main_discord_support_message">Alătură-te serverului de Discord pentru suport și optimizare.</string>
-	<string name="main_open_discord">Deschide Discord</string>
 	<string name="main_downloading_entry">Se descarcă %s</string>
 
 	<!-- PluviaMain: Game Launch -->
@@ -1725,7 +1703,6 @@
     <string name="option_open_container">Deschide containerul</string>
     <string name="option_edit_container">Editează containerul</string>
     <string name="option_reset_to_defaults">Resetează containerul</string>
-    <string name="option_get_support">Obține suport</string>
     <string name="option_submit_feedback">Trimite feedback</string>
     <string name="option_reset_drm">Resetează DRM</string>
     <string name="option_use_known_config">Folosește configurația cunoscută</string>
@@ -1822,7 +1799,6 @@
 	<string name="game_launch_tip_14">Sfat: Puteți afișa tastatura cu tasta de revenire a dispozitivului dvs.</string>
 	<string name="game_launch_tip_15">Sfat: Puteți atinge cu două degete în interiorul containerului pentru a face clic dreapta.</string>
 	<string name="game_launch_tip_16">Sfat: Dacă utilizați controllerul pe ecran, puteți dezactiva mouse-ul pentru a preveni atingerile accidentale.</string>
-	<string name="game_launch_tip_17">Sfat: Raportați problemele pe Discord pentru a le putea remedia.</string>
 	<string name="game_launch_tip_18">Sfat: Utilizați driverul Turnip Gen8 V25/V30 sau MrPurple T26 dacă aveți un dispozitiv 8 Elite.</string>
 	<string name="game_launch_tip_19">Sfat: Reduceți rezoluția și utilizați FSR din meniul rapid în joc pentru a crește performanța.</string>
 	<string name="game_launch_tip_20">Sfat: Dacă întreaga aplicație se blochează după încărcarea unui joc, dispozitivul dvs. rămâne fără RAM.</string>
@@ -2035,42 +2011,28 @@
     <string name="debug_report_what_went_wrong">Ce nu a funcționat?</string>
     <string name="debug_report_send">Trimite</string>
     <string name="debug_report_share_instead">Partajează în schimb</string>
-    <string name="debug_report_connect_hint">Conectează-ți contul de Discord pentru ca AI-ul nostru să îți poată răspunde într-un fir de suport.</string>
-    <string name="debug_report_connect_discord">Conectează Discord</string>
     <string name="debug_report_sending">Se trimite raportul…</string>
-    <string name="debug_report_success_title">Raport trimis</string>
-    <string name="debug_report_success_message">A fost deschis un fir de suport pe Discordul nostru. AI-ul nostru îți citește jurnalul și îți va răspunde acolo.</string>
-    <string name="debug_report_open_discord">Deschide Discord</string>
     <string name="debug_report_failed_title">Raportul nu a putut fi trimis</string>
     <string name="debug_report_failed_message">Raportul este salvat pe acest dispozitiv. Reîncearcă atunci când revii online sau partajează jurnalul în schimb.</string>
     <string name="debug_report_retry">Reîncearcă</string>
     <string name="debug_report_share_log_title">Partajează jurnalul de depanare</string>
-    <string name="debug_report_discord_linked">Discord conectat</string>
     <string name="debug_report_no_log">Nu a fost capturat niciun jurnal de depanare pentru această rulare.</string>
     <string name="debug_offer_title">Primește ajutor de la AI pentru această blocare</string>
     <string name="debug_offer_message">Acea sesiune s-a încheiat prematur. Rulează %1$s încă o dată cu jurnalizarea de depanare, iar AI-ul nostru va citi jurnalul și îți va spune ce să schimbi.</string>
     <string name="debug_offer_confirm">Pornește rularea de depanare</string>
     <string name="debug_prerun_title">Primește ajutor de la AI</string>
-    <string name="debug_prerun_message_1">Rulează jocul cu jurnal de depanare și partajează jurnalul cu AI-ul nostru pe Discord la ieșire. Joacă până când apare problema.</string>
     <string name="debug_prerun_message_2">Răspunsurile AI sunt doar pentru abonați.</string>
-    <string name="debug_prerun_message_1_app">Rulează jocul cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru, iar răspunsul vine pe Discordul nostru sau în aplicație, dacă te conectezi cu un cont GameNative. Joacă până când apare problema.</string>
+    <string name="debug_prerun_message_1_app">Rulează jocul cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru, iar răspunsul vine în aplicație, dacă te conectezi cu un cont GameNative. Joacă până când apare problema.</string>
     <string name="debug_prerun_message_2_app">Prima analiză este gratuită. Răspunsurile ulterioare necesită un plan.</string>
     <string name="debug_prerun_message_1_neutral">Jocul rulează cu jurnal de depanare. Când ieși, jurnalul ajunge la AI-ul nostru. Joacă până când apare problema.</string>
     <string name="debug_trial_note">Perioadă de probă gratuită disponibilă.</string>
     <string name="debug_prerun_message_3">Oricine poate partaja raportul pentru ajutor uman.</string>
     <string name="debug_paywall_title">Obține suport de depanare AI</string>
     <string name="debug_paywall_pitch">Patch-uri și build-uri AI personalizate care îți repară jocurile.</string>
-    <string name="debug_paywall_tier5_title">$5/lună · Basic</string>
-    <string name="debug_paywall_tier5_body">1 remediere personalizată pe lună, până la 5 încercări fiecare.</string>
     <string name="debug_paywall_tier10_title">$10/lună · Pro</string>
     <string name="debug_paywall_tier10_body">3 remedieri personalizate pe lună, răspunsuri mai rapide, primul la rând.</string>
     <string name="debug_paywall_cancel_anytime">Anulează oricând. Se aplică limite de utilizare corectă.</string>
     <string name="debug_paywall_costs_note">Abonamentele acoperă costurile serviciului AI care face posibilă această funcție.</string>
-    <string name="debug_paywall_subscribe">Abonează-te pe Discord</string>
-    <string name="debug_paywall_kofi_alt">Abonează-te pe Ko-fi</string>
-    <string name="debug_paywall_already">Ești deja susținător?</string>
-    <string name="debug_paywall_send_now">M-am abonat, trimite acum</string>
-    <string name="debug_paywall_not_now">Nu acum</string>
     <string name="diagnostics_share_title">Partajează jurnalul de diagnosticare</string>
     <string name="diagnostics_share_none">Încă nu există jurnal de diagnosticare. Folosește mai întâi \"Rulare de diagnosticare\".</string>
 

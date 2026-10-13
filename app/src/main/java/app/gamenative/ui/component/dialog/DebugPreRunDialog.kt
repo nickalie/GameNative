@@ -63,10 +63,10 @@ fun DebugPreRunDialog(
                     )
                     Text(
                         text = stringResource(
-                            when (appChat) {
-                                true -> R.string.debug_prerun_message_1_app
-                                false -> R.string.debug_prerun_message_1
-                                null -> R.string.debug_prerun_message_1_neutral
+                            if (appChat == true) {
+                                R.string.debug_prerun_message_1_app
+                            } else {
+                                R.string.debug_prerun_message_1_neutral
                             },
                         ),
                         style = MaterialTheme.typography.bodyMedium,

@@ -134,7 +134,6 @@ fun BootingSplash(
             context.getString(R.string.game_launch_tip_14),
             context.getString(R.string.game_launch_tip_15),
             context.getString(R.string.game_launch_tip_16),
-            context.getString(R.string.game_launch_tip_17),
             context.getString(R.string.game_launch_tip_18),
             context.getString(R.string.game_launch_tip_19),
             context.getString(R.string.game_launch_tip_20),

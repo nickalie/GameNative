@@ -625,7 +625,6 @@
     <string name="gesture_zoom_page_up_down">Page Up/Down</string>
     <string name="gesture_zoom_plus_minus">+/- клавиши</string>
     <string name="gesture_zoom_scroll_wheel">Колесо прокрутки</string>
-    <string name="get_support_on_discord">Получить поддержку на Discord</string>
     <string name="gog_install_confirmation_message">Устанавливаемое приложение имеет следующие требования к пространству. Вы хотите продолжить?
 
 	Размер загрузки: %1$s
@@ -662,7 +661,6 @@
     <string name="hall_of_fame">Зал славы</string>
     <string name="header_img_desc">Изображение заголовка приложения</string>
     <string name="height">Высота</string>
-    <string name="help_and_support">Справка и поддержка</string>
     <string name="home">Главная</string>
     <string name="icon">Значок</string>
     <string name="icon_content_description">Значок диалога</string>
@@ -830,8 +828,6 @@ Ubuntu RootFs - releases.ubuntu.com/focal</string>
 Вы всё ещё можете играть в эту игру, но это отключит другой сеанс от Steam и может создать конфликт сохранений, когда прогресс того сеанса синхронизируется</string>
     <string name="main_app_running_title">Приложение запущено</string>
     <string name="main_app_session_suspended">Сеанс приложения приостановлен. Пожалуйста, перезапустите приложение.</string>
-    <string name="main_discord_support_message">Присоединитесь к Discord, чтобы получить поддержку для исправления вашей игры или улучшения производительности.</string>
-    <string name="main_discord_support_title">Игра работала?</string>
     <string name="main_downloading_entry">Загрузка %s</string>
     <string name="main_downloading_steam">Загрузка Steam...</string>
     <string name="steam_update_required_title">Требуется обновление</string>
@@ -848,7 +844,6 @@ Ubuntu RootFs - releases.ubuntu.com/focal</string>
     <string name="main_later_button">Позже</string>
     <string name="main_launch_anyway">Запустить в любом случае</string>
     <string name="main_loading">Загрузка...</string>
-    <string name="main_open_discord">Открыть Discord</string>
     <string name="main_pending_operation_none">Получены ожидающие удалённые операции, операция которых была \'none\'. Пожалуйста, перезапустите приложение.</string>
     <string name="main_multiple_pending_operations_message">В эту игру недавно играли на другом устройстве, и прогресс той сессии ещё не загружен в облако.\nЕсли вы продолжите, игра на том устройстве будет закрыта, а незагруженный прогресс может быть безвозвратно потерян.</string>
     <string name="main_pending_upload_message">Вы играли в %1$s на устройстве %2$s (%3$s), и это сохранение ещё не в облаке. (загрузка не началась)
@@ -871,14 +866,11 @@ Ubuntu RootFs - releases.ubuntu.com/focal</string>
     <string name="main_save_conflict_upgrade_v1_title">Выберите версию сохранения</string>
     <string name="main_save_conflict_upgrade_v1_message">Мы исправили обработку путей облачных сохранений для этой игры и обнаружили различия между локальным и облачным сохранением.\n\nЛокальное сохранение:\n\t%1$s\nОблачное сохранение:\n\t%2$s</string>
     <string name="main_thank_you_title">Нравится GameNative?</string>
-    <string name="main_thank_you_message">Станьте участником сегодня. Участники получают:\n\n• Помощь ИИ с запуском игр\n• Ранний доступ к новым версиям\n• Премиум-роли и эксклюзивные каналы в Discord\n• …и не только\n\nОт $5/мес.</string>
+    <string name="main_thank_you_message">Станьте участником сегодня. Участники получают:\n\n• Помощь ИИ с запуском игр\n• Ранний доступ к новым версиям\n• …и не только\n\nОт $5/мес.</string>
     <string name="main_join_kofi">Стать участником</string>
     <string name="pitch_session_title">Нравится %1$s?</string>
     <string name="pitch_five_star_title">Рады, что %1$s отлично работает!</string>
     <string name="main_share">Поделиться</string>
-    <string name="main_share_text">Проверьте GameNative - играйте в ваши ПК игры Steam на Android, с полной поддержкой облачных сохранений!
-https://gamenative.app
-Присоединитесь к сообществу: https://discord.gg/2hKv4VfZfE</string>
     <string name="main_sync_failed">Ошибка синхронизации файлов сохранений: %s.</string>
     <string name="main_sync_in_progress">Синхронизация в процессе. Пожалуйста, попробуйте снова через момент.</string>
     <string name="main_sync_in_progress_launch_anyway_message">Синхронизация облачного сохранения для этой игры уже запущена. Вы можете подождать и попробовать снова, или запустить в любом случае без синхронизации (может вызвать конфликты сохранений).</string>
@@ -1189,23 +1181,10 @@ https://gamenative.app
     <string name="gamenative_account_manage_subscription_subtitle">Открывает страницу оплаты в браузере.</string>
     <string name="gamenative_account_manage_subscription_opening">Открывается страница оплаты.</string>
     <string name="gamenative_account_manage_subscription_none">В этом аккаунте нет подписки для управления.</string>
-    <string name="gamenative_account_managed_discord">Ваш тариф предоставлен через Discord. Управляйте им в Discord.</string>
     <string name="gamenative_account_managed_kofi">Ваш тариф предоставлен через Ko-fi. Управляйте им на Ko-fi.</string>
     <string name="gamenative_account_manage_subscription_failed">Не удалось открыть страницу оплаты. Повторите попытку позже.</string>
     <string name="gamenative_account_sign_out">Выйти</string>
     <string name="gamenative_account_sign_out_subtitle">Выйти из аккаунта GameNative на этом устройстве.</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">Не подключено › Подключить</string>
-    <string name="gamenative_account_discord_connected">Подключено › Отключить</string>
-    <string name="gamenative_account_discord_connected_as">Подключено как %1$s › Отключить</string>
-    <string name="gamenative_account_discord_link_scan">Отсканируйте этот код телефоном или откройте этот адрес на другом устройстве, чтобы подключить Discord.</string>
-    <string name="gamenative_account_discord_link_this_device">Или открыть на этом устройстве</string>
-    <string name="gamenative_account_discord_link_waiting">Ожидание завершения подключения Discord.</string>
-    <string name="gamenative_account_discord_link_starting">Подготовка кода.</string>
-    <string name="gamenative_account_discord_link_expired">Срок действия кода истёк. Выберите «Повторить», чтобы получить новый код.</string>
-    <string name="gamenative_account_discord_link_failed">Подключение Discord сейчас недоступно. Проверьте соединение и попробуйте снова.</string>
-    <string name="gamenative_account_discord_link_connected_as">Подключено как %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">Не найден браузер для открытия Discord. Отсканируйте код другим устройством.</string>
     <string name="gamenative_sign_in_title">Вход в GameNative</string>
     <string name="gamenative_sign_in_scan">Отсканируйте этот код телефоном, чтобы войти. Также можно войти на этом устройстве.</string>
     <string name="gamenative_sign_in_code">Код: %1$s</string>
@@ -1222,7 +1201,6 @@ https://gamenative.app
     <string name="support_refresh">Обновить</string>
     <string name="support_signed_out_title">Помощь с вашими играми</string>
     <string name="support_signed_out_body">Войдите в аккаунт GameNative, чтобы видеть свои разговоры с поддержкой и обсуждать с нашим AI проблемы с играми.</string>
-    <string name="support_signed_out_discord">Помощь также можно получить в нашем Discord</string>
     <string name="support_empty_title">Разговоров пока нет</string>
     <string name="support_empty_body">Чтобы начать, выберите «Получить помощь AI» у игры в библиотеке. Играйте, пока не возникнет проблема, закройте игру, а затем опишите, что пошло не так.</string>
     <string name="support_state_waiting">Ожидает ответа</string>
@@ -1232,7 +1210,7 @@ https://gamenative.app
     <string name="support_started">Начат %1$s</string>
     <string name="support_last_activity">Последняя активность %1$s</string>
     <string name="support_problem_network">Не удалось подключиться. Проверьте соединение и попробуйте снова.</string>
-    <string name="support_problem_unavailable">Чат поддержки в приложении пока недоступен. До тех пор помощь AI продолжается в нашем Discord.</string>
+    <string name="support_problem_unavailable">Чат поддержки в приложении пока недоступен.</string>
     <string name="support_problem_unauthorized">Не удалось подтвердить ваш аккаунт GameNative. Попробуйте позже или выйдите и снова войдите в настройках.</string>
     <string name="support_problem_rate_limited">Вы отправили слишком много за короткое время. Подождите немного и попробуйте снова.</string>
     <string name="support_problem_not_found">Этот разговор не найден.</string>
@@ -1266,7 +1244,7 @@ https://gamenative.app
     </plurals>
     <string name="support_upgrade_reply_cap_pro_hint">Отчёты Pro проходят без очереди.</string>
     <string name="support_limit_title">Дневной лимит честного использования исчерпан</string>
-    <string name="support_upgrade_reason_required">Для ответов AI нужна подписка GameNative. Если вы уже оформили подписку в Discord или на Ko-fi, подключите Discord в настройках.</string>
+    <string name="support_upgrade_reason_required">Для ответов AI нужна подписка GameNative.</string>
     <string name="support_see_plans">Посмотреть планы</string>
     <string name="support_plan_basic_title">$5/месяц · Basic</string>
     <string name="support_plan_basic_body">Запустите свои игры или заставьте их работать лучше.</string>
@@ -1303,8 +1281,6 @@ https://gamenative.app
     <string name="support_run_check_send_last">Отправить последний запуск</string>
     <string name="support_uploading">Загрузка логов</string>
     <string name="support_share_file">Открыть файл</string>
-    <string name="debug_report_use_discord">Использовать Discord</string>
-    <string name="debug_report_use_app">Использовать чат в приложении</string>
     <string name="settings_emulation_wine_proton_manager_subtitle">Импортировать пользовательские версии Wine/Proton (только Bionic)</string>
     <string name="settings_emulation_wine_proton_manager_title">Менеджер Wine/Proton</string>
     <string name="settings_info_libraries_subtitle">Узнайте, какие технологии делают GameNative возможным</string>
@@ -1672,7 +1648,6 @@ https://gamenative.app
     <string name="option_open_container">Открыть контейнер</string>
     <string name="option_edit_container">Редактировать контейнер</string>
     <string name="option_reset_to_defaults">Сбросить контейнер</string>
-    <string name="option_get_support">Получить поддержку</string>
     <string name="option_submit_feedback">Отправить отзыв</string>
     <string name="option_reset_drm">Сбросить DRM</string>
     <string name="option_use_known_config">Использовать известную конфигурацию</string>
@@ -1769,7 +1744,6 @@ https://gamenative.app
     <string name="game_launch_tip_14">Совет: Вы можете вызвать клавиатуру с помощью кнопки «Назад» на устройстве.</string>
     <string name="game_launch_tip_15">Совет: Вы можете нажать двумя пальцами внутри контейнера для щелчка правой кнопкой мыши.</string>
     <string name="game_launch_tip_16">Совет: Если вы используете экранный контроллер, вы можете отключить мышь, чтобы предотвратить случайные касания.</string>
-    <string name="game_launch_tip_17">Совет: Сообщайте о проблемах в Discord, чтобы мы могли их исправить.</string>
     <string name="game_launch_tip_18">Совет: Используйте драйвер Turnip Gen8 V25/V30 или MrPurple T26, если у вас устройство 8 Elite.</string>
     <string name="game_launch_tip_19">Совет: Уменьшите разрешение и используйте FSR из быстрого меню в игре для повышения производительности.</string>
     <string name="game_launch_tip_20">Совет: Если всё приложение вылетает после загрузки игры, вашему устройству не хватает RAM.</string>
@@ -1982,42 +1956,28 @@ https://gamenative.app
     <string name="debug_report_what_went_wrong">Что пошло не так?</string>
     <string name="debug_report_send">Отправить</string>
     <string name="debug_report_share_instead">Поделиться вместо этого</string>
-    <string name="debug_report_connect_hint">Подключите аккаунт Discord, чтобы наш AI мог ответить вам в ветке поддержки.</string>
-    <string name="debug_report_connect_discord">Подключить Discord</string>
     <string name="debug_report_sending">Отправка отчёта…</string>
-    <string name="debug_report_success_title">Отчёт отправлен</string>
-    <string name="debug_report_success_message">В нашем Discord открыта ветка поддержки. Наш AI читает ваш лог и ответит там.</string>
-    <string name="debug_report_open_discord">Открыть Discord</string>
     <string name="debug_report_failed_title">Не удалось отправить отчёт</string>
     <string name="debug_report_failed_message">Отчёт сохранён на этом устройстве. Повторите попытку, когда снова будете в сети, или поделитесь логом.</string>
     <string name="debug_report_retry">Повторить</string>
     <string name="debug_report_share_log_title">Поделиться логом отладки</string>
-    <string name="debug_report_discord_linked">Discord подключён</string>
     <string name="debug_report_no_log">Для этого запуска лог отладки не был записан.</string>
     <string name="debug_offer_title">Получите помощь AI с этим сбоем</string>
     <string name="debug_offer_message">Сессия завершилась преждевременно. Запустите %1$s ещё раз с отладочным логированием. Наш AI прочитает лог и подскажет, что изменить.</string>
     <string name="debug_offer_confirm">Начать отладочный запуск</string>
     <string name="debug_prerun_title">Получить помощь AI</string>
-    <string name="debug_prerun_message_1">Запускает игру с отладочным журналом и после выхода отправляет журнал нашему AI в Discord. Играйте, пока не возникнет проблема.</string>
     <string name="debug_prerun_message_2">Ответы AI доступны только подписчикам.</string>
-    <string name="debug_prerun_message_1_app">Запускает игру с отладочным журналом. После выхода журнал отправляется нашему AI, а ответ придёт в наш Discord или в приложение, если вы войдёте в аккаунт GameNative. Играйте, пока не возникнет проблема.</string>
+    <string name="debug_prerun_message_1_app">Запускает игру с отладочным журналом. После выхода журнал отправляется нашему AI, а ответ придёт в приложение, если вы войдёте в аккаунт GameNative. Играйте, пока не возникнет проблема.</string>
     <string name="debug_prerun_message_2_app">Первый анализ бесплатный. Для дальнейших ответов нужен план.</string>
     <string name="debug_prerun_message_1_neutral">Игра запускается с отладочным журналом. После выхода журнал отправляется нашему AI. Играйте, пока не возникнет проблема.</string>
     <string name="debug_trial_note">Доступен бесплатный пробный период.</string>
     <string name="debug_prerun_message_3">Любой может поделиться отчётом, чтобы получить помощь людей.</string>
     <string name="debug_paywall_title">Получите AI-поддержку по отладке</string>
     <string name="debug_paywall_pitch">Индивидуальные AI-патчи и сборки, которые чинят ваши игры.</string>
-    <string name="debug_paywall_tier5_title">$5/месяц · Basic</string>
-    <string name="debug_paywall_tier5_body">1 индивидуальное исправление в месяц, до 5 попыток на каждое.</string>
     <string name="debug_paywall_tier10_title">$10/месяц · Pro</string>
     <string name="debug_paywall_tier10_body">3 индивидуальных исправления в месяц, более быстрые ответы, первое место в очереди.</string>
     <string name="debug_paywall_cancel_anytime">Отмена в любой момент. Действуют лимиты добросовестного использования.</string>
     <string name="debug_paywall_costs_note">Подписки покрывают расходы на сервис AI, благодаря которому работает эта функция.</string>
-    <string name="debug_paywall_subscribe">Подпишитесь в Discord</string>
-    <string name="debug_paywall_kofi_alt">Подпишитесь в Ko-fi</string>
-    <string name="debug_paywall_already">Уже саппортер?</string>
-    <string name="debug_paywall_send_now">Я оформил подписку, отправить сейчас</string>
-    <string name="debug_paywall_not_now">Не сейчас</string>
     <string name="diagnostics_share_title">Поделиться журналом диагностики</string>
     <string name="diagnostics_share_none">Журнала диагностики пока нет. Сначала используйте \"Диагностический запуск\".</string>
 

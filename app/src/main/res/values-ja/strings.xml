@@ -684,7 +684,6 @@
 
 
     <!-- Profile & Menu -->
-    <string name="help_and_support">ヘルプ &amp; サポート</string>
     <string name="hall_of_fame">殿堂</string>
     <string name="go_online">オンラインにする</string>
     <string name="go_offline">オフラインにする</string>
@@ -922,7 +921,6 @@
     <string name="select_wine_debug_channels">Wine デバッグ チャネルの選択</string>
     <string name="cpu_label">CPU%d</string>
     <string name="describe_what_happened">何が起こったのか説明してください</string>
-    <string name="get_support_on_discord">Discord でサポートを受ける</string>
 
     <!-- Driver Manager -->
     <string name="driver_manager">ドライバーマネージャー</string>
@@ -975,23 +973,10 @@
     <string name="gamenative_account_manage_subscription_subtitle">ブラウザーで請求ページを開きます。</string>
     <string name="gamenative_account_manage_subscription_opening">請求ページを開いています。</string>
     <string name="gamenative_account_manage_subscription_none">このアカウントには管理するサブスクリプションがありません。</string>
-    <string name="gamenative_account_managed_discord">このプランは Discord から提供されています。Discord で管理してください。</string>
     <string name="gamenative_account_managed_kofi">このプランは Ko-fi から提供されています。Ko-fi で管理してください。</string>
     <string name="gamenative_account_manage_subscription_failed">請求ページを開けませんでした。しばらくしてからもう一度お試しください。</string>
     <string name="gamenative_account_sign_out">サインアウト</string>
     <string name="gamenative_account_sign_out_subtitle">このデバイスで GameNative アカウントからサインアウトします。</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">未接続 › 接続</string>
-    <string name="gamenative_account_discord_connected">接続済み › 接続解除</string>
-    <string name="gamenative_account_discord_connected_as">%1$s として接続済み › 接続解除</string>
-    <string name="gamenative_account_discord_link_scan">スマートフォンでこのコードをスキャンするか、別の端末でこのアドレスを開いて Discord を連携してください。</string>
-    <string name="gamenative_account_discord_link_this_device">またはこの端末で開く</string>
-    <string name="gamenative_account_discord_link_waiting">Discord の連携が完了するのを待っています。</string>
-    <string name="gamenative_account_discord_link_starting">コードを準備しています。</string>
-    <string name="gamenative_account_discord_link_expired">このコードは期限切れです。新しいコードを取得するには「再試行」を選択してください。</string>
-    <string name="gamenative_account_discord_link_failed">現在 Discord と連携できません。接続を確認して、もう一度お試しください。</string>
-    <string name="gamenative_account_discord_link_connected_as">%1$s として接続済み</string>
-    <string name="gamenative_account_discord_link_no_browser">Discord を開くブラウザが見つかりません。別の端末でコードをスキャンしてください。</string>
     <string name="gamenative_sign_in_title">GameNative にサインイン</string>
     <string name="gamenative_sign_in_scan">スマートフォンでこのコードをスキャンしてサインインしてください。このデバイスでサインインすることもできます。</string>
     <string name="gamenative_sign_in_code">コード: %1$s</string>
@@ -1008,7 +993,6 @@
     <string name="support_refresh">更新</string>
     <string name="support_signed_out_title">ゲームについてサポートを受ける</string>
     <string name="support_signed_out_body">GameNative アカウントにサインインすると、サポートの会話を確認し、ゲームの問題について AI と話すことができます。</string>
-    <string name="support_signed_out_discord">Discord でもサポートを受けられます</string>
     <string name="support_empty_title">まだ会話はありません</string>
     <string name="support_empty_body">会話を始めるには、ライブラリのゲームで「AI のサポートを受ける」を選んでください。問題が起きるまでプレイしてからゲームを閉じ、何が起きたかを説明してください。</string>
     <string name="support_state_waiting">返信待ち</string>
@@ -1018,7 +1002,7 @@
     <string name="support_started">開始日 %1$s</string>
     <string name="support_last_activity">最終アクティビティ %1$s</string>
     <string name="support_problem_network">接続できませんでした。接続を確認して、もう一度お試しください。</string>
-    <string name="support_problem_unavailable">アプリ内のサポートチャットはまだ利用できません。それまでは、AI サポートは Discord で行われます。</string>
+    <string name="support_problem_unavailable">アプリ内のサポートチャットはまだ利用できません。</string>
     <string name="support_problem_unauthorized">GameNative アカウントを確認できませんでした。後でもう一度お試しいただくか、設定でサインアウトしてから再度サインインしてください。</string>
     <string name="support_problem_rate_limited">短時間に多くの送信がありました。しばらく待ってから、もう一度お試しください。</string>
     <string name="support_problem_not_found">この会話は見つかりませんでした。</string>
@@ -1049,7 +1033,7 @@
     </plurals>
     <string name="support_upgrade_reply_cap_pro_hint">Pro のレポートはキューを待たずに処理されます。</string>
     <string name="support_limit_title">本日の公正利用の上限に達しました</string>
-    <string name="support_upgrade_reason_required">AI の返信には GameNative のサブスクリプションが必要です。すでに Discord または Ko-fi でサブスクリプションに登録している場合は、設定で Discord を連携してください。</string>
+    <string name="support_upgrade_reason_required">AI の返信には GameNative のサブスクリプションが必要です。</string>
     <string name="support_see_plans">プランを見る</string>
     <string name="support_plan_basic_title">$5/月 · Basic</string>
     <string name="support_plan_basic_body">ゲームを動かす。もっと快適に動かす。</string>
@@ -1086,8 +1070,6 @@
     <string name="support_run_check_send_last">前回の実行を送信</string>
     <string name="support_uploading">ログをアップロードしています</string>
     <string name="support_share_file">ファイルを開く</string>
-    <string name="debug_report_use_discord">代わりに Discord を使う</string>
-    <string name="debug_report_use_app">代わりにアプリ内チャットを使う</string>
     <string name="settings_emulation_orientations_title">画面方向</string>
     <string name="settings_emulation_orientations_subtitle">ゲーム画面をどの方向に回転できるかを選択する</string>
     <string name="settings_emulation_default_config_title">デフォルト設定の変更</string>
@@ -1305,15 +1287,11 @@
     <string name="main_recent_crash_title">最近のクラッシュ</string>
     <string name="main_recent_crash_message">申し訳ありません!\n\' が抱えていた最近の問題について知っていただければ幸いです。\nアプリ\'s の設定で最新のクラッシュ ログを表示およびエクスポートし、プロジェクト ZESC4ZZs リポジトリの Github の問題として添付できます。\nGithub リポジトリへのリンクも設定にあります。</string>
     <string name="main_thank_you_title">GameNativeを楽しんでいますか？</string>
-    <string name="main_thank_you_message">今すぐメンバーになりましょう。メンバー特典:\n\n• ゲームを動かすための AI サポート\n• 新リリースへの早期アクセス\n• Discordのプレミアムロールと限定チャンネル\n• …その他多数\n\n月額$5から</string>
+    <string name="main_thank_you_message">今すぐメンバーになりましょう。メンバー特典:\n\n• ゲームを動かすための AI サポート\n• 新リリースへの早期アクセス\n• …その他多数\n\n月額$5から</string>
     <string name="main_join_kofi">メンバーになる</string>
     <string name="pitch_session_title">%1$sを楽しんでいますか？</string>
     <string name="pitch_five_star_title">%1$sが快適に動いてよかったです！</string>
     <string name="main_share">共有</string>
-    <string name="main_share_text">GameNative をチェックしてください - クラウド セーブを完全にサポートし、Android で PC Steam ゲームをプレイしましょう!\nhttps://gamenative.app\nコミュニティに参加してください: https://discord.gg/2hKv4VfZfE</string>
-    <string name="main_discord_support_title">ゲームはうまくいきましたか？</string>
-    <string name="main_discord_support_message">Discord に参加して、ゲームを修正したりパフォーマンスを向上させるためのサポートを受けてください。</string>
-    <string name="main_open_discord">Discordを開く</string>
 
     <!-- PluviaMain: Game Launch -->
     <string name="main_downloading_entry">%sをダウンロード中</string>
@@ -1767,7 +1745,6 @@
     <string name="option_open_container">コンテナを開く</string>
     <string name="option_edit_container">コンテナの編集</string>
     <string name="option_reset_to_defaults">コンテナをリセットする</string>
-    <string name="option_get_support">サポートを受ける</string>
     <string name="option_submit_feedback">フィードバックを送信する</string>
     <string name="option_reset_drm">DRMをリセットする</string>
     <string name="option_use_known_config">既知の構成を使用する</string>
@@ -1858,7 +1835,6 @@
     <string name="game_launch_tip_14">ヒント: device\' の戻るキーを使用してキーボードを呼び出すことができます。</string>
     <string name="game_launch_tip_15">ヒント: コンテナ内を 2 本の指でタップして右クリックできます。</string>
     <string name="game_launch_tip_16">ヒント: オンスクリーン コントローラーを使用している場合は、マウスを無効にして誤ってタッチすることを防ぐことができます。</string>
-    <string name="game_launch_tip_17">ヒント: Discord で問題を報告してください。問題を解決できるようになります。</string>
     <string name="game_launch_tip_18">ヒント: 8 Elite デバイスをお使いの場合は、Turnip Gen8 V25/V30 または MrPurple T26 ドライバーを使用してください。</string>
     <string name="game_launch_tip_19">ヒント: 解像度を下げ、ゲーム内のクイック メニューから FSR を使用してパフォーマンスを向上させましょう。</string>
     <string name="game_launch_tip_20">ヒント: ゲームの読み込み後にアプリ全体がクラッシュする場合は、デバイスの RAM が不足しています。</string>
@@ -2019,42 +1995,28 @@
     <string name="debug_report_what_went_wrong">何が起きましたか？</string>
     <string name="debug_report_send">送信</string>
     <string name="debug_report_share_instead">代わりに共有</string>
-    <string name="debug_report_connect_hint">Discord アカウントを連携すると、AI がサポートスレッドで返信できるようになります。</string>
-    <string name="debug_report_connect_discord">Discord を連携</string>
     <string name="debug_report_sending">レポートを送信中…</string>
-    <string name="debug_report_success_title">レポートを送信しました</string>
-    <string name="debug_report_success_message">Discord にサポートスレッドが作成されました。AI がログを読んで、そちらで返信します。</string>
-    <string name="debug_report_open_discord">Discord を開く</string>
     <string name="debug_report_failed_title">レポートを送信できませんでした</string>
     <string name="debug_report_failed_message">レポートはこの端末に保存されています。オンラインに戻ったら再試行するか、代わりにログを共有してください。</string>
     <string name="debug_report_retry">再試行</string>
     <string name="debug_report_share_log_title">デバッグログを共有</string>
-    <string name="debug_report_discord_linked">Discord 連携済み</string>
     <string name="debug_report_no_log">この実行ではデバッグログが取得されませんでした。</string>
     <string name="debug_offer_title">このクラッシュについて AI のサポートを受ける</string>
     <string name="debug_offer_message">セッションが途中で終了しました。デバッグログを有効にして %1$s をもう一度実行すると、AI がログを読んで変更すべき点をお伝えします。</string>
     <string name="debug_offer_confirm">デバッグ実行を開始</string>
     <string name="debug_prerun_title">AI のサポートを受ける</string>
-    <string name="debug_prerun_message_1">デバッグログ付きでゲームを起動し、終了時にログを Discord の AI に共有します。問題が発生するまでゲームをプレイしてください。</string>
     <string name="debug_prerun_message_2">AI の返信はサブスク会員限定です。</string>
-    <string name="debug_prerun_message_1_app">デバッグログ付きでゲームを実行します。終了するとログが AI に送られ、回答は Discord に届きます。GameNative アカウントでサインインした場合はアプリに届きます。問題が発生するまでプレイしてください。</string>
+    <string name="debug_prerun_message_1_app">デバッグログ付きでゲームを実行します。終了するとログが AI に送られ、GameNative アカウントでサインインしている場合は回答がアプリに届きます。問題が発生するまでプレイしてください。</string>
     <string name="debug_prerun_message_2_app">最初の分析は無料です。追加の返信にはプランが必要です。</string>
     <string name="debug_prerun_message_1_neutral">デバッグログ付きでゲームを実行します。終了するとログが AI に送られます。問題が発生するまでプレイしてください。</string>
     <string name="debug_trial_note">無料トライアルあり。</string>
     <string name="debug_prerun_message_3">レポートは誰でも共有でき、人間のサポートを受けられます。</string>
     <string name="debug_paywall_title">AI デバッグサポートを利用</string>
     <string name="debug_paywall_pitch">ゲームを直すカスタム AI パッチとビルド。</string>
-    <string name="debug_paywall_tier5_title">$5/月 · Basic</string>
-    <string name="debug_paywall_tier5_body">カスタム修正は月 1 回、各最大 5 回まで試行。</string>
     <string name="debug_paywall_tier10_title">$10/月 · Pro</string>
     <string name="debug_paywall_tier10_body">カスタム修正は月 3 回、より速い返信、キューで最優先。</string>
     <string name="debug_paywall_cancel_anytime">いつでも解約できます。フェアユース上限が適用されます。</string>
     <string name="debug_paywall_costs_note">サブスクリプションは、この機能を支える AI サービスの費用に充てられます。</string>
-    <string name="debug_paywall_subscribe">Discord で登録する</string>
-    <string name="debug_paywall_kofi_alt">Ko-fi で登録する</string>
-    <string name="debug_paywall_already">すでにサポーターですか？</string>
-    <string name="debug_paywall_send_now">加入済みです。今すぐ送信</string>
-    <string name="debug_paywall_not_now">今はしない</string>
     <string name="diagnostics_share_title">診断ログを共有</string>
     <string name="diagnostics_share_none">診断ログがまだありません。先に「診断実行」を使用してください。</string>
 

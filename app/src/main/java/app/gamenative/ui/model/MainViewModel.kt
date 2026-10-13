@@ -77,6 +77,11 @@ class MainViewModel @Inject constructor(
     companion object {
         private const val KEY_CURRENT_SCREEN_ROUTE = "current_screen_route"
         private const val MIN_WARM_PITCH_SESSION_MS = 7 * 60 * 1000L
+
+        // Legacy container extra name kept as-is: renaming it would re-show the first-run feedback dialog
+        // for every game already played.
+        private const val FEEDBACK_PROMPT_SHOWN_EXTRA = "discord_support_prompt_shown"
+
         private const val WARM_PITCH_COOLDOWN_MS = 3 * 24 * 60 * 60 * 1000L
         private const val SHORT_SESSION_MS = 90 * 1000L
         private const val AI_DEBUG_OFFER_INTERVAL_MS = 3 * 24 * 60 * 60 * 1000L
@@ -128,7 +133,6 @@ class MainViewModel @Inject constructor(
         data class ExternalGameLaunch(val appId: String) : MainUiEvent()
         data class OnLogonEnded(val result: LoginResult) : MainUiEvent()
         data class SteamDisconnected(val isTerminal: Boolean) : MainUiEvent()
-        data object ShowDiscordSupportDialog : MainUiEvent()
         data class ShowGameFeedbackDialog(val appId: String) : MainUiEvent()
         data class ShowMembershipPitch(val appId: String, val trigger: String) : MainUiEvent()
         data class ShowDebugReportDialog(val appId: String) : MainUiEvent()
@@ -768,10 +772,10 @@ class MainViewModel @Inject constructor(
                     if (feedbackGameSource != GameSource.CUSTOM_GAME) {
                         val container = ContainerUtils.getContainer(context, appId)
 
-                        val shown = container.getExtra("discord_support_prompt_shown", "false") == "true"
+                        val shown = container.getExtra(FEEDBACK_PROMPT_SHOWN_EXTRA, "false") == "true"
                         val configChanged = container.getExtra("config_changed", "false") == "true"
                         if (!shown) {
-                            container.putExtra("discord_support_prompt_shown", "true")
+                            container.putExtra(FEEDBACK_PROMPT_SHOWN_EXTRA, "true")
                             container.saveData()
                             feedbackRequested = true
                             _uiEvent.send(MainUiEvent.ShowGameFeedbackDialog(appId))

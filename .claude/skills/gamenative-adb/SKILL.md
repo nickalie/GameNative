@@ -106,8 +106,8 @@ gnctl containers get STEAM_123                          # confirm it matches the
 
 ## After exit
 
-- Post-exit dialogs can cover the screen: the game-feedback dialog (after a config change, and the one-time
-  Discord/support prompt after the first run), the AI debug-run offer (no window or a run under 90 s), a
+- Post-exit dialogs can cover the screen: the game-feedback dialog (after a config change, and once after
+  the first run of a game), the AI debug-run offer (no window or a run under 90 s), a
   membership pitch. Dismiss with `adb shell input keyevent BACK` and check with a screenshot.
 - After a launch through the intent the app calls `finish()` when the game exits, so it drops back to the
   launcher; that is expected.

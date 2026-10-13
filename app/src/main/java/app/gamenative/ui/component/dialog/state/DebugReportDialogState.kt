@@ -10,13 +10,11 @@ data class DebugReportDialogState(
     val deviceName: String = "",
     val issueText: String = "",
     val phase: String = PHASE_COMPOSE,
-    val threadUrl: String = "",
     val preparing: Boolean = false,
 ) {
     companion object {
         const val PHASE_COMPOSE = "compose"
         const val PHASE_SENDING = "sending"
-        const val PHASE_SUCCESS = "success"
         const val PHASE_ERROR = "error"
         const val PHASE_NO_LOG = "no_log"
 
@@ -30,7 +28,6 @@ data class DebugReportDialogState(
                     "deviceName" to state.deviceName,
                     "issueText" to state.issueText,
                     "phase" to state.phase,
-                    "threadUrl" to state.threadUrl,
                     "preparing" to state.preparing,
                 )
             },
@@ -43,7 +40,6 @@ data class DebugReportDialogState(
                     deviceName = savedMap["deviceName"] as String,
                     issueText = savedMap["issueText"] as String,
                     phase = (savedMap["phase"] as String).let { if (it == PHASE_SENDING) PHASE_ERROR else it },
-                    threadUrl = savedMap["threadUrl"] as String,
                     preparing = savedMap["preparing"] as? Boolean ?: false,
                 )
             },

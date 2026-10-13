@@ -682,7 +682,6 @@
 
 
     <!-- Profile & Menu -->
-    <string name="help_and_support">Pomoc i wsparcie</string>
     <string name="hall_of_fame">Aleja Sław</string>
     <string name="go_online">Przejdź online</string>
     <string name="go_offline">Przejdź offline</string>
@@ -961,7 +960,6 @@
     <string name="select_wine_debug_channels">Wybierz kanały debugowania Wine</string>
     <string name="cpu_label">CPU%d</string>
     <string name="describe_what_happened">Opisz co się stało</string>
-    <string name="get_support_on_discord">Uzyskaj pomoc na Discordzie</string>
 
     <!-- Driver Manager -->
     <string name="driver_manager">Menedżer sterowników</string>
@@ -1014,23 +1012,10 @@
     <string name="gamenative_account_manage_subscription_subtitle">Otwiera stronę płatności w przeglądarce.</string>
     <string name="gamenative_account_manage_subscription_opening">Otwieranie strony płatności.</string>
     <string name="gamenative_account_manage_subscription_none">To konto nie ma subskrypcji do zarządzania.</string>
-    <string name="gamenative_account_managed_discord">Twój plan pochodzi z Discorda. Zarządzaj nim na Discordzie.</string>
     <string name="gamenative_account_managed_kofi">Twój plan pochodzi z Ko-fi. Zarządzaj nim na Ko-fi.</string>
     <string name="gamenative_account_manage_subscription_failed">Nie udało się otworzyć strony płatności. Spróbuj ponownie później.</string>
     <string name="gamenative_account_sign_out">Wyloguj się</string>
     <string name="gamenative_account_sign_out_subtitle">Wyloguj się z konta GameNative na tym urządzeniu.</string>
-    <string name="gamenative_account_discord">Discord</string>
-    <string name="gamenative_account_discord_not_connected">Nie połączono › Połącz</string>
-    <string name="gamenative_account_discord_connected">Połączono › Rozłącz</string>
-    <string name="gamenative_account_discord_connected_as">Połączono jako %1$s › Rozłącz</string>
-    <string name="gamenative_account_discord_link_scan">Zeskanuj ten kod telefonem lub otwórz ten adres na innym urządzeniu, aby połączyć Discord.</string>
-    <string name="gamenative_account_discord_link_this_device">Lub otwórz na tym urządzeniu</string>
-    <string name="gamenative_account_discord_link_waiting">Czekamy, aż zakończysz łączenie z Discordem.</string>
-    <string name="gamenative_account_discord_link_starting">Przygotowywanie kodu.</string>
-    <string name="gamenative_account_discord_link_expired">Ten kod wygasł. Wybierz Spróbuj ponownie, aby uzyskać nowy kod.</string>
-    <string name="gamenative_account_discord_link_failed">Połączenie z Discordem jest teraz niedostępne. Sprawdź połączenie i spróbuj ponownie.</string>
-    <string name="gamenative_account_discord_link_connected_as">Połączono jako %1$s</string>
-    <string name="gamenative_account_discord_link_no_browser">Nie znaleziono przeglądarki do otwarcia Discorda. Zeskanuj kod innym urządzeniem.</string>
     <string name="gamenative_sign_in_title">Zaloguj się do GameNative</string>
     <string name="gamenative_sign_in_scan">Zeskanuj ten kod telefonem, aby się zalogować. Możesz też zalogować się na tym urządzeniu.</string>
     <string name="gamenative_sign_in_code">Kod: %1$s</string>
@@ -1047,7 +1032,6 @@
     <string name="support_refresh">Odśwież</string>
     <string name="support_signed_out_title">Uzyskaj pomoc w grach</string>
     <string name="support_signed_out_body">Zaloguj się na konto GameNative, aby zobaczyć swoje rozmowy z pomocą i porozmawiać z naszym AI o problemach z grami.</string>
-    <string name="support_signed_out_discord">Pomoc możesz też uzyskać na naszym Discordzie</string>
     <string name="support_empty_title">Brak rozmów</string>
     <string name="support_empty_body">Aby ją rozpocząć, wybierz „Uzyskaj pomoc AI” przy grze w bibliotece. Graj, aż wystąpi problem, zamknij grę, a następnie opisz, co poszło nie tak.</string>
     <string name="support_state_waiting">Oczekuje na odpowiedź</string>
@@ -1057,7 +1041,7 @@
     <string name="support_started">Rozpoczęto %1$s</string>
     <string name="support_last_activity">Ostatnia aktywność %1$s</string>
     <string name="support_problem_network">Nie udało się połączyć. Sprawdź połączenie i spróbuj ponownie.</string>
-    <string name="support_problem_unavailable">Czat pomocy w aplikacji nie jest jeszcze dostępny. Do tego czasu pomoc AI odbywa się na naszym Discordzie.</string>
+    <string name="support_problem_unavailable">Czat pomocy w aplikacji nie jest jeszcze dostępny.</string>
     <string name="support_problem_unauthorized">Nie udało się potwierdzić konta GameNative. Spróbuj ponownie później albo wyloguj się i zaloguj ponownie w Ustawieniach.</string>
     <string name="support_problem_rate_limited">Wysłano dużo w krótkim czasie. Odczekaj chwilę i spróbuj ponownie.</string>
     <string name="support_problem_not_found">Nie znaleziono tej rozmowy.</string>
@@ -1091,7 +1075,7 @@
     </plurals>
     <string name="support_upgrade_reply_cap_pro_hint">Raporty Pro omijają kolejkę.</string>
     <string name="support_limit_title">Osiągnięto dzienny limit uczciwego użytkowania</string>
-    <string name="support_upgrade_reason_required">Odpowiedzi AI wymagają subskrypcji GameNative. Jeśli masz już subskrypcję na Discordzie lub Ko-fi, połącz Discord w Ustawieniach.</string>
+    <string name="support_upgrade_reason_required">Odpowiedzi AI wymagają subskrypcji GameNative.</string>
     <string name="support_see_plans">Zobacz plany</string>
     <string name="support_plan_basic_title">$5/miesiąc · Basic</string>
     <string name="support_plan_basic_body">Uruchom swoje gry albo spraw, by działały lepiej.</string>
@@ -1128,8 +1112,6 @@
     <string name="support_run_check_send_last">Wyślij ostatnie uruchomienie</string>
     <string name="support_uploading">Wysyłanie logów</string>
     <string name="support_share_file">Otwórz plik</string>
-    <string name="debug_report_use_discord">Użyj Discorda</string>
-    <string name="debug_report_use_app">Użyj czatu w aplikacji</string>
     <string name="settings_emulation_orientations_title">Dozwolone orientacje</string>
     <string name="settings_emulation_orientations_subtitle">Wybierz, które orientacje ekranu mogą być używane w grze</string>
     <string name="settings_emulation_default_config_title">Zmodyfikuj domyślną konfigurację</string>
@@ -1289,15 +1271,11 @@
     <string name="main_recent_crash_title">Ostatnia awaria</string>
     <string name="main_recent_crash_message">Przykro nam!\nDobrze byłoby wiedzieć o ostatnim problemie, który wystąpił.\nMożesz zobaczyć i wyeksportować log ostatniej awarii w ustawieniach aplikacji i dołączyć go jako zgłoszenie w repozytorium projektu na Githubie.\nLink do repozytorium Github znajduje się również w ustawieniach!</string>
     <string name="main_thank_you_title">Podoba Ci się GameNative?</string>
-    <string name="main_thank_you_message">Zostań członkiem już dziś. Członkowie otrzymują:\n\n• Pomoc AI w uruchamianiu gier\n• Wcześniejszy dostęp do nowych wydań\n• Role premium i ekskluzywne kanały na Discordzie\n• …i więcej\n\nOd 5 $/mies.</string>
+    <string name="main_thank_you_message">Zostań członkiem już dziś. Członkowie otrzymują:\n\n• Pomoc AI w uruchamianiu gier\n• Wcześniejszy dostęp do nowych wydań\n• …i więcej\n\nOd 5 $/mies.</string>
     <string name="main_join_kofi">Zostań członkiem</string>
     <string name="pitch_session_title">Podoba Ci się %1$s?</string>
     <string name="pitch_five_star_title">Świetnie, że %1$s działa doskonale!</string>
     <string name="main_share">Udostępnij</string>
-    <string name="main_share_text">Sprawdź GameNative - graj w gry Steam z PC na Androidzie, z pełnym wsparciem zapisów w chmurze!\nhttps://gamenative.app\nDołącz do społeczności: https://discord.gg/2hKv4VfZfE</string>
-    <string name="main_discord_support_title">Czy gra zadziałała?</string>
-    <string name="main_discord_support_message">Dołącz do Discorda, aby uzyskać pomoc w naprawie gry lub poprawie wydajności.</string>
-    <string name="main_open_discord">Otwórz Discord</string>
     <string name="main_downloading_entry">Pobieranie %s</string>
 
     <!-- PluviaMain: Game Launch -->
@@ -1748,7 +1726,6 @@
     <string name="option_open_container">Otwórz kontener</string>
     <string name="option_edit_container">Edytuj kontener</string>
     <string name="option_reset_to_defaults">Zresetuj kontener</string>
-    <string name="option_get_support">Uzyskaj pomoc</string>
     <string name="option_submit_feedback">Wyślij opinię</string>
     <string name="option_reset_drm">Zresetuj DRM</string>
     <string name="option_use_known_config">Użyj znanej konfiguracji</string>
@@ -1845,7 +1822,6 @@
     <string name="game_launch_tip_14">Wskazówka: Możesz wywołać klawiaturę za pomocą przycisku wstecz na urządzeniu.</string>
     <string name="game_launch_tip_15">Wskazówka: Możesz dotknąć dwoma palcami wewnątrz kontenera, aby kliknąć prawym przyciskiem myszy.</string>
     <string name="game_launch_tip_16">Wskazówka: Jeśli używasz kontrolera ekranowego, możesz wyłączyć mysz, aby zapobiec przypadkowym dotknięciom.</string>
-    <string name="game_launch_tip_17">Wskazówka: Zgłaszaj problemy na Discordzie, abyśmy mogli je naprawić.</string>
     <string name="game_launch_tip_18">Wskazówka: Użyj sterownika Turnip Gen8 V25/V30 lub MrPurple T26, jeśli masz urządzenie 8 Elite.</string>
     <string name="game_launch_tip_19">Wskazówka: Obniż rozdzielczość i użyj FSR z szybkiego menu w grze, aby zwiększyć wydajność.</string>
     <string name="game_launch_tip_20">Wskazówka: Jeśli cała aplikacja ulega awarii po załadowaniu gry, Twojemu urządzeniu kończy się RAM.</string>
@@ -2058,42 +2034,28 @@
     <string name="debug_report_what_went_wrong">Co poszło nie tak?</string>
     <string name="debug_report_send">Wyślij</string>
     <string name="debug_report_share_instead">Udostępnij zamiast tego</string>
-    <string name="debug_report_connect_hint">Połącz swoje konto Discord, aby nasza AI mogła odpowiedzieć Ci w wątku pomocy.</string>
-    <string name="debug_report_connect_discord">Połącz Discord</string>
     <string name="debug_report_sending">Wysyłanie raportu…</string>
-    <string name="debug_report_success_title">Raport wysłany</string>
-    <string name="debug_report_success_message">Na naszym Discordzie otwarto wątek pomocy. Nasza AI czyta Twój log i tam odpowie.</string>
-    <string name="debug_report_open_discord">Otwórz Discord</string>
     <string name="debug_report_failed_title">Nie udało się wysłać raportu</string>
     <string name="debug_report_failed_message">Raport został zapisany na tym urządzeniu. Spróbuj ponownie, gdy będziesz online, albo udostępnij log.</string>
     <string name="debug_report_retry">Ponów próbę</string>
     <string name="debug_report_share_log_title">Udostępnij log debugowania</string>
-    <string name="debug_report_discord_linked">Discord połączony</string>
     <string name="debug_report_no_log">Dla tego uruchomienia nie przechwycono logu debugowania.</string>
     <string name="debug_offer_title">Uzyskaj pomoc AI przy tej awarii</string>
     <string name="debug_offer_message">Ta sesja zakończyła się przedwcześnie. Uruchom %1$s jeszcze raz z logowaniem debugowania, a nasza AI przeczyta log i powie Ci, co zmienić.</string>
     <string name="debug_offer_confirm">Rozpocznij uruchomienie debugowania</string>
     <string name="debug_prerun_title">Uzyskaj pomoc AI</string>
-    <string name="debug_prerun_message_1">Uruchamia grę z logowaniem debugowania i po wyjściu udostępnia log naszemu AI na Discordzie. Graj, aż wystąpi problem.</string>
     <string name="debug_prerun_message_2">Odpowiedzi AI są tylko dla subskrybentów.</string>
-    <string name="debug_prerun_message_1_app">Uruchamia grę z logowaniem debugowania. Po wyjściu log trafia do naszego AI, a odpowiedź przychodzi na naszym Discordzie lub w aplikacji, jeśli zalogujesz się na konto GameNative. Graj, aż wystąpi problem.</string>
+    <string name="debug_prerun_message_1_app">Uruchamia grę z logowaniem debugowania. Po wyjściu log trafia do naszego AI, a odpowiedź przychodzi w aplikacji, jeśli zalogujesz się na konto GameNative. Graj, aż wystąpi problem.</string>
     <string name="debug_prerun_message_2_app">Pierwsza analiza jest darmowa. Kolejne odpowiedzi wymagają planu.</string>
     <string name="debug_prerun_message_1_neutral">Gra uruchamia się z logowaniem debugowania. Po wyjściu log trafia do naszego AI. Graj, aż wystąpi problem.</string>
     <string name="debug_trial_note">Dostępny bezpłatny okres próbny.</string>
     <string name="debug_prerun_message_3">Każdy może udostępnić raport, aby uzyskać pomoc od ludzi.</string>
     <string name="debug_paywall_title">Uzyskaj pomoc AI w debugowaniu</string>
     <string name="debug_paywall_pitch">Własne poprawki i buildy od AI, które naprawiają Twoje gry.</string>
-    <string name="debug_paywall_tier5_title">$5/miesiąc · Basic</string>
-    <string name="debug_paywall_tier5_body">1 własna poprawka miesięcznie, do 5 prób na każdą.</string>
     <string name="debug_paywall_tier10_title">$10/miesiąc · Pro</string>
     <string name="debug_paywall_tier10_body">3 własne poprawki miesięcznie, szybsze odpowiedzi, pierwszeństwo w kolejce.</string>
     <string name="debug_paywall_cancel_anytime">Anuluj w dowolnym momencie. Obowiązują limity uczciwego użytkowania.</string>
     <string name="debug_paywall_costs_note">Subskrypcje pokrywają koszty usługi AI, dzięki której ta funkcja działa.</string>
-    <string name="debug_paywall_subscribe">Subskrybuj przez Discord</string>
-    <string name="debug_paywall_kofi_alt">Subskrybuj przez Ko-fi</string>
-    <string name="debug_paywall_already">Jesteś już supporterem?</string>
-    <string name="debug_paywall_send_now">Mam już subskrypcję, wyślij teraz</string>
-    <string name="debug_paywall_not_now">Nie teraz</string>
     <string name="diagnostics_share_title">Udostępnij dziennik diagnostyki</string>
     <string name="diagnostics_share_none">Brak dziennika diagnostyki. Najpierw użyj \"Uruchomienie diagnostyczne\".</string>
 
