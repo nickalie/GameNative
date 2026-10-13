@@ -313,6 +313,8 @@ class AgentProviderTest {
             "device.info",
             "games.list",
             "games.add_custom",
+            "stores.list",
+            "stores.set",
             "components.list",
             "components.install",
             "containers.get",

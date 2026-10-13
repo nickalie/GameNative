@@ -37,6 +37,9 @@ pub enum Command {
     /// Installed games; add custom game folders
     #[command(subcommand)]
     Games(GamesCommand),
+    /// Which game stores are on (Settings → Stores); turn them on or off
+    #[command(subcommand)]
+    Stores(StoresCommand),
     /// Component versions usable in container configs
     #[command(subcommand)]
     Components(ComponentsCommand),
@@ -87,6 +90,25 @@ pub enum GamesCommand {
         #[arg(value_name = "PATH")]
         path: String,
     },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum StoresCommand {
+    /// Every store with its switch
+    List,
+    /// Turn a store on or off (starts or stops its service; never logs in or out)
+    Set {
+        /// STEAM, CUSTOM_GAME, GOG, EPIC or AMAZON
+        source: String,
+        /// on or off
+        state: Switch,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
+pub enum Switch {
+    On,
+    Off,
 }
 
 #[derive(Debug, Subcommand)]

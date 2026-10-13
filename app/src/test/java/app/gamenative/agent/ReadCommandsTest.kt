@@ -161,7 +161,14 @@ class ReadCommandsTest {
         custom: List<InstalledGame> = CUSTOM_GAMES,
         containers: Set<String> = setOf("STEAM_10"),
         folders: FakeCustomFolders = FakeCustomFolders(),
-    ) = GameCommands(storeGames = { store }, customGames = { custom }, containerIds = { containers }, customFolders = folders.deps())
+        enabledStores: Set<GameSource> = GameSource.entries.toSet(),
+    ) = GameCommands(
+        storeGames = { store },
+        customGames = { custom },
+        containerIds = { containers },
+        customFolders = folders.deps(),
+        isStoreEnabled = { it in enabledStores },
+    )
 
     /** Records what `games.add_custom` asks of the app. */
     private class FakeCustomFolders(
@@ -224,6 +231,23 @@ class ReadCommandsTest {
         assertEquals(AgentErrorCode.BAD_ARGS, unknown.code)
         assertTrue(unknown.details!!.jsonObject["sources"]!!.jsonArray.isNotEmpty())
         assertEquals(AgentErrorCode.BAD_ARGS, mistyped.code)
+    }
+
+    @Test
+    fun gamesList_leavesOutStoresThatAreOff() {
+        val steamAndCustom = gameCommands(enabledStores = setOf(GameSource.STEAM, GameSource.CUSTOM_GAME))
+            .list(JsonObject(emptyMap())).objects()
+        val epicOnly = gameCommands(enabledStores = setOf(GameSource.EPIC)).list(JsonObject(emptyMap())).objects()
+
+        assertEquals(listOf("STEAM_10", "CUSTOM_GAME_40"), steamAndCustom.map { it.str("app_id") })
+        assertEquals(listOf("EPIC_20"), epicOnly.map { it.str("app_id") })
+    }
+
+    @Test
+    fun gamesList_sourceOfAStoreThatIsOffIsEmpty() {
+        val gog = gameCommands(enabledStores = setOf(GameSource.STEAM)).list(args("source" to "GOG")).objects()
+
+        assertTrue(gog.isEmpty())
     }
 
     @Test
@@ -325,6 +349,19 @@ class ReadCommandsTest {
 
         assertEquals(AgentErrorCode.STORAGE_ACCESS_DENIED, error.code)
         assertTrue("the message says how to grant access", error.message!!.contains(GRANT_HINT))
+        assertTrue(folders.added.isEmpty())
+    }
+
+    @Test
+    fun addCustom_whileCustomGamesIsOffIsStoreDisabled() {
+        val folders = FakeCustomFolders()
+
+        val error = failure {
+            gameCommands(folders = folders, enabledStores = setOf(GameSource.STEAM)).addCustom(args("path" to gameFolder().path))
+        }
+
+        assertEquals(AgentErrorCode.STORE_DISABLED, error.code)
+        assertEquals("CUSTOM_GAME", error.details!!.jsonObject.str("source"))
         assertTrue(folders.added.isEmpty())
     }
 

@@ -71,18 +71,19 @@ class CustomFolderDeps(
 }
 
 /**
- * `games.list {source?}`: installed games from every store plus custom games. Custom folders that
- * were imported as a Steam game share its `STEAM_<id>` and are dropped in favor of the store entry,
- * as the library screen does.
+ * `games.list {source?}`: installed games from every store that is on in Settings → Stores, plus custom
+ * games while that switch is on. Custom folders that were imported as a Steam game share its `STEAM_<id>`
+ * and are dropped in favor of the store entry, as the library screen does.
  *
  * `games.add_custom {path}`: adds a folder on the device as a custom game, the way the library's
- * "add custom game" folder picker does.
+ * "add custom game" folder picker does. Refused with `STORE_DISABLED` while Custom Games is off.
  */
 class GameCommands(
     private val storeGames: () -> List<InstalledGame>,
     private val customGames: () -> List<InstalledGame>,
     private val containerIds: () -> Set<String>,
     private val customFolders: CustomFolderDeps,
+    private val isStoreEnabled: (GameSource) -> Boolean,
 ) {
 
     fun register(dispatcher: AgentDispatcher) {
@@ -111,6 +112,13 @@ class GameCommands(
 
     fun addCustom(args: JsonObject): JsonElement {
         val path = folderPath(args)
+        if (!isStoreEnabled(GameSource.CUSTOM_GAME)) {
+            throw AgentException(
+                AgentErrorCode.STORE_DISABLED,
+                "Custom Games is turned off in Settings → Stores",
+                buildJsonObject { put("source", GameSource.CUSTOM_GAME.name) },
+            )
+        }
         if (!customFolders.hasStorageAccess(path)) {
             throw AgentException(
                 AgentErrorCode.STORAGE_ACCESS_DENIED,
@@ -155,8 +163,8 @@ class GameCommands(
     private fun installedGames(): List<InstalledGame> {
         val byAppId = LinkedHashMap<String, InstalledGame>()
         storeGames().forEach { byAppId.putIfAbsent(it.appId, it) }
-        customGames().forEach { byAppId.putIfAbsent(it.appId, it) }
-        return byAppId.values.toList()
+        if (isStoreEnabled(GameSource.CUSTOM_GAME)) customGames().forEach { byAppId.putIfAbsent(it.appId, it) }
+        return byAppId.values.filter { isStoreEnabled(it.source) }
     }
 
     companion object {

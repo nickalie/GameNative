@@ -11,7 +11,7 @@ use serde_json::{json, Map, Value};
 use crate::adb::{self, truncate, AdbRunner};
 use crate::cli::{
     AppId, Cli, Command, ComponentsCommand, ContainersCommand, DeviceCommand, GamesCommand,
-    LogsCommand, SessionsCommand,
+    LogsCommand, SessionsCommand, StoresCommand, Switch,
 };
 use crate::error::CliError;
 use crate::launch::{self, Clock};
@@ -59,6 +59,11 @@ pub fn execute(cli: &Cli, ctx: &mut Ctx) -> Result<Value, CliError> {
         Command::Games(GamesCommand::Add { path }) => {
             ctx.call("games.add_custom", json!({ "path": path }))
         }
+        Command::Stores(StoresCommand::List) => ctx.call("stores.list", Value::Null),
+        Command::Stores(StoresCommand::Set { source, state }) => ctx.call(
+            "stores.set",
+            json!({ "source": source, "enabled": *state == Switch::On }),
+        ),
         Command::Components(ComponentsCommand::List { target }) => {
             ctx.call("components.list", optional("target", target.as_deref()))
         }
@@ -453,6 +458,18 @@ mod tests {
             (
                 vec!["games", "add", "/sdcard/Games/PC/My Game"],
                 json!({"command": "games.add_custom", "args": {"path": "/sdcard/Games/PC/My Game"}}),
+            ),
+            (
+                vec!["stores", "list"],
+                json!({"command": "stores.list", "args": {}}),
+            ),
+            (
+                vec!["stores", "set", "gog", "on"],
+                json!({"command": "stores.set", "args": {"source": "gog", "enabled": true}}),
+            ),
+            (
+                vec!["stores", "set", "STEAM", "off"],
+                json!({"command": "stores.set", "args": {"source": "STEAM", "enabled": false}}),
             ),
             (
                 vec!["components", "list", "--target", "wineVersion"],

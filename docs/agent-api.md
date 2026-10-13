@@ -49,7 +49,8 @@ The provider authority is derived from the package name: `app.gamenative.agent` 
   full `envVars` string, unmasked.
 - **What an enabled API allows.** Persistent config changes within the AI-suggestion boundary (below),
   adding folders as custom games, installing component versions listed in the app's component manifest,
-  launching and stopping games. It cannot install anything outside that manifest, change drives, controls or
+  turning stores on and off as **Settings → Stores** does (never logging in or out), launching and stopping
+  games. It cannot install anything outside that manifest, change drives, controls or
   the container variant, and cannot read other app data.
 
 ## Transport
@@ -91,6 +92,7 @@ adb shell content call --uri content://app.gamenative.agent --method command --a
 | `SESSION_ACTIVE` | `containers.set`/`restore` while the game has a session that has not exited. |
 | `NO_BACKUP` | `containers.restore` with an unknown backup id, or no baseline yet. |
 | `STORAGE_ACCESS_DENIED` | `games.add_custom` for a folder outside the app's own storage while the app has no All files access. |
+| `STORE_DISABLED` | `games.add_custom` while Custom Games is off in Settings → Stores; `details.source` is the store. Turn it on with `stores.set`. |
 | `NOT_READY` | The app process is still starting. Retry. |
 | `DISABLED` | The Agent API toggle is off. |
 | `RESPONSE_TOO_LARGE` | The response exceeds 256 KB; `details` has `size` and `limit`. Use a filter or a smaller `tail`. |
@@ -105,7 +107,8 @@ App ids have the shape `<SOURCE>_<number>`, e.g. `STEAM_123`, `CUSTOM_GAME_7`; s
 
 `{api_version, app_version, package, commands[]}` — `commands` lists every registered command, sorted:
 `capabilities`, `components.install`, `components.list`, `containers.backups`, `containers.get`, `containers.restore`,
-`containers.set`, `device.info`, `games.add_custom`, `games.list`, `sessions.current`, `sessions.logs`, `sessions.stop`.
+`containers.set`, `device.info`, `games.add_custom`, `games.list`, `sessions.current`, `sessions.logs`, `sessions.stop`,
+`stores.list`, `stores.set`.
 
 ### `device.info`
 
@@ -121,6 +124,9 @@ Installed games only: `[{app_id, game_id, game_source, name, has_container}]`. `
 id (`null` when the store id is not numeric). Custom game folders imported as a Steam game are listed once,
 as the Steam entry. `has_container=false` means the game was never launched: config commands answer
 `NO_CONTAINER` until it is. Unknown `source` → `BAD_ARGS` with `details.sources`.
+
+Only stores that are on in **Settings → Stores** are listed (by default Steam and Custom Games); a `source`
+that is off gives `[]`. See `stores.list` / `stores.set`.
 
 ### `games.add_custom {path}`
 
@@ -144,6 +150,26 @@ Adds a folder on the device as a custom game, as the library's folder picker doe
   allow`, Android 10 and earlier `adb shell pm grant <package> android.permission.READ_EXTERNAL_STORAGE`.
   Granting All files access restarts the app process (`NOT_READY` until it is up again).
 - Not a directory, or a folder the app refuses → `BAD_ARGS`. The folder is never copied or moved.
+- While Custom Games is off in Settings → Stores → `STORE_DISABLED` (checked after the path is validated);
+  nothing is added.
+
+### `stores.list`
+
+`[{source, enabled}]` for every source (`STEAM`, `CUSTOM_GAME`, `GOG`, `EPIC`, `AMAZON`): the **Settings →
+Stores** switches. Defaults: `STEAM` and `CUSTOM_GAME` on, the rest off. A store that is off is absent from the
+app: its games, library tab and sign-in entries are hidden, its service does not run, `games.list` leaves it
+out and a `LAUNCH_GAME` intent for its games is refused (see Sessions). Its installed games, containers and
+sign-in are kept.
+
+### `stores.set {source, enabled}`
+
+Turns a store on or off, as the Settings switch does: `{source, enabled, changed}` (`changed=false` when it
+already had that value). On: the store's service starts when the account is signed in (Steam reconnects
+with its stored session). Off: the service stops through its normal stop path unless it is downloading or
+syncing (then it stops once idle); nothing is logged out or deleted. It does not sign in: a store that was
+never signed in on the device stays empty. Container commands (`containers.*`) work for any game, whatever
+its store's switch. `source` is case-insensitive; a missing or unknown `source` or a non-boolean `enabled` →
+`BAD_ARGS`.
 
 ### `components.list {target?}`
 
@@ -364,7 +390,9 @@ Rules:
   `launch_options_ignored_session_active`. A session that is still `launching` is replaced by the new intent.
   An intent for the Steam game that is already running only brings its screen forward.
 - **No session yet.** A launch that is deferred (the store service is not ready, Steam not logged in on a cold
-  start) creates no session until it actually starts; a game that is not installed never does.
+  start) creates no session until it actually starts; a game that is not installed never does. Neither does a
+  game whose store is off in Settings → Stores: the app refuses the intent with a snackbar ("… is turned off in
+  Settings → Stores") and drops its launch extras; turn the store on with `stores.set` first.
   `sessions.current` keeps showing the previous session meanwhile.
 - **One-shot options.** Launch options belong to one session and end with it; the next launch (also from the
   UI) never inherits them.

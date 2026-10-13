@@ -25,7 +25,10 @@ import app.gamenative.agent.commands.ContainerWriteDeps
 import app.gamenative.agent.commands.DeviceCommands
 import app.gamenative.agent.commands.GameCommands
 import app.gamenative.agent.commands.SessionCommands
+import app.gamenative.agent.commands.StoreCommands
+import app.gamenative.data.StoreToggles
 import app.gamenative.events.SteamEvent
+import app.gamenative.service.StoreServices
 
 /**
  * ADB back channel for AI agents: `adb shell content call --uri content://<package>.agent
@@ -141,6 +144,11 @@ class AgentProvider : ContentProvider() {
                 customGames = { GameCommands.customGamesFrom() },
                 containerIds = { GameCommands.containerIdsFrom(context) },
                 customFolders = CustomFolderDeps.forApp(context),
+                isStoreEnabled = StoreToggles::isEnabled,
+            ).register(dispatcher)
+            StoreCommands(
+                isEnabled = StoreToggles::isEnabled,
+                setEnabled = { source, enabled -> StoreServices.setEnabled(context, source, enabled) },
             ).register(dispatcher)
             ComponentCommands(installs = ComponentInstallDeps.forApp(context, componentInstalls)) {
                 ComponentCommands.loadSources(context)
