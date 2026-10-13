@@ -92,6 +92,15 @@ object PrefManager {
                 removePref(oldRefreshToken)
             }
         }
+
+        // Note: Should remove after a few release versions. Discord integration was removed;
+        // drop its leftover state (relay credential, linked name, link flow flags).
+        removePref(stringPreferencesKey("discord_relay_token"))
+        removePref(byteArrayPreferencesKey("discord_relay_token_enc"))
+        removePref(stringPreferencesKey("discord_oauth_nonce"))
+        removePref(booleanPreferencesKey("discord_merge_pending"))
+        removePref(stringPreferencesKey("discord_linked_name"))
+        removePref(stringPreferencesKey("ai_help_preferred_path"))
     }
 
     fun clearPreferences() {

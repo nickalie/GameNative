@@ -1916,6 +1916,7 @@
     <string name="debug_prerun_message_1_app">Kører spillet med debug-logning. Når du afslutter, sendes loggen til vores AI, og svaret kommer i appen, hvis du logger ind med en GameNative-konto. Kør spillet, indtil problemet opstår.</string>
     <string name="debug_prerun_message_2_app">Den første analyse er gratis. Opfølgende svar kræver en plan.</string>
     <string name="debug_prerun_message_1_neutral">Spillet kører med debug-logning. Når du afslutter, sendes loggen til vores AI. Spil, indtil problemet opstår.</string>
+    <string name="debug_prerun_message_1_share">Spillet kører med debug-logning. Når du afslutter, kan du dele loggen. Spil, indtil problemet opstår.</string>
     <string name="debug_trial_note">Gratis prøveperiode tilgængelig.</string>
     <string name="debug_prerun_message_3">Alle kan dele rapporten for at få menneskelig hjælp.</string>
     <string name="debug_paywall_title">Få AI-fejlfindingshjælp</string>

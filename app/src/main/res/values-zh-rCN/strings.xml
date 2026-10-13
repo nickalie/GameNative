@@ -2062,6 +2062,7 @@
     <string name="debug_prerun_message_1_app">以调试日志运行游戏。退出后，日志会发送给我们的 AI；如果你使用 GameNative 账户登录，回答会显示在应用内。请一直运行游戏，直到出现问题。</string>
     <string name="debug_prerun_message_2_app">首次分析免费。后续回复需要方案。</string>
     <string name="debug_prerun_message_1_neutral">游戏将以调试日志运行。退出后，日志会发送给我们的 AI。请一直运行游戏，直到出现问题。</string>
+    <string name="debug_prerun_message_1_share">游戏将以调试日志运行。退出后，你可以分享日志。请一直运行游戏，直到出现问题。</string>
     <string name="debug_trial_note">提供免费试用。</string>
     <string name="debug_prerun_message_3">任何人都可以分享报告以获得人工帮助。</string>
     <string name="debug_paywall_title">获取 AI 调试支持</string>

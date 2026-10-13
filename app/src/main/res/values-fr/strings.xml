@@ -2064,6 +2064,7 @@
     <string name="debug_prerun_message_1_app">Lance le jeu avec les journaux de débogage. Quand vous quittez, le journal est envoyé à notre AI, et la réponse arrive dans l\'app si vous vous connectez avec un compte GameNative. Jouez jusqu\'à ce que le problème se produise.</string>
     <string name="debug_prerun_message_2_app">La première analyse est gratuite. Les réponses suivantes nécessitent un abonnement.</string>
     <string name="debug_prerun_message_1_neutral">Le jeu se lance avec les journaux de débogage. Quand vous quittez, le journal est envoyé à notre AI. Jouez jusqu\'à ce que le problème se produise.</string>
+    <string name="debug_prerun_message_1_share">Le jeu se lance avec les journaux de débogage. Quand vous quittez, vous pouvez partager le journal. Jouez jusqu\'à ce que le problème se produise.</string>
     <string name="debug_trial_note">Essai gratuit disponible.</string>
     <string name="debug_prerun_message_3">Tout le monde peut partager le rapport pour obtenir de l\'aide humaine.</string>
     <string name="debug_paywall_title">Obtenez une assistance de débogage AI</string>

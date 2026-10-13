@@ -1970,6 +1970,7 @@ Ubuntu RootFs - releases.ubuntu.com/focal</string>
     <string name="debug_prerun_message_1_app">Запускает игру с отладочным журналом. После выхода журнал отправляется нашему AI, а ответ придёт в приложение, если вы войдёте в аккаунт GameNative. Играйте, пока не возникнет проблема.</string>
     <string name="debug_prerun_message_2_app">Первый анализ бесплатный. Для дальнейших ответов нужен план.</string>
     <string name="debug_prerun_message_1_neutral">Игра запускается с отладочным журналом. После выхода журнал отправляется нашему AI. Играйте, пока не возникнет проблема.</string>
+    <string name="debug_prerun_message_1_share">Игра запускается с отладочным журналом. После выхода журналом можно поделиться. Играйте, пока не возникнет проблема.</string>
     <string name="debug_trial_note">Доступен бесплатный пробный период.</string>
     <string name="debug_prerun_message_3">Любой может поделиться отчётом, чтобы получить помощь людей.</string>
     <string name="debug_paywall_title">Получите AI-поддержку по отладке</string>

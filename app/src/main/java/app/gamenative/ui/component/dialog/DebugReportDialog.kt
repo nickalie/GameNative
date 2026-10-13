@@ -244,33 +244,66 @@ fun DebugReportDialog(
                                 )
                             }
 
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                TextButton(onClick = onDismiss) {
-                                    Text(stringResource(R.string.cancel))
-                                }
-                                Button(
-                                    onClick = onSend,
-                                    modifier = Modifier.padding(start = 8.dp),
-                                    enabled = canSend && appChatEnabled,
+                            if (!appChatEnabled) {
+                                // In-app chat is off (relay 404): sending can't work, so explain why
+                                // and make Share the primary action instead of a dead Send button.
+                                Text(
+                                    text = stringResource(R.string.support_problem_unavailable),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = PluviaTheme.colors.textMuted,
+                                    modifier = Modifier
+                                        .align(Alignment.Start)
+                                        .padding(bottom = 16.dp),
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text(stringResource(R.string.debug_report_send))
+                                    TextButton(onClick = onDismiss) {
+                                        Text(stringResource(R.string.cancel))
+                                    }
+                                    Button(
+                                        onClick = onShare,
+                                        modifier = Modifier.padding(start = 8.dp),
+                                        enabled = !state.preparing,
+                                    ) {
+                                        Text(stringResource(R.string.debug_report_share_instead))
+                                    }
                                 }
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
-                                horizontalArrangement = Arrangement.End,
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                TextButton(
-                                    onClick = onShare,
-                                    enabled = !state.preparing,
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Text(stringResource(R.string.debug_report_share_instead), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+                                    TextButton(onClick = onDismiss) {
+                                        Text(stringResource(R.string.cancel))
+                                    }
+                                    Button(
+                                        onClick = onSend,
+                                        modifier = Modifier.padding(start = 8.dp),
+                                        enabled = canSend,
+                                    ) {
+                                        Text(stringResource(R.string.debug_report_send))
+                                    }
+                                }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                                    horizontalArrangement = Arrangement.End,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    TextButton(
+                                        onClick = onShare,
+                                        enabled = !state.preparing,
+                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp),
+                                    ) {
+                                        Text(
+                                            stringResource(R.string.debug_report_share_instead),
+                                            style = MaterialTheme.typography.labelMedium,
+                                            maxLines = 1,
+                                        )
+                                    }
                                 }
                             }
                         }

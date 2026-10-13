@@ -1986,6 +1986,7 @@
     <string name="debug_prerun_message_1_app">Startet das Spiel mit Debug-Logging. Wenn du es beendest, geht das Log an unsere AI, und die Antwort kommt in der App, wenn du dich mit einem GameNative-Konto anmeldest. Spiele, bis das Problem auftritt.</string>
     <string name="debug_prerun_message_2_app">Die erste Analyse ist kostenlos. Für weitere Antworten brauchst du einen Plan.</string>
     <string name="debug_prerun_message_1_neutral">Das Spiel läuft mit Debug-Logging. Wenn du es beendest, geht das Log an unsere AI. Spiele, bis das Problem auftritt.</string>
+    <string name="debug_prerun_message_1_share">Das Spiel läuft mit Debug-Logging. Wenn du es beendest, kannst du das Log teilen. Spiele, bis das Problem auftritt.</string>
     <string name="debug_trial_note">Kostenlose Testphase verfügbar.</string>
     <string name="debug_prerun_message_3">Jeder kann den Bericht teilen, um menschliche Hilfe zu erhalten.</string>
     <string name="debug_paywall_title">AI-Debug-Support erhalten</string>

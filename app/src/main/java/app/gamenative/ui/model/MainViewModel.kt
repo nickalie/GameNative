@@ -9,6 +9,7 @@ import app.gamenative.BuildConfig
 import app.gamenative.PluviaApp
 import app.gamenative.PrefManager
 import app.gamenative.agent.AgentHooks
+import app.gamenative.api.SupportApi
 import app.gamenative.data.BootAdRepository
 import app.gamenative.data.GameProcessInfo
 import app.gamenative.data.GameSource
@@ -823,6 +824,8 @@ class MainViewModel @Inject constructor(
 
     private suspend fun offerAiDebugRun(context: Context, appId: String, trigger: String): Boolean {
         if (PrefManager.hideAiFeatures) return false
+        // The debug run's report can only go through in-app chat; don't promise AI help when it's known to be off.
+        if (SupportApi.available.value == false) return false
         return try {
             val container = ContainerUtils.getContainer(context, appId)
             val now = System.currentTimeMillis()

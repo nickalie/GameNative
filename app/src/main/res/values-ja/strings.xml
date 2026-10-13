@@ -2009,6 +2009,7 @@
     <string name="debug_prerun_message_1_app">デバッグログ付きでゲームを実行します。終了するとログが AI に送られ、GameNative アカウントでサインインしている場合は回答がアプリに届きます。問題が発生するまでプレイしてください。</string>
     <string name="debug_prerun_message_2_app">最初の分析は無料です。追加の返信にはプランが必要です。</string>
     <string name="debug_prerun_message_1_neutral">デバッグログ付きでゲームを実行します。終了するとログが AI に送られます。問題が発生するまでプレイしてください。</string>
+    <string name="debug_prerun_message_1_share">デバッグログ付きでゲームを実行します。終了後にログを共有できます。問題が発生するまでプレイしてください。</string>
     <string name="debug_trial_note">無料トライアルあり。</string>
     <string name="debug_prerun_message_3">レポートは誰でも共有でき、人間のサポートを受けられます。</string>
     <string name="debug_paywall_title">AI デバッグサポートを利用</string>

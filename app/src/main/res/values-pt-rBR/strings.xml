@@ -1916,6 +1916,7 @@
     <string name="debug_prerun_message_1_app">Roda o jogo com registro de depuração. Ao sair, o log vai para nossa AI, e a resposta chega no app se você entrar com uma conta GameNative. Jogue até que o problema aconteça.</string>
     <string name="debug_prerun_message_2_app">A primeira análise é gratuita. Respostas seguintes exigem um plano.</string>
     <string name="debug_prerun_message_1_neutral">O jogo roda com registro de depuração. Ao sair, o log vai para nossa AI. Jogue até que o problema aconteça.</string>
+    <string name="debug_prerun_message_1_share">O jogo roda com registro de depuração. Ao sair, você pode compartilhar o log. Jogue até que o problema aconteça.</string>
     <string name="debug_trial_note">Teste gratuito disponível.</string>
     <string name="debug_prerun_message_3">Qualquer pessoa pode compartilhar o relatório para receber ajuda humana.</string>
     <string name="debug_paywall_title">Obtenha suporte de depuração com AI</string>

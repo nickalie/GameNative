@@ -2042,6 +2042,7 @@
     <string name="debug_prerun_message_1_app">디버그 로깅으로 게임을 실행합니다. 종료하면 로그가 AI에 전송되고, GameNative 계정으로 로그인하면 답변을 앱에서 받을 수 있습니다. 문제가 발생할 때까지 플레이하세요.</string>
     <string name="debug_prerun_message_2_app">첫 분석은 무료입니다. 추가 답변에는 플랜이 필요합니다.</string>
     <string name="debug_prerun_message_1_neutral">게임이 디버그 로깅으로 실행됩니다. 종료하면 로그가 AI에 전송됩니다. 문제가 발생할 때까지 플레이하세요.</string>
+    <string name="debug_prerun_message_1_share">게임이 디버그 로깅으로 실행됩니다. 종료하면 로그를 공유할 수 있습니다. 문제가 발생할 때까지 플레이하세요.</string>
     <string name="debug_trial_note">무료 체험 이용 가능.</string>
     <string name="debug_prerun_message_3">리포트는 누구나 공유해 사람의 도움을 받을 수 있습니다.</string>
     <string name="debug_paywall_title">AI 디버그 지원 받기</string>

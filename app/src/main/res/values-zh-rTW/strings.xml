@@ -2053,6 +2053,7 @@
     <string name="debug_prerun_message_1_app">以除錯日誌執行遊戲。退出後，日誌會傳送給我們的 AI；如果你使用 GameNative 帳戶登入，回答會顯示在應用程式內。請持續執行遊戲，直到問題出現。</string>
     <string name="debug_prerun_message_2_app">首次分析免費。後續回覆需要方案。</string>
     <string name="debug_prerun_message_1_neutral">遊戲將以除錯日誌執行。退出後，日誌會傳送給我們的 AI。請持續執行遊戲，直到問題出現。</string>
+    <string name="debug_prerun_message_1_share">遊戲將以除錯日誌執行。退出後，你可以分享日誌。請持續執行遊戲，直到問題出現。</string>
     <string name="debug_trial_note">提供免費試用。</string>
     <string name="debug_prerun_message_3">任何人都可以分享報告以獲得人工協助。</string>
     <string name="debug_paywall_title">取得 AI 除錯支援</string>

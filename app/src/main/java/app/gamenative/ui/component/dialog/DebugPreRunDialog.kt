@@ -63,10 +63,10 @@ fun DebugPreRunDialog(
                     )
                     Text(
                         text = stringResource(
-                            if (appChat == true) {
-                                R.string.debug_prerun_message_1_app
-                            } else {
-                                R.string.debug_prerun_message_1_neutral
+                            when (appChat) {
+                                true -> R.string.debug_prerun_message_1_app
+                                false -> R.string.debug_prerun_message_1_share
+                                null -> R.string.debug_prerun_message_1_neutral
                             },
                         ),
                         style = MaterialTheme.typography.bodyMedium,
@@ -75,10 +75,10 @@ fun DebugPreRunDialog(
                             .padding(bottom = 8.dp),
                     )
                     Text(
-                        text = if (appChat == true) {
-                            stringResource(R.string.debug_prerun_message_2_app)
-                        } else {
-                            stringResource(R.string.debug_prerun_message_2) + " " + stringResource(R.string.debug_trial_note)
+                        text = when (appChat) {
+                            true -> stringResource(R.string.debug_prerun_message_2_app)
+                            false -> stringResource(R.string.support_problem_unavailable)
+                            null -> stringResource(R.string.debug_prerun_message_2) + " " + stringResource(R.string.debug_trial_note)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
