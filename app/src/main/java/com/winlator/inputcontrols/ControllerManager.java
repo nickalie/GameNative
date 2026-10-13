@@ -68,7 +68,6 @@ public class ControllerManager {
     private final Handler settleHandler = new Handler(Looper.getMainLooper());
     private final Runnable settleAssignRunnable = this::autoAssignConnectedDevices;
     private final Set<String> sessionActiveIdentifiers = new HashSet<>();
-    private boolean sessionUsedExternalController;
 
     public interface OnSlotsChangedListener {
         void onSlotsChanged();
@@ -512,15 +511,6 @@ public class ControllerManager {
 
     public void resetSessionActivity() {
         sessionActiveIdentifiers.clear();
-        sessionUsedExternalController = false;
-    }
-
-    public int getSessionUsedControllerCount() {
-        return sessionActiveIdentifiers.size();
-    }
-
-    public boolean getSessionUsedExternalController() {
-        return sessionUsedExternalController;
     }
 
     public void noteGamepadActivity(MotionEvent event) {
@@ -562,12 +552,7 @@ public class ControllerManager {
 
     private void markActive(int deviceId) {
         String identifier = getDeviceIdentifierForDeviceId(deviceId);
-        if (identifier == null || !sessionActiveIdentifiers.add(identifier)) return;
-        InputDevice device = inputManager.getInputDevice(deviceId);
-        if (device != null &&
-                (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.Q || device.isExternal())) {
-            sessionUsedExternalController = true;
-        }
+        if (identifier != null) sessionActiveIdentifiers.add(identifier);
     }
 
     private static boolean isRealGamepadMotion(MotionEvent event) {

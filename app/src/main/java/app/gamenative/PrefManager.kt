@@ -1417,14 +1417,6 @@ object PrefManager {
             setPref(RECOMMENDED_TAB_SEEN_DAY, value)
         }
 
-    // Recent campaign CTA clicks keyed by app id, attached to later install/launch events
-    private val CAMPAIGN_CLICKS_JSON = stringPreferencesKey("campaign_clicks_json")
-    var campaignClicksJson: String
-        get() = getPref(CAMPAIGN_CLICKS_JSON, "")
-        set(value) {
-            setPref(CAMPAIGN_CLICKS_JSON, value)
-        }
-
     private val REC_TEASER_DISMISSED_DAY = longPreferencesKey("rec_teaser_dismissed_day")
     var recTeaserDismissedDay: Long
         get() = getPref(REC_TEASER_DISMISSED_DAY, 0L)
@@ -1725,17 +1717,6 @@ object PrefManager {
             setPref(GPU_GAME_STATS_CACHE, value)
         }
 
-    /* Security / Attestation */
-    private val KEY_ATTESTATION_AVAILABLE = booleanPreferencesKey("key_attestation_available")
-    var keyAttestationAvailable: Boolean
-        get() = getPref(KEY_ATTESTATION_AVAILABLE, false)
-        set(value) = setPref(KEY_ATTESTATION_AVAILABLE, value)
-
-    private val PLAY_INTEGRITY_AVAILABLE = booleanPreferencesKey("play_integrity_available")
-    var playIntegrityAvailable: Boolean
-        get() = getPref(PLAY_INTEGRITY_AVAILABLE, false)
-        set(value) = setPref(PLAY_INTEGRITY_AVAILABLE, value)
-
     private val GOG_AMAZON_PATH_MIGRATED = booleanPreferencesKey("gog_amazon_path_migrated")
     var gogAmazonPathMigrated: Boolean
         get() = getPref(GOG_AMAZON_PATH_MIGRATED, false)
@@ -1760,11 +1741,6 @@ object PrefManager {
     var warnBeforeExit: Boolean
         get() = getPref(WARN_BEFORE_EXIT, false)
         set(value) { setPref(WARN_BEFORE_EXIT, value) }
-
-    private val USAGE_ANALYTICS_ENABLED = booleanPreferencesKey("usage_analytics_enabled")
-    var usageAnalyticsEnabled: Boolean
-        get() = getPref(USAGE_ANALYTICS_ENABLED, true)
-        set(value) { setPref(USAGE_ANALYTICS_ENABLED, value) }
 
     private val NEXUS_LAST_PLACEMENT_JSON = stringPreferencesKey("nexus_last_placement_json")
     var nexusLastPlacementJson: String

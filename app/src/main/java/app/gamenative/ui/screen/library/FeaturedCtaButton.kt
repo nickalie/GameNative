@@ -26,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import app.gamenative.PrefManager
 import app.gamenative.R
 import app.gamenative.data.FeaturedCta
 import app.gamenative.data.gog.GogRecommendationsRepository
@@ -34,8 +33,6 @@ import app.gamenative.service.SteamService
 import app.gamenative.service.SteamWishlistService
 import app.gamenative.ui.component.focusRing
 import app.gamenative.ui.util.SnackbarManager
-import app.gamenative.utils.ConversionTracker
-import com.posthog.PostHog
 import kotlinx.coroutines.launch
 
 @Composable
@@ -44,8 +41,6 @@ internal fun FeaturedCtaButton(
     campaignId: String,
     recSource: String,
     recRank: Int = -1,
-    ctaIndex: Int = 0,
-    ctaCount: Int = 1,
     focusRequester: FocusRequester? = null,
 ) {
     val context = LocalContext.current
@@ -65,43 +60,13 @@ internal fun FeaturedCtaButton(
     val openUrl = { url: String -> context.startActivity(Intent(Intent.ACTION_VIEW, url.toUri())) }
 
     val inert = cta != null && (busy || done == true)
-    val extras = mapOf<String, Any>(
-        "rank" to recRank,
-        "cta_type" to action.type,
-        "cta_index" to ctaIndex,
-        "cta_count" to ctaCount,
-    )
 
     val onClick: () -> Unit = onClick@{
         if (inert) return@onClick
 
-        val clickId = ConversionTracker.newClickId()
-        val sid = if (affiliate) GogRecommendationsRepository.affiliateSubId(recSource, recRank, clickId) else ""
+        val sid = if (affiliate) GogRecommendationsRepository.affiliateSubId(recSource, recRank) else ""
         val url = if (affiliate) GogRecommendationsRepository.withAffiliateSubId(action.url, sid) else action.url
-        if (PrefManager.usageAnalyticsEnabled) {
-            PostHog.capture(
-                event = "featured_action_clicked",
-                properties = mapOf(
-                    "campaign_id" to campaignId,
-                    "action_label" to action.label,
-                    "url" to action.url,
-                    "source" to recSource,
-                    "sid" to sid,
-                    "click_id" to (clickId ?: ""),
-                ) + extras,
-            )
-        }
-        ConversionTracker.rememberCampaignClick(action.appId, campaignId, recSource)
         if (cta == null) {
-            // Plain-link CTAs (VISIT etc.) are billable clicks too: count them like in-app
-            // conversions so per-CTA campaigns bill even with usage analytics disabled.
-            ConversionTracker.featuredConversion(
-                campaignId = campaignId,
-                actionType = action.type,
-                appId = action.appId,
-                source = recSource,
-                extras = extras,
-            )
             openUrl(url)
         } else {
             busy = true
@@ -110,13 +75,6 @@ internal fun FeaturedCtaButton(
                 busy = false
                 if (ok) {
                     done = true
-                    ConversionTracker.featuredConversion(
-                        campaignId = campaignId,
-                        actionType = action.type,
-                        appId = action.appId,
-                        source = recSource,
-                        extras = extras,
-                    )
                 } else {
                     SnackbarManager.show(context.getString(R.string.featured_action_failed))
                     openUrl(url)

@@ -83,8 +83,6 @@ import app.gamenative.service.rockstar.RockstarLoginGate
 import app.gamenative.service.rockstar.RockstarTitleMetadata
 import app.gamenative.service.rockstar.RockstarRuntime
 import app.gamenative.service.amazon.AmazonService
-import app.gamenative.utils.ConversionTracker
-import com.posthog.PostHog
 import app.gamenative.ui.component.AchievementOverlay
 import app.gamenative.ui.component.ConnectionStatusBanner
 import app.gamenative.ui.component.GameInviteOverlay
@@ -350,44 +348,6 @@ private fun consumePendingSteamLoginError(context: Context) {
 
 private const val SUPPORT_PROMPT_SIGN_IN = "sign_in"
 
-private fun trackAiDebugOffer(event: String, appId: String, trigger: String) {
-    if (PrefManager.usageAnalyticsEnabled) {
-        PostHog.capture(
-            event = event,
-            properties = mapOf(
-                "game_name" to ContainerUtils.resolveGameName(appId),
-                "game_store" to ContainerUtils.extractGameSourceFromContainerId(appId).name,
-                "trigger" to trigger,
-            ),
-        )
-    }
-}
-
-fun trackAiDebug(event: String, properties: Map<String, Any> = emptyMap()) {
-    if (PrefManager.usageAnalyticsEnabled) {
-        PostHog.capture(event = event, properties = properties)
-    }
-}
-
-private fun trackGameLaunched(appId: String) {
-    val gameSource = ContainerUtils.extractGameSourceFromContainerId(appId)
-    val gameName = ContainerUtils.resolveGameName(appId)
-    val attribution = if (gameSource == GameSource.STEAM) {
-        ConversionTracker.campaignAttribution(runCatching { ContainerUtils.extractGameIdFromContainerId(appId) }.getOrNull())
-    } else {
-        emptyMap()
-    }
-    PostHog.capture(
-        event = "game_launched",
-        properties = mapOf(
-            "game_name" to gameName,
-            "game_store" to gameSource.name,
-            "key_attestation_available" to PrefManager.keyAttestationAvailable,
-            "play_integrity_available" to PrefManager.playIntegrityAvailable,
-        ) + attribution,
-    )
-}
-
 private fun CoroutineScope.markAppliedReported(context: Context, state: DebugReportDialogState) {
     if (state.phase != DebugReportDialogState.PHASE_COMPOSE && state.phase != DebugReportDialogState.PHASE_ERROR) return
     launch(Dispatchers.IO) { SupportAppliedRun.markReported(context, state.appId) }
@@ -401,7 +361,6 @@ private fun startDebugRun(
     setMessageDialogState: (MessageDialogState) -> Unit,
 ) {
     if (appId.isEmpty()) return
-    trackGameLaunched(appId)
     viewModel.setLaunchedAppId(appId)
     viewModel.setBootToContainer(false)
     viewModel.setTestGraphics(false)
@@ -448,7 +407,6 @@ fun PluviaMain(
     }
     var debugAccountPrompt by rememberSaveable { mutableStateOf<String?>(null) }
     var aiDebugOfferAppId by rememberSaveable { mutableStateOf("") }
-    var aiDebugOfferTrigger by rememberSaveable { mutableStateOf("") }
     var debugPreRunVisible by rememberSaveable { mutableStateOf(false) }
     var debugPreRunAppId by rememberSaveable { mutableStateOf("") }
     var debugPreRunOffline by rememberSaveable { mutableStateOf(false) }
@@ -515,7 +473,6 @@ fun PluviaMain(
         } else {
             MainActivity.wasLaunchedViaExternalIntent = true
             val agentLaunch = AgentPreLaunch.start(AgentHooks.onLaunchRequested(resolvedAppId))
-            trackGameLaunched(resolvedAppId)
             viewModel.setLaunchedAppId(resolvedAppId)
             viewModel.setBootToContainer(false)
             scope.launch(Dispatchers.IO) {
@@ -803,14 +760,11 @@ fun PluviaMain(
                             AccountApi.loadSignedInState()
                             SupportApi.checkAvailability()
                         }
-                        trackAiDebug("ai_debug_report_shown")
                     }
                 }
 
                 is MainViewModel.MainUiEvent.ShowAiDebugOffer -> {
                     aiDebugOfferAppId = event.appId
-                    aiDebugOfferTrigger = event.trigger
-                    trackAiDebugOffer("ai_debug_offer_shown", event.appId, event.trigger)
                     msgDialogState = MessageDialogState(
                         visible = true,
                         type = DialogType.AI_DEBUG_OFFER,
@@ -1379,7 +1333,6 @@ fun PluviaMain(
             onConfirmClick = {
                 setMessageDialogState(MessageDialogState(false))
                 if (aiDebugOfferAppId.isNotEmpty()) {
-                    trackAiDebugOffer("ai_debug_offer_accepted", aiDebugOfferAppId, aiDebugOfferTrigger)
                     SupportSession.clearRun(aiDebugOfferAppId)
                     debugPreRunAppId = aiDebugOfferAppId
                     debugPreRunOffline = viewModel.isOffline.value
@@ -1388,15 +1341,9 @@ fun PluviaMain(
             }
             onDismissClick = {
                 setMessageDialogState(MessageDialogState(false))
-                if (aiDebugOfferAppId.isNotEmpty()) {
-                    trackAiDebugOffer("ai_debug_offer_dismissed", aiDebugOfferAppId, aiDebugOfferTrigger)
-                }
             }
             onDismissRequest = {
                 setMessageDialogState(MessageDialogState(false))
-                if (aiDebugOfferAppId.isNotEmpty()) {
-                    trackAiDebugOffer("ai_debug_offer_dismissed", aiDebugOfferAppId, aiDebugOfferTrigger)
-                }
             }
         }
 
@@ -1634,7 +1581,6 @@ fun PluviaMain(
                     val composeAgain = { debugReportState = debugReportState.copy(visible = true, phase = DebugReportDialogState.PHASE_COMPOSE) }
                     when (outcome) {
                         is SupportReportSubmitter.Outcome.Sent -> {
-                            trackAiDebug("ai_debug_report_result", mapOf("result" to "success", "path" to "app"))
                             withContext(Dispatchers.IO) {
                                 val dir = File(current.reportDir)
                                 val header = DebugReportUtils.readHeader(dir)
@@ -1655,34 +1601,18 @@ fun PluviaMain(
                             debugAccountPrompt = SUPPORT_PROMPT_SIGN_IN
                         }
                         is SupportReportSubmitter.Outcome.Forbidden -> {
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "forbidden", "reason" to outcome.reason, "path" to "app"),
-                            )
                             composeAgain()
                             SnackbarManager.show(refusalReasonText(context, outcome.reason))
                         }
                         SupportReportSubmitter.Outcome.LimitReached -> {
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "failure", "reason" to SupportApi.REASON_FAIR_USE, "path" to "app"),
-                            )
                             composeAgain()
                             SnackbarManager.show(SupportReportSubmitter.limitReachedText(context))
                         }
                         SupportReportSubmitter.Outcome.RateLimited -> {
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "failure", "reason" to SupportApi.REASON_RATE_LIMITED, "path" to "app"),
-                            )
                             debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
                             SnackbarManager.show(context.getString(R.string.support_problem_rate_limited))
                         }
                         is SupportReportSubmitter.Outcome.Failed -> {
-                            trackAiDebug(
-                                "ai_debug_report_result",
-                                mapOf("result" to "failure", "reason" to outcome.reason, "path" to "app"),
-                            )
                             debugReportState = debugReportState.copy(phase = DebugReportDialogState.PHASE_ERROR)
                         }
                     }
@@ -1861,7 +1791,6 @@ fun PluviaMain(
 
                     HomeScreen(
                         onClickPlay = { appId, asContainer ->
-                            trackGameLaunched(appId)
                             viewModel.setLaunchedAppId(appId)
                             viewModel.setBootToContainer(asContainer)
                             viewModel.setTestGraphics(false)
@@ -1900,7 +1829,6 @@ fun PluviaMain(
                             )
                         },
                         onPlayWithDiagnostics = { appId ->
-                            trackGameLaunched(appId)
                             viewModel.setLaunchedAppId(appId)
                             viewModel.setBootToContainer(false)
                             viewModel.setTestGraphics(false)

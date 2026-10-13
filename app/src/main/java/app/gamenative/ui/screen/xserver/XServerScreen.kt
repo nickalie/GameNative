@@ -167,7 +167,6 @@ import app.gamenative.utils.WineMono
 import app.gamenative.utils.WineMsiCache
 import app.gamenative.utils.downloader.WinComponentDownloader
 import app.gamenative.utils.WineProcessSnapshotHelper
-import com.posthog.PostHog
 import com.winlator.alsaserver.ALSAClient
 import com.winlator.container.Container
 import com.winlator.container.ContainerFiles
@@ -273,7 +272,7 @@ import com.winlator.PrefManager as WinlatorPrefManager
 // where games randomly stop working. Set to false once corruption issues are resolved.
 private const val ALWAYS_REEXTRACT = true
 
-// Guard to prevent duplicate game_exited events when multiple exit triggers fire simultaneously
+// Guard so exit() runs once when multiple exit triggers fire simultaneously
 private val isExiting = AtomicBoolean(false)
 private val windowActivity = WindowActivity()
 
@@ -1255,11 +1254,10 @@ fun XServerScreen(
 
     // Shows the soft keyboard, anchored to [anchor]. Handles the Android 12+
     // post-delay quirk and routes input to the external display IME when needed.
-    val showSoftKeyboard: (View, String) -> Unit = { anchor, analyticsEvent ->
+    val showSoftKeyboard: (View) -> Unit = { anchor ->
         anchor.post {
             if (anchor.windowToken != null) {
                 val show = {
-                    if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = analyticsEvent)
                     val isExternalDisplaySession =
                         (anchor.display?.displayId ?: Display.DEFAULT_DISPLAY) != Display.DEFAULT_DISPLAY
 
@@ -1282,16 +1280,14 @@ fun XServerScreen(
         when (itemId) {
             QuickMenuAction.KEYBOARD -> {
                 keyboardRequestedFromOverlay = true
-                showSoftKeyboard(view, "onscreen_keyboard_enabled")
+                showSoftKeyboard(view)
                 true
             }
 
             QuickMenuAction.INPUT_CONTROLS -> {
                 if (areControlsVisible) {
-                    if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "onscreen_controller_disabled")
                     hideInputControls()
                 } else {
-                    if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "onscreen_controller_enabled")
                     val manager = PluviaApp.inputControlsManager
                     val profiles = manager?.getProfiles(false) ?: listOf()
                     if (profiles.isNotEmpty()) {
@@ -1375,7 +1371,6 @@ fun XServerScreen(
             }
 
             QuickMenuAction.EDIT_CONTROLS -> {
-                if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "edit_controls_in_game")
                 keepPausedForEditor = true
 
                 // Get or create profile for this container
@@ -1492,7 +1487,6 @@ fun XServerScreen(
             }
 
             QuickMenuAction.EDIT_PHYSICAL_CONTROLLER -> {
-                if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "edit_physical_controller_from_menu")
                 keepPausedForEditor = true
                 physicalControllerDialogMode = PHYSICAL_CONTROLLER_DIALOG_BINDINGS
                 true
@@ -1510,7 +1504,6 @@ fun XServerScreen(
             QuickMenuAction.SC_LAYOUT -> { keepPausedForEditor = true; sc.showLayout = true; true }
 
             QuickMenuAction.RADIAL_MENU -> {
-                if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "edit_radial_menu_from_menu")
                 PluviaApp.radialMenuCoordinator?.showSettingsDialog() == true
             }
 
@@ -1519,27 +1512,10 @@ fun XServerScreen(
                 isPerformanceHudEnabled = enabled
                 PrefManager.showFps = enabled
                 updatePerformanceHud(enabled)
-                if (PrefManager.usageAnalyticsEnabled) {
-                    PostHog.capture(
-                        event = "performance_hud_toggled",
-                        properties = mapOf("enabled" to enabled),
-                    )
-                }
                 false
             }
 
             QuickMenuAction.EXIT_GAME -> {
-                PostHog.capture(
-                    event = "game_closed",
-                    properties = buildMap {
-                        put("game_name", ContainerUtils.resolveGameName(appId))
-                        put("game_store", ContainerUtils.extractGameSourceFromContainerId(appId).name)
-                        if (PrefManager.usageAnalyticsEnabled) {
-                            put("max_controllers", ControllerManager.getInstance().sessionUsedControllerCount)
-                            put("external_controller_used", ControllerManager.getInstance().sessionUsedExternalController)
-                        }
-                    },
-                )
                 imeInputReceiver?.hideKeyboard()
                 // Resume processes before exiting so they can receive SIGTERM cleanly.
                 // Don't resume audio to avoid resume->suspend race condition causing ANR.
@@ -1560,7 +1536,6 @@ fun XServerScreen(
             ?.isVisible(WindowInsetsCompat.Type.ime()) == true
 
         if (imeVisible) {
-            if (PrefManager.usageAnalyticsEnabled) PostHog.capture(event = "onscreen_keyboard_disabled")
             imeInputReceiver?.hideKeyboard()
             view.post {
                 if (Build.VERSION.SDK_INT >= 30) {
@@ -2813,7 +2788,7 @@ fun XServerScreen(
 
             // Wire SHOW_KEYBOARD binding callback for overlay control buttons
             icView.setShowKeyboardCallback {
-                showSoftKeyboard(icView, "onscreen_keyboard_enabled_from_binding")
+                showSoftKeyboard(icView)
             }
             PluviaApp.radialMenuCoordinator?.bindInputControlsView(icView)
 
@@ -5296,10 +5271,6 @@ private fun exit(
     }.getOrElse { emptyMap() } + runCatching {
         GameCompatibilityService.badgeProperties(ContainerUtils.resolveGameName(appId))
     }.getOrElse { emptyMap() }
-    PostHog.capture(
-        event = "game_exited",
-        properties = exitProperties,
-    )
     CoroutineScope(Dispatchers.IO).launch { SessionReport.recordRun(container, exitProperties) }
     runCatching { windowActivity.stop() }
 

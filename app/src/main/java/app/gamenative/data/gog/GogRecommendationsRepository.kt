@@ -28,9 +28,9 @@ object GogRecommendationsRepository {
 
     fun isAffiliateLink(url: String): Boolean = url.startsWith(CJ_CLICK)
 
-    /** CJ sub-ID for a click: placement + rank, plus a per-click token when usage analytics is on. */
-    fun affiliateSubId(source: String, rank: Int, clickId: String?): String =
-        listOfNotNull("gn", source.ifBlank { "unknown" }, "r$rank", clickId)
+    /** CJ sub-ID for a click: placement + rank. */
+    fun affiliateSubId(source: String, rank: Int): String =
+        listOf("gn", source.ifBlank { "unknown" }, "r$rank")
             .joinToString("_")
             .replace(Regex("[^A-Za-z0-9_-]"), "-")
             .take(CJ_SID_MAX)
@@ -371,11 +371,6 @@ object GogRecommendationsRepository {
             val priceLabel = price?.let { formatCents(it.finalPrice) }
             val discounted = price != null && price.basePrice > price.finalPrice && price.basePrice > 0
             val basePriceLabel = if (discounted) formatCents(price!!.basePrice) else null
-            val discountLabel = if (discounted) {
-                "-${100 - (price!!.finalPrice * 100 / price.basePrice)}%"
-            } else {
-                null
-            }
             val seedList = seeds.keys.toList()
             val because = when {
                 seedList.isEmpty() -> ""
@@ -391,7 +386,6 @@ object GogRecommendationsRepository {
                 affiliateUrl = CJ_CLICK + URLEncoder.encode(d.storeUrl, "UTF-8"),
                 priceLabel = priceLabel,
                 basePriceLabel = basePriceLabel,
-                discountLabel = discountLabel,
                 becausePlayed = because,
                 score = score,
                 seedCount = seedList.size,

@@ -42,36 +42,6 @@ object PowerTelemetry {
     private var startMs = 0L
     private val buckets = ArrayList<Bucket>()
 
-    fun capabilityProperties(): Map<String, Any> = buildMap {
-        put("power_driver", PowerManager.driverName())
-        put("power_driver_supported", PowerManager.isDriverSupported())
-        put("power_governor_supported", PowerManager.isGovernorSupported())
-        put("power_gpu_supported", PowerManager.isGpuSupported())
-        put("power_bus_supported", PowerManager.isBusSupported())
-        put("power_fan_supported", PowerManager.isFanControlAvailable())
-        put("power_cluster_tuning_supported", PowerManager.isClusterTuningAvailable())
-        put("power_pinning_supported", PowerManager.isGamePinningAvailable())
-        PowerManager.getAvailableGovernors().takeIf { it.isNotEmpty() }?.let { put("cpu_governors", it) }
-        PowerManager.getAvailableCpuFrequencies().takeIf { it.isNotEmpty() }?.let { put("cpu_freqs_khz", it) }
-        PowerManager.getGpuInfo()?.numGpuPowerLevels?.takeIf { it > 0 }?.let { put("gpu_power_levels", it) }
-        PowerManager.getAvailableGpuFrequencies().takeIf { it.isNotEmpty() }?.let { put("gpu_freqs_khz", it) }
-        PowerManager.getBusInfo()?.numBusLevels?.takeIf { it > 0 }?.let { put("bus_levels", it) }
-        clusters.takeIf { it.isNotEmpty() }?.let { list ->
-            put(
-                "cpu_clusters",
-                list.map { c ->
-                    buildMap<String, Any> {
-                        put("cores", c.cores)
-                        put("max_khz", c.maxKhz)
-                        SystemMetricsSources.readFirstLine("${c.dir}/scaling_available_frequencies")
-                            ?.trim()?.split(Regex("\\s+"))?.mapNotNull { it.toLongOrNull() }
-                            ?.takeIf { it.isNotEmpty() }?.let { put("freqs_khz", it) }
-                    }
-                },
-            )
-        }
-    }
-
     fun sessionProperties(): Map<String, Any> = buildMap {
         val active = PowerManager.isGameStarted && PowerManager.isDriverSupported() && PowerManager.isProfilePowerControlEnabled()
         put("power_enabled", active)

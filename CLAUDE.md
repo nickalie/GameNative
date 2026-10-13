@@ -17,7 +17,7 @@
   ```
 - Do not run the whole `:app:testModernDebugUnitTest` in one JVM: it hangs (also on upstream master) —
   ~78 Robolectric classes boot the real `PluviaApp`, which ends in `CrashHandler.uncaughtException` →
-  `saveCrashToFile` recursion or a `PostHog.register` lock in `PluviaApp.onCreate`. Run per-package batches
+  `saveCrashToFile` recursion. Run per-package batches
   (`--tests 'app.gamenative.utils.*'`, `…ui.*`, …), each under `timeout`, in the background.
 - Known pre-existing failures: `WorkshopManagerTest` (order-dependent `PrefManager` lateinit `dataStore`),
   `ModArchiveIndexPerformanceTest` (timing budget).

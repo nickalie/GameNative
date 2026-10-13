@@ -18,7 +18,6 @@ import app.gamenative.powercontrol.metrics.PowerTelemetry
 import com.winlator.container.Container
 import java.io.File
 import org.json.JSONObject
-import com.posthog.PostHog
 import com.winlator.core.GPUHelper
 import com.winlator.core.GPUInformation
 import com.winlator.widget.FrameRating
@@ -27,34 +26,6 @@ import kotlin.math.roundToInt
 import timber.log.Timber
 
 object DeviceInfo {
-
-    fun registerSuperProperties(context: Context) {
-        try {
-            registerAll(deviceProperties(context))
-        } catch (e: Exception) {
-            Timber.w(e, "DeviceInfo: device properties failed")
-        }
-    }
-
-    fun registerGpuSuperProperties(context: Context) {
-        try {
-            registerAll(gpuProperties(context))
-        } catch (e: Exception) {
-            Timber.w(e, "DeviceInfo: gpu properties failed")
-        }
-    }
-
-    fun registerPowerSuperProperties() {
-        try {
-            registerAll(PowerTelemetry.capabilityProperties())
-        } catch (e: Exception) {
-            Timber.w(e, "DeviceInfo: power properties failed")
-        }
-    }
-
-    private fun registerAll(props: Map<String, Any>) {
-        props.forEach { (key, value) -> PostHog.register(key, value) }
-    }
 
     private fun systemProperty(name: String): String? = runCatching {
         val cls = Class.forName("android.os.SystemProperties")

@@ -59,7 +59,6 @@ import app.gamenative.utils.IconDecoder
 import app.gamenative.utils.IntentLaunchManager
 import app.gamenative.utils.LocaleHelper
 import app.gamenative.ui.util.SnackbarManager
-import com.posthog.PostHog
 import com.skydoves.landscapist.coil.LocalCoilImageLoader
 import com.winlator.core.AppUtils
 import com.winlator.inputcontrols.ControllerManager
@@ -545,10 +544,6 @@ class MainActivity : ComponentActivity() {
             Timber.i("EpicService was down on resume - restarting")
             EpicService.start(this)
         }
-
-        if (PrefManager.usageAnalyticsEnabled) {
-            PostHog.capture(event = "app_foregrounded")
-        }
     }
 
     override fun onPause() {
@@ -574,9 +569,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-        }
-        if (PrefManager.usageAnalyticsEnabled) {
-            PostHog.capture(event = "app_backgrounded")
         }
         super.onPause()
     }
